@@ -33,16 +33,8 @@ app.use('/api/orders', orderRoute);
 app.use('/api/categories', categoryRoute);
 app.use('/api/settings', settingsRoute);
 
-// Serve Static Files
-const clientBuildPath = path.join(__dirname, '../client/dist');
-app.use(express.static(clientBuildPath));
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(clientBuildPath, 'index.html'));
-});
-
-
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
     console.log(`Backend server is running on port ${PORT}`);
 });
