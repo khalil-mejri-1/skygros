@@ -18,7 +18,7 @@ const Products = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/products");
+                const res = await axios.get("/api/products");
                 setProducts(res.data);
             } catch (err) {
                 console.error(err);
@@ -28,7 +28,7 @@ const Products = () => {
 
         const fetchCategories = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/categories");
+                const res = await axios.get("/api/categories");
                 const fetchedCategories = res.data.map(cat => ({ id: cat.name, label: cat.name }));
                 setCategories([initialCategory, ...fetchedCategories]);
             } catch (err) {

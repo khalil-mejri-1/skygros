@@ -22,7 +22,7 @@ const ProductDetails = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/products");
+                const res = await axios.get("/api/products");
                 const currentProduct = res.data.find(p => p._id === id);
                 if (currentProduct) {
                     setProduct(currentProduct);
@@ -49,7 +49,7 @@ const ProductDetails = () => {
 
         setIsLoading(true);
         try {
-            const res = await axios.post("http://localhost:5000/api/products/purchase", {
+            const res = await axios.post("/api/products/purchase", {
                 userId: user._id,
                 productId: product._id
             });

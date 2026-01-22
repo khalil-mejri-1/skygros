@@ -8,7 +8,7 @@ const Footer = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/settings");
+                const res = await axios.get("/api/settings");
                 setSettings(res.data);
             } catch (err) {
                 console.error("Error fetching settings for footer", err);

@@ -33,7 +33,7 @@ const Panier = () => {
                 }
             });
 
-            const res = await axios.post("http://localhost:5000/api/products/purchase-cart", {
+            const res = await axios.post("/api/products/purchase-cart", {
                 userId: user._id,
                 productIds: expandedIds
             });

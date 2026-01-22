@@ -24,6 +24,7 @@ const userRoute = require('./routes/users');
 const orderRoute = require('./routes/orders');
 const categoryRoute = require('./routes/categories');
 const settingsRoute = require('./routes/settings');
+const path = require('path');
 
 app.use('/api/auth', authRoute);
 app.use('/api/products', productRoute);
@@ -31,6 +32,15 @@ app.use('/api/users', userRoute);
 app.use('/api/orders', orderRoute);
 app.use('/api/categories', categoryRoute);
 app.use('/api/settings', settingsRoute);
+
+// Serve Static Files
+const clientBuildPath = path.join(__dirname, '../client/dist');
+app.use(express.static(clientBuildPath));
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

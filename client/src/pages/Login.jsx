@@ -26,7 +26,7 @@ const Login = () => {
 
         dispatch({ type: "LOGIN_START" });
         try {
-            const res = await axios.post("http://localhost:5000/api/auth/login", { ...credentials, captchaToken });
+            const res = await axios.post("/api/auth/login", { ...credentials, captchaToken });
 
             // Handle 2FA requirement
             if (res.data.twoFARequired) {

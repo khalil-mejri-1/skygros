@@ -46,7 +46,7 @@ const Admin = () => {
 
     const fetchSettings = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/settings");
+            const res = await axios.get("/api/settings");
             setSettings(res.data);
         } catch (err) {
             console.error(err);
@@ -56,7 +56,7 @@ const Admin = () => {
     const handleUpdateSettings = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.put("http://localhost:5000/api/settings", settings);
+            const res = await axios.put("/api/settings", settings);
             setSettings(res.data);
             alert("Paramètres mis à jour avec succès !");
         } catch (err) {
@@ -66,7 +66,7 @@ const Admin = () => {
 
     const fetchOrders = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/orders");
+            const res = await axios.get("/api/orders");
             setOrders(res.data);
         } catch (err) {
             console.error(err);
@@ -75,7 +75,7 @@ const Admin = () => {
 
     const fetchProducts = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/products");
+            const res = await axios.get("/api/products");
             setProducts(res.data);
         } catch (err) {
             console.error(err);
@@ -84,7 +84,7 @@ const Admin = () => {
 
     const fetchCategories = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/categories");
+            const res = await axios.get("/api/categories");
             setCategories(res.data);
         } catch (err) {
             console.error(err);
@@ -94,7 +94,7 @@ const Admin = () => {
     const handleAddCategory = async (e) => {
         e.preventDefault();
         try {
-            await axios.post("http://localhost:5000/api/categories", newCategory);
+            await axios.post("/api/categories", newCategory);
             setNewCategory({ name: "", icon: "", subcategories: [], description: "" });
             setShowCategoryForm(false);
             fetchCategories();
@@ -106,7 +106,7 @@ const Admin = () => {
     const handleUpdateCategory = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`http://localhost:5000/api/categories/${isEditingCategory._id}`, isEditingCategory);
+            await axios.put(`/api/categories/${isEditingCategory._id}`, isEditingCategory);
             setIsEditingCategory(null);
             fetchCategories();
         } catch (err) {
@@ -117,7 +117,7 @@ const Admin = () => {
     const handleDeleteCategory = async (id) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
             try {
-                await axios.delete(`http://localhost:5000/api/categories/${id}`);
+                await axios.delete(`/api/categories/${id}`);
                 fetchCategories();
             } catch (err) {
                 console.error(err);
@@ -127,7 +127,7 @@ const Admin = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/users");
+            const res = await axios.get("/api/users");
             setUsers(res.data);
         } catch (err) {
             console.error(err);
@@ -137,7 +137,7 @@ const Admin = () => {
     const handleDelete = async (id) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
             try {
-                await axios.delete(`http://localhost:5000/api/products/${id}`);
+                await axios.delete(`/api/products/${id}`);
                 fetchProducts();
             } catch (err) {
                 console.error(err);
@@ -150,7 +150,7 @@ const Admin = () => {
         const keysArray = newProduct.keysInput.split(',').map(k => ({ key: k.trim(), isSold: false })).filter(k => k.key);
 
         try {
-            await axios.post("http://localhost:5000/api/products", { ...newProduct, keys: keysArray });
+            await axios.post("/api/products", { ...newProduct, keys: keysArray });
             setNewProduct({
                 title: "",
                 description: "",
@@ -178,7 +178,7 @@ const Admin = () => {
         }
 
         try {
-            const res = await axios.put(`http://localhost:5000/api/products/${isEditing._id}`, updatedData);
+            const res = await axios.put(`/api/products/${isEditing._id}`, updatedData);
             setIsEditing(null);
             fetchProducts();
 
@@ -196,7 +196,7 @@ const Admin = () => {
 
     const handleAddBalance = async () => {
         try {
-            await axios.post("http://localhost:5000/api/users/add-balance", {
+            await axios.post("/api/users/add-balance", {
                 userId: showBalanceModal._id,
                 amount: balanceAmount
             });
@@ -210,7 +210,7 @@ const Admin = () => {
 
     const handleFulfillOrder = async () => {
         try {
-            await axios.put(`http://localhost:5000/api/orders/fulfill/${showFulfillModal._id}`, {
+            await axios.put(`/api/orders/fulfill/${showFulfillModal._id}`, {
                 licenseKey: manualKey
             });
             setShowFulfillModal(null);

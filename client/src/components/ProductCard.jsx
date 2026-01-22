@@ -30,7 +30,7 @@ const ProductCard = ({ product }) => {
 
         setIsLoading(true);
         try {
-            const res = await axios.post("http://localhost:5000/api/products/purchase", {
+            const res = await axios.post("/api/products/purchase", {
                 userId: user._id,
                 productId: product._id
             });
