@@ -38,6 +38,9 @@ app.use('/api/orders', orderRoute);
 app.use('/api/categories', categoryRoute);
 app.use('/api/settings', settingsRoute);
 
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
