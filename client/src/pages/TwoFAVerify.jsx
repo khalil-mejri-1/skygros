@@ -1,4 +1,6 @@
 import { useState, useContext } from "react";
+
+import API_BASE_URL from "../config/api";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -27,7 +29,7 @@ const TwoFAVerify = () => {
         setError("");
 
         try {
-            const res = await axios.post("/api/auth/2fa/verify", {
+            const res = await axios.post(`${API_BASE_URL}/api/auth/2fa/verify`, {
                 userId,
                 token
             });

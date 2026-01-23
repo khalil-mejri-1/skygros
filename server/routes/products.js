@@ -63,6 +63,9 @@ router.put('/:id', async (req, res) => {
                     order.status = 'COMPLETED';
                     await order.save();
 
+                    // Increment user purchase count
+                    await User.findByIdAndUpdate(order.userId, { $inc: { purchaseCount: 1 } });
+
                     // Get user info for admin log
                     const recipient = await User.findById(order.userId);
                     fulfillmentLogs.push({
@@ -134,9 +137,15 @@ router.post('/purchase', async (req, res) => {
             await product.save();
         }
 
+        if (licenseKey !== "PENDING") {
+            user.purchaseCount += 1;
+            await user.save();
+        }
+
         res.status(200).json({
             message: licenseKey === "PENDING" ? "Commande reçue (Stock épuisé)" : "Achat réussi",
             newBalance: user.balance,
+            purchaseCount: user.purchaseCount,
             licenseKey: licenseKey,
             isPending: licenseKey === "PENDING"
         });
@@ -220,9 +229,16 @@ router.post('/purchase-cart', async (req, res) => {
             }
         }
 
+        const completedCount = keysToReturn.filter(k => k.status === "COMPLETED").length;
+        if (completedCount > 0) {
+            user.purchaseCount += completedCount;
+            await user.save();
+        }
+
         res.status(200).json({
             message: "Achat réussi",
             newBalance: user.balance,
+            purchaseCount: user.purchaseCount,
             purchasedItems: keysToReturn,
             hasPendingItems: hasPendingItems
         });

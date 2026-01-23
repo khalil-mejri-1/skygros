@@ -2,10 +2,12 @@ import { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import bg from "../assets/bg.mp4";
+import API_BASE_URL from "../config/api";
 
 const Register = () => {
     const [credentials, setCredentials] = useState({ username: "", email: "", password: "" });
     const [error, setError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -15,14 +17,17 @@ const Register = () => {
     const handleClick = async (e) => {
         e.preventDefault();
         setError(false);
+        setErrorMessage("");
         try {
-            const res = await axios.post("/api/auth/register", credentials);
+            const res = await axios.post(`${API_BASE_URL}/api/auth/register`, credentials);
             if (res.status === 200) {
                 navigate("/login");
             }
         } catch (err) {
             setError(true);
-            console.error(err);
+            const msg = err.response?.data?.message || err.response?.data || "Une erreur est survenue !";
+            setErrorMessage(msg);
+            console.error("Registration Error:", msg);
         }
     };
 
@@ -124,7 +129,7 @@ const Register = () => {
                     >
                         S'INSCRIRE
                     </button>
-                    {error && <span style={{ color: 'var(--danger)', textAlign: 'center', marginTop: '10px' }}>Une erreur est survenue !</span>}
+                    {error && <span style={{ color: 'var(--danger)', textAlign: 'center', marginTop: '10px', fontSize: '0.8rem' }}>{errorMessage}</span>}
                 </div>
 
                 <div style={{ marginTop: '20px', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>

@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+
+import API_BASE_URL from "../config/api";
 import axios from "axios";
 import { FaFacebook, FaTwitter, FaInstagram, FaDiscord, FaYoutube, FaTelegramPlane } from "react-icons/fa";
 
@@ -8,7 +10,7 @@ const Footer = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const res = await axios.get("/api/settings");
+                const res = await axios.get(`${API_BASE_URL}/api/settings`);
                 setSettings(res.data);
             } catch (err) {
                 console.error("Error fetching settings for footer", err);

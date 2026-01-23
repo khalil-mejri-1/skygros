@@ -6,6 +6,7 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
 
     balance: { type: Number, default: 0 },
+    purchaseCount: { type: Number, default: 0 },
     avatar: { type: String, default: '' },
 
     // ===== 2FA =====

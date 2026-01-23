@@ -42,6 +42,12 @@ router.put('/fulfill/:orderId', async (req, res) => {
             },
             { new: true }
         );
+
+        if (updatedOrder) {
+            const User = require('../models/User');
+            await User.findByIdAndUpdate(updatedOrder.userId, { $inc: { purchaseCount: 1 } });
+        }
+
         res.status(200).json(updatedOrder);
     } catch (err) {
         res.status(500).json(err);

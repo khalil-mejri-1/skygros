@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import Profile from "./pages/Profile.jsx";
 
 import Footer from "./components/Footer";
 import Products from "./pages/Products.jsx";
@@ -35,6 +36,7 @@ function App() {
         <Route path="/admin" element={user?.isAdmin ? <Admin /> : <Navigate to="/" />} />
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
         <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
       </Routes>
       <Footer />
     </BrowserRouter>

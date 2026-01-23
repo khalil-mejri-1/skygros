@@ -23,7 +23,27 @@ const GeneralSettingsSchema = new mongoose.Schema({
         ],
         newsletterTitle: { type: String, default: "Newsletter" },
         newsletterDesc: { type: String, default: "Abonnez-vous pour recevoir des offres spéciales et des cadeaux exclusifs." }
-    }
+    },
+    ranks: [
+        {
+            name: { type: String, default: "Bronze" },
+            minPurchases: { type: Number, default: 0 },
+            color: { type: String, default: "#cd7f32" },
+            icon: { type: String, default: "FaMedal" }
+        },
+        {
+            name: { type: String, default: "Silver" },
+            minPurchases: { type: Number, default: 10 },
+            color: { type: String, default: "#c0c0c0" },
+            icon: { type: String, default: "FaMedal" }
+        },
+        {
+            name: { type: String, default: "Gold" },
+            minPurchases: { type: Number, default: 20 },
+            color: { type: String, default: "#ffd700" },
+            icon: { type: String, default: "FaMedal" }
+        }
+    ]
 }, { timestamps: true });
 
 module.exports = mongoose.model('GeneralSettings', GeneralSettingsSchema);

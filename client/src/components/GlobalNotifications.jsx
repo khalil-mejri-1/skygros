@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import API_BASE_URL from "../config/api";
 import { FaCheckCircle, FaTimes, FaBell } from "react-icons/fa";
 import axios from "axios";
 
@@ -17,8 +18,8 @@ const GlobalNotifications = () => {
             try {
                 // Fetch latest user data and orders in parallel
                 const [ordersRes, userRes] = await Promise.all([
-                    axios.get(`/api/orders/user/${user._id}`),
-                    axios.get(`/api/users/${user._id}`)
+                    axios.get(`${API_BASE_URL}/api/orders/user/${user._id}`),
+                    axios.get(`${API_BASE_URL}/api/users/${user._id}`)
                 ]);
 
                 // Sync Balance

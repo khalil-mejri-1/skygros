@@ -1,4 +1,6 @@
 import { useContext, useState } from "react";
+
+import API_BASE_URL from "../config/api";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
@@ -30,7 +32,7 @@ const ProductCard = ({ product }) => {
 
         setIsLoading(true);
         try {
-            const res = await axios.post("/api/products/purchase", {
+            const res = await axios.post(`${API_BASE_URL}/api/products/purchase`, {
                 userId: user._id,
                 productId: product._id
             });
@@ -39,15 +41,10 @@ const ProductCard = ({ product }) => {
                 updateBalance(res.data.newBalance);
                 setLastPurchasedKey(res.data.licenseKey);
 
-                // Save to history
-                const orderData = {
-                    _id: Math.random().toString(36).substr(2, 9),
-                    date: new Date().toISOString(),
-                    items: [{ ...product, licenseKey: res.data.licenseKey, quantity: 1 }],
-                    total: product.price
-                };
-                const existingOrders = JSON.parse(localStorage.getItem(`orders_${user._id}`)) || [];
-                localStorage.setItem(`orders_${user._id}`, JSON.stringify([...existingOrders, orderData]));
+                // Order saved to DB by backend
+
+
+
 
                 setIsPurchased(true);
                 setShowKeyModal(true);

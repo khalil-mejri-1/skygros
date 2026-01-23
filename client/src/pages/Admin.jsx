@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+
+import API_BASE_URL from "../config/api";
 import axios from "axios";
-import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar } from "react-icons/fa";
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState("products");
@@ -36,6 +38,12 @@ const Admin = () => {
         keysInput: ""
     });
 
+    const getRankDetail = (count, ranks = []) => {
+        if (!ranks || ranks.length === 0) return null;
+        const sorted = [...ranks].sort((a, b) => b.minPurchases - a.minPurchases);
+        return sorted.find(r => count >= r.minPurchases) || (ranks[0] || null);
+    };
+
     useEffect(() => {
         fetchProducts();
         fetchUsers();
@@ -46,7 +54,7 @@ const Admin = () => {
 
     const fetchSettings = async () => {
         try {
-            const res = await axios.get("/api/settings");
+            const res = await axios.get(`${API_BASE_URL}/api/settings`);
             setSettings(res.data);
         } catch (err) {
             console.error(err);
@@ -56,7 +64,7 @@ const Admin = () => {
     const handleUpdateSettings = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.put("/api/settings", settings);
+            const res = await axios.put(`${API_BASE_URL}/api/settings`, settings);
             setSettings(res.data);
             alert("Paramètres mis à jour avec succès !");
         } catch (err) {
@@ -66,35 +74,53 @@ const Admin = () => {
 
     const fetchOrders = async () => {
         try {
-            const res = await axios.get("/api/orders");
-            setOrders(res.data);
+            const res = await axios.get(`${API_BASE_URL}/api/orders`);
+            if (Array.isArray(res.data)) {
+                setOrders(res.data);
+            } else {
+                console.error("Orders data is not an array:", res.data);
+                setOrders([]);
+            }
         } catch (err) {
             console.error(err);
+            setOrders([]);
         }
     };
 
     const fetchProducts = async () => {
         try {
-            const res = await axios.get("/api/products");
-            setProducts(res.data);
+            const res = await axios.get(`${API_BASE_URL}/api/products`);
+            if (Array.isArray(res.data)) {
+                setProducts(res.data);
+            } else {
+                console.error("Products data is not an array:", res.data);
+                setProducts([]);
+            }
         } catch (err) {
             console.error(err);
+            setProducts([]);
         }
     };
 
     const fetchCategories = async () => {
         try {
-            const res = await axios.get("/api/categories");
-            setCategories(res.data);
+            const res = await axios.get(`${API_BASE_URL}/api/categories`);
+            if (Array.isArray(res.data)) {
+                setCategories(res.data);
+            } else {
+                console.error("Categories data is not an array:", res.data);
+                setCategories([]);
+            }
         } catch (err) {
             console.error(err);
+            setCategories([]);
         }
     };
 
     const handleAddCategory = async (e) => {
         e.preventDefault();
         try {
-            await axios.post("/api/categories", newCategory);
+            await axios.post(`${API_BASE_URL}/api/categories`, newCategory);
             setNewCategory({ name: "", icon: "", subcategories: [], description: "" });
             setShowCategoryForm(false);
             fetchCategories();
@@ -106,7 +132,7 @@ const Admin = () => {
     const handleUpdateCategory = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`/api/categories/${isEditingCategory._id}`, isEditingCategory);
+            await axios.put(`${API_BASE_URL}/api/categories/${isEditingCategory._id}`, isEditingCategory);
             setIsEditingCategory(null);
             fetchCategories();
         } catch (err) {
@@ -117,7 +143,7 @@ const Admin = () => {
     const handleDeleteCategory = async (id) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
             try {
-                await axios.delete(`/api/categories/${id}`);
+                await axios.delete(`${API_BASE_URL}/api/categories/${id}`);
                 fetchCategories();
             } catch (err) {
                 console.error(err);
@@ -127,17 +153,23 @@ const Admin = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get("/api/users");
-            setUsers(res.data);
+            const res = await axios.get(`${API_BASE_URL}/api/users`);
+            if (Array.isArray(res.data)) {
+                setUsers(res.data);
+            } else {
+                console.error("Users data is not an array:", res.data);
+                setUsers([]);
+            }
         } catch (err) {
             console.error(err);
+            setUsers([]);
         }
     };
 
     const handleDelete = async (id) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
             try {
-                await axios.delete(`/api/products/${id}`);
+                await axios.delete(`${API_BASE_URL}/api/products/${id}`);
                 fetchProducts();
             } catch (err) {
                 console.error(err);
@@ -150,7 +182,7 @@ const Admin = () => {
         const keysArray = newProduct.keysInput.split(',').map(k => ({ key: k.trim(), isSold: false })).filter(k => k.key);
 
         try {
-            await axios.post("/api/products", { ...newProduct, keys: keysArray });
+            await axios.post(`${API_BASE_URL}/api/products`, { ...newProduct, keys: keysArray });
             setNewProduct({
                 title: "",
                 description: "",
@@ -178,7 +210,7 @@ const Admin = () => {
         }
 
         try {
-            const res = await axios.put(`/api/products/${isEditing._id}`, updatedData);
+            const res = await axios.put(`${API_BASE_URL}/api/products/${isEditing._id}`, updatedData);
             setIsEditing(null);
             fetchProducts();
 
@@ -196,7 +228,7 @@ const Admin = () => {
 
     const handleAddBalance = async () => {
         try {
-            await axios.post("/api/users/add-balance", {
+            await axios.post(`${API_BASE_URL}/api/users/add-balance`, {
                 userId: showBalanceModal._id,
                 amount: balanceAmount
             });
@@ -210,7 +242,7 @@ const Admin = () => {
 
     const handleFulfillOrder = async () => {
         try {
-            await axios.put(`/api/orders/fulfill/${showFulfillModal._id}`, {
+            await axios.put(`${API_BASE_URL}/api/orders/fulfill/${showFulfillModal._id}`, {
                 licenseKey: manualKey
             });
             setShowFulfillModal(null);
@@ -308,6 +340,7 @@ const Admin = () => {
                     <SidebarItem id="categories" label="Gestion Catégories" icon={FaTag} />
                     <SidebarItem id="orders" label="Gestion Commandes" icon={FaShoppingBag} />
                     <SidebarItem id="users" label="Gestion Clients" icon={FaUsers} />
+                    <SidebarItem id="ranks" label="Système de Rangs" icon={FaMedal} />
                     <SidebarItem id="settings" label="Paramètres Généraux" icon={FaCog} />
                 </div>
 
@@ -329,13 +362,15 @@ const Admin = () => {
                         <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '8px' }}>
                             {activeTab === "products" ? "Inventaire des Produits" :
                                 activeTab === "categories" ? "Gestion des Catégories" :
-                                    activeTab === "orders" ? "Gestion des Commandes" : "Base de Données Clients"}
+                                    activeTab === "orders" ? "Gestion des Commandes" :
+                                        activeTab === "ranks" ? "Système de Rangs" : "Base de Données Clients"}
                         </h1>
                         <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>
                             {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
                                 activeTab === "categories" ? "Organisez vos produits par types et icônes." :
-                                    activeTab === "orders" ? "Suivez et valيدة les achats en attente." :
-                                        activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
+                                    activeTab === "orders" ? "Suivez et validez les achats en attente." :
+                                        activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
+                                            activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
                         </p>
                     </div>
                     {activeTab === "products" && (
@@ -555,6 +590,111 @@ const Admin = () => {
                             </tbody>
                         </table>
                     </div>
+                ) : activeTab === "ranks" ? (
+                    <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: '900' }}>Paliers de Récompenses</h3>
+                            <button
+                                onClick={() => {
+                                    const newRanks = [...(settings.ranks || []), { name: "Nouveau", minPurchases: 0, color: "#ffffff", icon: "FaMedal" }];
+                                    setSettings({ ...settings, ranks: newRanks });
+                                }}
+                                className="btn"
+                                style={{ background: 'var(--success)', color: '#000', fontSize: '0.8rem', padding: '8px 16px', borderRadius: '10px' }}
+                            >
+                                + AJOUTER PALIERS
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {settings?.ranks?.map((rank, idx) => (
+                                <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 50px', gap: '20px', alignItems: 'center' }}>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="form-label" style={{ fontSize: '0.7rem' }}>Nom du Rang</label>
+                                        <input
+                                            className="admin-input"
+                                            value={rank.name}
+                                            onChange={(e) => {
+                                                const newRanks = [...settings.ranks];
+                                                newRanks[idx].name = e.target.value;
+                                                setSettings({ ...settings, ranks: newRanks });
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="form-label" style={{ fontSize: '0.7rem' }}>Achats Requis</label>
+                                        <input
+                                            type="number"
+                                            className="admin-input"
+                                            value={rank.minPurchases}
+                                            onChange={(e) => {
+                                                const newRanks = [...settings.ranks];
+                                                newRanks[idx].minPurchases = parseInt(e.target.value);
+                                                setSettings({ ...settings, ranks: newRanks });
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="form-label" style={{ fontSize: '0.7rem' }}>Couleur (Hex)</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="color"
+                                                style={{ width: '40px', height: '40px', padding: '0', background: 'none', border: 'none', cursor: 'pointer' }}
+                                                value={rank.color}
+                                                onChange={(e) => {
+                                                    const newRanks = [...settings.ranks];
+                                                    newRanks[idx].color = e.target.value;
+                                                    setSettings({ ...settings, ranks: newRanks });
+                                                }}
+                                            />
+                                            <input
+                                                className="admin-input"
+                                                value={rank.color}
+                                                onChange={(e) => {
+                                                    const newRanks = [...settings.ranks];
+                                                    newRanks[idx].color = e.target.value;
+                                                    setSettings({ ...settings, ranks: newRanks });
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="form-label" style={{ fontSize: '0.7rem' }}>Icône</label>
+                                        <select
+                                            className="admin-input"
+                                            value={rank.icon}
+                                            onChange={(e) => {
+                                                const newRanks = [...settings.ranks];
+                                                newRanks[idx].icon = e.target.value;
+                                                setSettings({ ...settings, ranks: newRanks });
+                                            }}
+                                        >
+                                            <option value="FaMedal">Médaille</option>
+                                            <option value="FaTrophy">Trophée</option>
+                                            <option value="FaStar">Étoile</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            const newRanks = settings.ranks.filter((_, i) => i !== idx);
+                                            setSettings({ ...settings, ranks: newRanks });
+                                        }}
+                                        className="action-btn delete"
+                                    >
+                                        <FaTrash size={14} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={handleUpdateSettings}
+                            className="btn btn-primary"
+                            style={{ marginTop: '30px', padding: '15px 40px', borderRadius: '15px', fontWeight: '900' }}
+                        >
+                            ENREGISTRER LES RANGS
+                        </button>
+                    </div>
                 ) : activeTab === "settings" ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                         {settings && (
@@ -747,6 +887,7 @@ const Admin = () => {
                                 <tr>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Utilisateur</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Solde Actuel</th>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Rang / Achats</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                 </tr>
                             </thead>
@@ -766,6 +907,23 @@ const Admin = () => {
                                         </td>
                                         <td style={{ padding: '20px 24px' }}>
                                             <div style={{ color: 'var(--success)', fontWeight: '900', fontSize: '1.2rem' }}>${u.balance.toFixed(2)}</div>
+                                        </td>
+                                        <td style={{ padding: '20px 24px' }}>
+                                            {(() => {
+                                                const rank = getRankDetail(u.purchaseCount || 0, settings?.ranks);
+                                                return (
+                                                    <div className="flex flex-col gap-1">
+                                                        {rank && (
+                                                            <div className="flex items-center gap-1" style={{ color: rank.color, fontSize: '0.7rem', fontWeight: '900' }}>
+                                                                <FaMedal size={10} /> {rank.name.toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '800' }}>
+                                                            {u.purchaseCount || 0} ACHATS RÉUSSIS
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </td>
                                         <td style={{ padding: '20px 24px' }}>
                                             <div className="flex gap-2">

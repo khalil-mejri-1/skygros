@@ -9,9 +9,14 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Simple logging middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+});
+
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://feriddaghbouji_db_user:ow6ytVLbpYNxGBtC@cluster0.wkxzy5g.mongodb.net/')
-    // mongodb+srv://feriddaghbouji_db_user:ow6ytVLbpYNxGBtC@cluster0.wkxzy5g.mongodb.net/
+mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://feriddaghbouji_db_user:OyLOqJgd87aDaVZw@cluster0.wkxzy5g.mongodb.net/skygros?retryWrites=true&w=majority')
     .then(() => console.log('DB Connection Successfull!'))
     .catch((err) => {
         console.error(err);

@@ -1,4 +1,6 @@
 import { useContext, useState } from "react";
+
+import API_BASE_URL from "../config/api";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
@@ -33,7 +35,7 @@ const Panier = () => {
                 }
             });
 
-            const res = await axios.post("/api/products/purchase-cart", {
+            const res = await axios.post(`${API_BASE_URL}/api/products/purchase-cart`, {
                 userId: user._id,
                 productIds: expandedIds
             });

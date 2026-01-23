@@ -1,4 +1,6 @@
 import { useContext, useState, useEffect } from 'react';
+
+import API_BASE_URL from "../config/api";
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
@@ -12,14 +14,21 @@ const Navbar = () => {
     const [categories, setCategories] = useState([]);
     const [hoveredCategory, setHoveredCategory] = useState(null);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await axios.get("/api/categories");
-                setCategories(res.data);
+                const res = await axios.get(`${API_BASE_URL}/api/categories`);
+                if (Array.isArray(res.data)) {
+                    setCategories(res.data);
+                } else {
+                    console.error("Categories data is not an array:", res.data);
+                    setCategories([]);
+                }
             } catch (err) {
                 console.error("Error fetching categories", err);
+                setCategories([]);
             }
         };
         fetchCategories();
@@ -105,22 +114,109 @@ const Navbar = () => {
                                         HISTORIQUE
                                     </span>
                                 </Link>
-                                {/* Logout Icon */}
-                                <div
-                                    onClick={handleLogout}
-                                    className="flex items-center justify-center hover-lift"
-                                    style={{
-                                        cursor: 'pointer',
-                                        width: '40px',
-                                        height: '40px',
-                                        borderRadius: '50%',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        transition: '0.3s'
-                                    }}
-                                    title="Déconnexion"
-                                >
-                                    <FaSignOutAlt size={16} style={{ color: 'var(--text-secondary)' }} />
+                                {/* User Menu Button */}
+                                <div style={{ position: 'relative' }} ref={(node) => {
+                                    // Close menu when clicking outside (optional, but good UX)
+                                    // For simplicity in this step, we rely on toggles, but adding a wrapper is safe.
+                                }}>
+                                    <div
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="flex items-center justify-center hover-lift"
+                                        style={{
+                                            cursor: 'pointer',
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '50%',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            transition: '0.3s'
+                                        }}
+                                        title="Mon Profil"
+                                    >
+                                        <FaUser size={16} style={{ color: 'var(--text-secondary)' }} />
+                                    </div>
+
+                                    {/* User Dropdown Menu */}
+                                    {showUserMenu && (
+                                        <div className="glass" style={{
+                                            position: 'absolute',
+                                            top: '120%',
+                                            right: '0',
+                                            minWidth: '200px',
+                                            background: 'rgba(18, 18, 26, 0.95)',
+                                            backdropFilter: 'blur(20px)',
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                            borderRadius: '16px',
+                                            padding: '8px',
+                                            zIndex: 1000,
+                                            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                                            animation: 'fadeIn 0.2s ease-out',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '4px'
+                                        }}>
+                                            {/* Little Triangle Pointer */}
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '-6px',
+                                                right: '14px',
+                                                width: '12px',
+                                                height: '12px',
+                                                background: 'rgba(18, 18, 26, 0.95)',
+                                                borderLeft: '1px solid rgba(255,255,255,0.08)',
+                                                borderTop: '1px solid rgba(255,255,255,0.08)',
+                                                transform: 'rotate(45deg)'
+                                            }}></div>
+
+                                            <Link
+                                                to="/profile"
+                                                onClick={() => setShowUserMenu(false)}
+                                                className="dropdown-item"
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    color: 'rgba(255,255,255,0.8)',
+                                                    textDecoration: 'none',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: '600',
+                                                    borderRadius: '10px',
+                                                    transition: 'all 0.2s',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px'
+                                                }}
+                                            >
+                                                <FaUser size={14} style={{ color: 'var(--accent-color)' }} />
+                                                <span>Profile</span>
+                                            </Link>
+
+                                            <button
+                                                onClick={() => {
+                                                    handleLogout();
+                                                    setShowUserMenu(false);
+                                                }}
+                                                className="dropdown-item"
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    color: '#ff4757',
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: '600',
+                                                    borderRadius: '10px',
+                                                    transition: 'all 0.2s',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px',
+                                                    width: '100%',
+                                                    cursor: 'pointer',
+                                                    textAlign: 'left'
+                                                }}
+                                            >
+                                                <FaSignOutAlt size={14} />
+                                                <span>Deconnection</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Historique Button - Premium Style */}

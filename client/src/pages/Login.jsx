@@ -4,6 +4,8 @@ import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import bg from "../assets/bg.mp4";
+import API_BASE_URL from "../config/api";
+
 const Login = () => {
     const [credentials, setCredentials] = useState({ username: "", password: "" });
     const [captchaToken, setCaptchaToken] = useState(null);
@@ -26,7 +28,7 @@ const Login = () => {
 
         dispatch({ type: "LOGIN_START" });
         try {
-            const res = await axios.post("/api/auth/login", { ...credentials, captchaToken });
+            const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { ...credentials, captchaToken });
 
             // Handle 2FA requirement
             if (res.data.twoFARequired) {
@@ -46,6 +48,7 @@ const Login = () => {
             dispatch({ type: "LOGIN_FAILURE" });
         }
     };
+
 
     const turnstileRef = useRef(null);
 

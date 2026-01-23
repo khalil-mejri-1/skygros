@@ -1,4 +1,6 @@
 import { useState, useEffect, useContext } from "react";
+
+import API_BASE_URL from "../config/api";
 import { useParams, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
@@ -22,12 +24,16 @@ const ProductDetails = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await axios.get("/api/products");
-                const currentProduct = res.data.find(p => p._id === id);
-                if (currentProduct) {
-                    setProduct(currentProduct);
-                    // Get similar products from the same category
-                    setSimilarProducts(res.data.filter(p => p.category === currentProduct.category && p._id !== id).slice(0, 4));
+                const res = await axios.get(`${API_BASE_URL}/api/products`);
+                if (Array.isArray(res.data)) {
+                    const currentProduct = res.data.find(p => p._id === id);
+                    if (currentProduct) {
+                        setProduct(currentProduct);
+                        // Get similar products from the same category
+                        setSimilarProducts(res.data.filter(p => p.category === currentProduct.category && p._id !== id).slice(0, 4));
+                    }
+                } else {
+                    console.error("Products data is not an array:", res.data);
                 }
             } catch (err) {
                 console.error(err);
@@ -49,7 +55,7 @@ const ProductDetails = () => {
 
         setIsLoading(true);
         try {
-            const res = await axios.post("/api/products/purchase", {
+            const res = await axios.post(`${API_BASE_URL}/api/products/purchase`, {
                 userId: user._id,
                 productId: product._id
             });

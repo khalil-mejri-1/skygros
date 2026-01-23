@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { FaFilter, FaList, FaThLarge, FaSearch } from "react-icons/fa";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 const initialCategory = { id: "all", label: "Tous les Produits" };
 
@@ -18,21 +19,33 @@ const Products = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await axios.get("/api/products");
-                setProducts(res.data);
+                const res = await axios.get(`${API_BASE_URL}/api/products`);
+                if (Array.isArray(res.data)) {
+                    setProducts(res.data);
+                } else {
+                    console.error("Products data is not an array:", res.data);
+                    setProducts([]);
+                }
             } catch (err) {
                 console.error(err);
+                setProducts([]);
             }
         };
         fetchProducts();
 
         const fetchCategories = async () => {
             try {
-                const res = await axios.get("/api/categories");
-                const fetchedCategories = res.data.map(cat => ({ id: cat.name, label: cat.name }));
-                setCategories([initialCategory, ...fetchedCategories]);
+                const res = await axios.get(`${API_BASE_URL}/api/categories`);
+                if (Array.isArray(res.data)) {
+                    const fetchedCategories = res.data.map(cat => ({ id: cat.name, label: cat.name }));
+                    setCategories([initialCategory, ...fetchedCategories]);
+                } else {
+                    console.error("Categories data is not an array:", res.data);
+                    setCategories([initialCategory]);
+                }
             } catch (err) {
                 console.error("Error fetching categories", err);
+                setCategories([initialCategory]);
             }
         };
         fetchCategories();

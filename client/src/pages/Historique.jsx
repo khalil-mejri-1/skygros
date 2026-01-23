@@ -1,4 +1,6 @@
 import { useContext, useState, useEffect } from "react";
+
+import API_BASE_URL from "../config/api";
 import { AuthContext } from "../context/AuthContext";
 import { FaHistory, FaCalendarAlt, FaTicketAlt, FaGamepad, FaLink, FaClock, FaBox } from "react-icons/fa";
 import axios from "axios";
@@ -12,7 +14,7 @@ const Historique = () => {
         const fetchOrders = async () => {
             if (!user) return;
             try {
-                const res = await axios.get(`/api/orders/user/${user._id}`);
+                const res = await axios.get(`${API_BASE_URL}/api/orders/user/${user._id}`);
 
                 if (!Array.isArray(res.data)) {
                     setOrders([]);

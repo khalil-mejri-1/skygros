@@ -7,26 +7,33 @@ const speakeasy = require('speakeasy');
 // REGISTER
 router.post('/register', async (req, res) => {
     try {
-        if (req.body.email === "feridadmin@admin.com") {
-            return res.status(400).json("This email is reserved for administration.");
+        const { username, email, password } = req.body;
+        if (email === "feridadmin@admin.com") {
+            return res.status(400).json({ message: "This email is reserved for administration." });
+        }
+
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email or username already in use." });
         }
 
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser = new User({
-            username: req.body.username,
-            email: req.body.email,
+            username,
+            email,
             password: hashedPassword,
             balance: 0,
         });
 
         const savedUser = await newUser.save();
-        const { password, ...others } = savedUser._doc;
-        res.status(200).json(others);
+        const userResponse = savedUser.toObject();
+        delete userResponse.password;
+        res.status(200).json(userResponse);
     } catch (err) {
-        console.error("Registration error:", err);
-        res.status(500).json(err);
+        console.error("Registration error details:", err);
+        res.status(500).json({ message: "Registration failed", error: err.message });
     }
 });
 
@@ -36,7 +43,10 @@ router.post('/login', async (req, res) => {
         const { username, password, captchaToken } = req.body;
 
         // Verify Captcha
-        if (!captchaToken) return res.status(400).json("Captcha validation is required!");
+        if (!captchaToken) {
+            console.log("Login failed: Captcha token missing");
+            return res.status(400).json("Captcha validation is required!");
+        }
 
         const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
         const secretKey = '0x4AAAAAACN94-30N8OFz0mZtiJR5Q_3UeE';
@@ -54,6 +64,7 @@ router.post('/login', async (req, res) => {
         const verifyData = await verifyRes.json();
 
         if (!verifyData.success) {
+            console.log("Login failed: Captcha verification failed", verifyData);
             return res.status(400).json("Captcha validation failed!");
         }
 
@@ -101,7 +112,10 @@ router.post('/login', async (req, res) => {
         if (!user) return res.status(404).json("User not found!");
 
         const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.status(400).json("Wrong password!");
+        if (!validPassword) {
+            console.log(`Login failed: Wrong password for user ${username}`);
+            return res.status(400).json("Wrong password!");
+        }
 
         // Check 2FA for regular user
         if (user.is2FAEnabled) {
