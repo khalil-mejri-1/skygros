@@ -29,6 +29,7 @@ const userRoute = require('./routes/users');
 const orderRoute = require('./routes/orders');
 const categoryRoute = require('./routes/categories');
 const settingsRoute = require('./routes/settings');
+const demoRoute = require('./routes/demos');
 const path = require('path');
 
 app.use('/api/auth', authRoute);
@@ -37,6 +38,7 @@ app.use('/api/users', userRoute);
 app.use('/api/orders', orderRoute);
 app.use('/api/categories', categoryRoute);
 app.use('/api/settings', settingsRoute);
+app.use('/api/demos', demoRoute);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');

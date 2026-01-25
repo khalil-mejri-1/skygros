@@ -2,18 +2,24 @@ import { useState, useEffect } from "react";
 
 import API_BASE_URL from "../config/api";
 import axios from "axios";
-import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory } from "react-icons/fa";
+import ConfirmModal from "../components/ConfirmModal";
+import AlertModal from "../components/AlertModal";
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState("products");
     const [products, setProducts] = useState([]);
     const [users, setUsers] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [demos, setDemos] = useState([]); // demos state
+    const [newDemo, setNewDemo] = useState({ serviceName: "", description: "", image: "", contentListText: "" }); // new demo state
+
+    // ... existing states ...
     const [isEditing, setIsEditing] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [showBalanceModal, setShowBalanceModal] = useState(null);
     const [balanceAmount, setBalanceAmount] = useState(0);
-    const [fulfillmentLogs, setFulfillmentLogs] = useState([]); // New state for admin notifications
+    const [fulfillmentLogs, setFulfillmentLogs] = useState([]);
     const [showLogModal, setShowLogModal] = useState(false);
     const [showFulfillModal, setShowFulfillModal] = useState(null);
     const [manualKey, setManualKey] = useState("");
@@ -24,6 +30,10 @@ const Admin = () => {
     const [tempSubcategory, setTempSubcategory] = useState("");
     const [settings, setSettings] = useState(null);
     const [col1Input, setCol1Input] = useState("");
+
+    // Modal States
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, type: "warning" });
+    const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "success" });
     const [col2Input, setCol2Input] = useState("");
     const [col3Input, setCol3Input] = useState("");
 
@@ -50,7 +60,82 @@ const Admin = () => {
         fetchOrders();
         fetchCategories();
         fetchSettings();
+        fetchDemos(); // Fetch demos
     }, []);
+
+    const fetchDemos = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/demos`);
+            setDemos(res.data);
+        } catch (err) {
+            console.error("Error fetching demos:", err);
+        }
+    };
+
+    const handleAddDemo = async (e) => {
+        e.preventDefault();
+        try {
+            const contentList = newDemo.contentListText.split('\n').filter(line => line.trim() !== "");
+            await axios.post(`${API_BASE_URL}/api/demos`, {
+                serviceName: newDemo.serviceName,
+                description: newDemo.description,
+                image: newDemo.image,
+                contentList
+            });
+            setNewDemo({ serviceName: "", description: "", image: "", contentListText: "" });
+            fetchDemos();
+            setAlertModal({ isOpen: true, title: "Succès !", message: "Les démos ont été ajoutées avec succès.", type: "success" });
+        } catch (err) {
+            console.error(err);
+            setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors de l'ajout des démos.", type: "error" });
+        }
+    };
+
+    const handleDeleteDemo = async (id) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Supprimer le compte demo ?",
+            message: "Cette action est irréversible. Le compte demo sera définitivement supprimé.",
+            type: "danger",
+            confirmColor: "#ff4757",
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`${API_BASE_URL}/api/demos/${id}`);
+                    fetchDemos();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Supprimé !", message: "Le compte demo a été supprimé.", type: "success" });
+                } catch (err) {
+                    console.error(err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors de la suppression.", type: "error" });
+                }
+            }
+        });
+    };
+
+    const handleRefund = async (orderId) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Rembourser cet achat ?",
+            message: "Le montant sera recrédité au client. Cette action ne peut pas être annulée.",
+            type: "warning",
+            confirmColor: "#ff9900",
+            confirmText: "REMBOURSER",
+            onConfirm: async () => {
+                try {
+                    await axios.post(`${API_BASE_URL}/api/orders/refund/${orderId}`);
+                    fetchOrders();
+                    fetchUsers();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Remboursement effectué !", message: "Le montant a été recrédité au client.", type: "success" });
+                } catch (err) {
+                    console.error("Refund error:", err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Erreur", message: err.response?.data || "Erreur lors du remboursement.", type: "error" });
+                }
+            }
+        });
+    };
 
     const fetchSettings = async () => {
         try {
@@ -66,9 +151,10 @@ const Admin = () => {
         try {
             const res = await axios.put(`${API_BASE_URL}/api/settings`, settings);
             setSettings(res.data);
-            alert("Paramètres mis à jour avec succès !");
+            setAlertModal({ isOpen: true, title: "Succès !", message: "Les paramètres ont été mis à jour avec succès.", type: "success" });
         } catch (err) {
             console.error(err);
+            setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors de la mise à jour des paramètres.", type: "error" });
         }
     };
 
@@ -141,14 +227,26 @@ const Admin = () => {
     };
 
     const handleDeleteCategory = async (id) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
-            try {
-                await axios.delete(`${API_BASE_URL}/api/categories/${id}`);
-                fetchCategories();
-            } catch (err) {
-                console.error(err);
+        setConfirmModal({
+            isOpen: true,
+            title: "Supprimer cette catégorie ?",
+            message: "Tous les produits associés à cette catégorie seront affectés. Cette action est irréversible.",
+            type: "danger",
+            confirmColor: "#ff4757",
+            confirmText: "SUPPRIMER",
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`${API_BASE_URL}/api/categories/${id}`);
+                    fetchCategories();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Supprimé !", message: "La catégorie a été supprimée.", type: "success" });
+                } catch (err) {
+                    console.error(err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors de la suppression.", type: "error" });
+                }
             }
-        }
+        });
     };
 
     const fetchUsers = async () => {
@@ -167,14 +265,26 @@ const Admin = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
-            try {
-                await axios.delete(`${API_BASE_URL}/api/products/${id}`);
-                fetchProducts();
-            } catch (err) {
-                console.error(err);
+        setConfirmModal({
+            isOpen: true,
+            title: "Supprimer ce produit ?",
+            message: "Le produit et toutes ses clés seront définitivement supprimés. Cette action est irréversible.",
+            type: "danger",
+            confirmColor: "#ff4757",
+            confirmText: "SUPPRIMER",
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+                    fetchProducts();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Supprimé !", message: "Le produit a été supprimé.", type: "success" });
+                } catch (err) {
+                    console.error(err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors de la suppression.", type: "error" });
+                }
             }
-        }
+        });
     };
 
     const handleAddProduct = async (e) => {
@@ -224,8 +334,6 @@ const Admin = () => {
         }
     };
 
-
-
     const handleAddBalance = async () => {
         try {
             await axios.post(`${API_BASE_URL}/api/users/add-balance`, {
@@ -253,6 +361,34 @@ const Admin = () => {
         }
     };
 
+    const handleApproveUser = async (user) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Approuver ce compte ?",
+            message: `Un nouveau mot de passe sera généré et envoyé à ${user.email}.`,
+            type: "success",
+            confirmColor: "#2ed573",
+            confirmText: "APPROUVER & ENVOYER EMAIL",
+            onConfirm: async () => {
+                try {
+                    await axios.post(`${API_BASE_URL}/api/auth/approve-user/${user._id}`);
+                    fetchUsers();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Succès", message: "Utilisateur approuvé et email envoyé.", type: "success" });
+                } catch (err) {
+                    console.error("Approval error:", err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({
+                        isOpen: true,
+                        title: "Erreur",
+                        message: err.response?.data?.message || err.response?.data || "Erreur lors de l'approbation.",
+                        type: "error"
+                    });
+                }
+            }
+        });
+    };
+
     // Helper for stats
     const stats = {
         totalUsers: users.length,
@@ -260,7 +396,8 @@ const Admin = () => {
         totalKeys: products.reduce((acc, p) => acc + (p.keys?.length || 0), 0),
         availableKeys: products.reduce((acc, p) => acc + (p.keys?.filter(k => !k.isSold).length || 0), 0),
         outOfStock: products.filter(p => !p.keys || p.keys.filter(k => !k.isSold).length === 0).length,
-        pendingOrders: orders.filter(o => o.status === 'PENDING').length
+        pendingOrders: orders.filter(o => o.status === 'PENDING').length,
+        totalAvailableValue: products.reduce((acc, p) => acc + (p.price * (p.keys?.filter(k => !k.isSold).length || 0)), 0),
     };
 
     const SidebarItem = ({ id, label, icon: Icon }) => (
@@ -319,6 +456,19 @@ const Admin = () => {
         </div>
     );
 
+
+    /* ... */
+
+    /* ... Dashboard Header text logic ... */
+    /* activeTab === "ranks" ? "Système de Rangs" : activeTab === "demos" ? "Gestion des Demos" : ... */
+
+    /* ... Content View ... */
+    /* ... inside ternary ... */
+
+
+
+
+
     return (
         <div style={{ minHeight: '100vh', background: '#0a0b14', display: 'flex', color: '#fff' }}>
             {/* Sidebar */}
@@ -339,13 +489,16 @@ const Admin = () => {
                     <SidebarItem id="products" label="Gestion Produits" icon={FaBoxOpen} />
                     <SidebarItem id="categories" label="Gestion Catégories" icon={FaTag} />
                     <SidebarItem id="orders" label="Gestion Commandes" icon={FaShoppingBag} />
+                    <SidebarItem id="historique" label="Historique Ventes" icon={FaHistory} />
                     <SidebarItem id="users" label="Gestion Clients" icon={FaUsers} />
                     <SidebarItem id="ranks" label="Système de Rangs" icon={FaMedal} />
+                    <SidebarItem id="demos" label="Gestion Demos" icon={FaGift} />
                     <SidebarItem id="settings" label="Paramètres Généraux" icon={FaCog} />
+                    <SidebarItem id="home" label="Gestion Page Home" icon={FaHome} />
                 </div>
 
                 <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '800' }}>SERVEUR STATUS</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '800' }}>STATUT DU SERVEUR</div>
                     <div className="flex items-center gap-2">
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 10px var(--success)' }}></div>
                         <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>En Ligne</span>
@@ -363,14 +516,21 @@ const Admin = () => {
                             {activeTab === "products" ? "Inventaire des Produits" :
                                 activeTab === "categories" ? "Gestion des Catégories" :
                                     activeTab === "orders" ? "Gestion des Commandes" :
-                                        activeTab === "ranks" ? "Système de Rangs" : "Base de Données Clients"}
+                                        activeTab === "historique" ? "Historique des Ventes" :
+                                            activeTab === "ranks" ? "Système de Rangs" :
+                                                activeTab === "demos" ? "Gestion des Demos" :
+                                                    activeTab === "settings" ? "Paramètres Généraux" :
+                                                        activeTab === "home" ? "Gestion Page Home" : "Base de Données Clients"}
                         </h1>
                         <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>
                             {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
                                 activeTab === "categories" ? "Organisez vos produits par types et icônes." :
                                     activeTab === "orders" ? "Suivez et validez les achats en attente." :
-                                        activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
-                                            activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
+                                        activeTab === "historique" ? "Consultez toutes les transactions passées." :
+                                            activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
+                                                activeTab === "demos" ? "Gérez les comptes d'essai et démos." :
+                                                    activeTab === "settings" ? "Configurez les informations globales du site." :
+                                                        activeTab === "home" ? "Modifiez le contenu de la page d'accueil." : "Gérez les permissions et soldes de vos clients."}
                         </p>
                     </div>
                     {activeTab === "products" && (
@@ -410,11 +570,12 @@ const Admin = () => {
                 </div>
 
                 {/* Quick Stats */}
-                <div style={{ display: 'flex', gap: '24px', marginBottom: '40px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
                     <StatCard label="Total Produits" value={stats.totalProducts} icon={FaShoppingBag} color="255, 153, 0" />
-                    <StatCard label="Commandes PEND" value={stats.pendingOrders} icon={FaDolly} color="255, 71, 87" />
+                    <StatCard label="Commandes en attente" value={stats.pendingOrders} icon={FaDolly} color="255, 71, 87" />
                     <StatCard label="Stock Total" value={stats.totalKeys} icon={FaKey} color="46, 213, 115" />
-                    <StatCard label="Clients" value={stats.totalUsers} icon={FaUserFriends} color="0, 168, 255" />
+                    <StatCard label="Valeur Stock" value={`$${stats.totalAvailableValue.toFixed(2)}`} icon={FaWallet} color="10, 191, 255" />
+                    <StatCard label="Clients" value={stats.totalUsers} icon={FaUserFriends} color="162, 155, 254" />
                 </div>
 
                 {/* Content View */}
@@ -556,7 +717,7 @@ const Admin = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {orders.map((o) => (
+                                {orders.filter(o => o.status === 'PENDING').map((o) => (
                                     <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                         <td style={{ padding: '20px 24px' }}>
                                             <div style={{ color: '#fff', fontWeight: '800' }}>{o.userId?.username || 'N/A'}</div>
@@ -590,6 +751,55 @@ const Admin = () => {
                             </tbody>
                         </table>
                     </div>
+                ) : activeTab === "historique" ? (
+                    <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <tr>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Client</th>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Produit (Prix)</th>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Statut</th>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {orders.map((o) => (
+                                    <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                        <td style={{ padding: '20px 24px' }}>
+                                            <div style={{ color: '#fff', fontWeight: '800' }}>{o.userId?.username || 'N/A'}</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>{o.userId?.email || ''}</div>
+                                        </td>
+                                        <td style={{ padding: '20px 24px' }}>
+                                            <div style={{ color: '#fff', fontWeight: '700' }}>{o.productTitle}</div>
+                                            <div style={{ color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: '800' }}>${o.price.toFixed(2)}</div>
+                                        </td>
+                                        <td style={{ padding: '20px 24px' }}>
+                                            {o.status === 'COMPLETED' ? (
+                                                <span style={{ color: 'var(--success)', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(0, 210, 133, 0.1)', borderRadius: '6px' }}>COMPLÉTÉ</span>
+                                            ) : o.status === 'REFUNDED' ? (
+                                                <span style={{ color: 'var(--danger)', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(255, 71, 87, 0.1)', borderRadius: '6px' }}>REMBOURSÉ</span>
+                                            ) : (
+                                                <span style={{ color: '#ff9900', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(255, 153, 0, 0.1)', borderRadius: '6px' }}>EN ATTENTE</span>
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '20px 24px' }}>
+                                            {o.status !== 'REFUNDED' && (
+                                                <button
+                                                    onClick={() => handleRefund(o._id)}
+                                                    className="action-btn delete"
+                                                    title="Rembourser"
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '5px', width: 'auto', padding: '8px 15px', borderRadius: '10px' }}
+                                                >
+                                                    <FaWallet size={12} /> <span style={{ fontSize: '0.65rem', fontWeight: '800' }}>REMBOURSER</span>
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
                 ) : activeTab === "ranks" ? (
                     <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
@@ -630,6 +840,32 @@ const Admin = () => {
                                             onChange={(e) => {
                                                 const newRanks = [...settings.ranks];
                                                 newRanks[idx].minPurchases = parseInt(e.target.value);
+                                                setSettings({ ...settings, ranks: newRanks });
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="form-label" style={{ fontSize: '0.7rem' }}>Récompense Demo (Qté)</label>
+                                        <input
+                                            type="number"
+                                            className="admin-input"
+                                            value={rank.rewardDemoCount || 0}
+                                            onChange={(e) => {
+                                                const newRanks = [...settings.ranks];
+                                                newRanks[idx].rewardDemoCount = parseInt(e.target.value);
+                                                setSettings({ ...settings, ranks: newRanks });
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="form-label" style={{ fontSize: '0.7rem' }}>Récompense Demo (Qté)</label>
+                                        <input
+                                            type="number"
+                                            className="admin-input"
+                                            value={rank.rewardDemoCount || 0}
+                                            onChange={(e) => {
+                                                const newRanks = [...settings.ranks];
+                                                newRanks[idx].rewardDemoCount = parseInt(e.target.value);
                                                 setSettings({ ...settings, ranks: newRanks });
                                             }}
                                         />
@@ -695,10 +931,95 @@ const Admin = () => {
                             ENREGISTRER LES RANGS
                         </button>
                     </div>
+                ) : activeTab === "demos" ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff' }}>Ajouter Stock Demo</h3>
+                            <form onSubmit={handleAddDemo} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div className="flex flex-col gap-2">
+                                    <label className="form-label">Nom du Service (ex: IPTV Premium)</label>
+                                    <input className="admin-input" value={newDemo.serviceName} onChange={(e) => setNewDemo({ ...newDemo, serviceName: e.target.value })} required />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="form-label">Image URL (Produit)</label>
+                                    <input className="admin-input" value={newDemo.image} onChange={(e) => setNewDemo({ ...newDemo, image: e.target.value })} placeholder="https://..." />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="form-label">Description (Optionnel)</label>
+                                    <input className="admin-input" value={newDemo.description} onChange={(e) => setNewDemo({ ...newDemo, description: e.target.value })} />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="form-label">Comptes / Clés (Une par ligne)</label>
+                                    <textarea className="admin-input" style={{ height: '150px', fontFamily: 'monospace' }} value={newDemo.contentListText} onChange={(e) => setNewDemo({ ...newDemo, contentListText: e.target.value })} required placeholder="user:pass&#10;user2:pass2" />
+                                </div>
+                                <button type="submit" className="btn btn-primary" style={{ padding: '15px', borderRadius: '14px', background: 'var(--accent-color)', color: '#000', fontWeight: '900' }}>AJOUTER AU STOCK</button>
+                            </form>
+                        </div>
+
+                        <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff' }}>Stock Disponible ({demos.length})</h3>
+                            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                    <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                        <tr>
+                                            <th style={{ padding: '15px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>Service</th>
+                                            <th style={{ padding: '15px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>Contenu</th>
+                                            <th style={{ padding: '15px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>Statut</th>
+                                            <th style={{ padding: '15px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {demos.map(d => (
+                                            <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                <td style={{ padding: '15px', color: '#fff', fontWeight: '700' }}>{d.serviceName}</td>
+                                                <td style={{ padding: '15px', fontFamily: 'monospace', color: 'var(--accent-color)', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>{d.content}</td>
+                                                <td style={{ padding: '15px' }}>
+                                                    {d.isClaimed ? (
+                                                        <span style={{ color: 'var(--error)', fontWeight: 'bold' }}>
+                                                            {d.claimedBy?.username ? `Réclamé (${d.claimedBy.username})` : 'Réclamé'}
+                                                        </span>
+                                                    ) : <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>Disponible</span>}
+                                                </td>
+                                                <td style={{ padding: '15px' }}>
+                                                    <button onClick={() => handleDeleteDemo(d._id)} className="action-btn delete"><FaTrash size={12} /></button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 ) : activeTab === "settings" ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                         {settings && (
                             <form onSubmit={handleUpdateSettings}>
+                                {/* SMTP Settings */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
+                                    <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Configuration Email (SMTP)</h3>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="form-label">Email Expéditeur</label>
+                                            <input
+                                                className="admin-input"
+                                                type="email"
+                                                value={settings.smtpEmail || ""}
+                                                onChange={(e) => setSettings({ ...settings, smtpEmail: e.target.value })}
+                                                placeholder="ex: monemail@gmail.com"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="form-label">Mot de passe d'application</label>
+                                            <input
+                                                className="admin-input"
+                                                type="text"
+                                                value={settings.smtpPassword || ""}
+                                                onChange={(e) => setSettings({ ...settings, smtpPassword: e.target.value })}
+                                                placeholder="Clé secrète / App Password"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                                 {/* Pied de page (Footer) */}
                                 <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
                                     <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Pied de page (Footer)</h3>
@@ -880,6 +1201,261 @@ const Admin = () => {
                             </form>
                         )}
                     </div>
+                ) : activeTab === "home" ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        {settings && (
+                            <>
+                                {/* Carousel Manager */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff' }}>Carousel Principal</h3>
+                                        <button
+                                            onClick={() => {
+                                                const currentCarousel = settings.home?.carousel || [];
+                                                const newSlides = [...currentCarousel, { image: "", title: "", subtitle: "", color: "#ffffff", buttonText: "DÉCOUVRIR" }];
+                                                setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
+                                            }}
+                                            className="btn"
+                                            style={{ background: 'var(--accent-color)', color: '#fff', fontSize: '0.8rem', padding: '10px 20px', borderRadius: '12px', fontWeight: '800', boxShadow: '0 5px 15px rgba(255, 153, 0, 0.2)' }}
+                                        >
+                                            <FaPlus style={{ marginRight: '8px' }} /> AJOUTER SLIDE
+                                        </button>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        {(settings.home?.carousel || []).map((slide, idx) => (
+                                            <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 0.5fr 50px', gap: '15px', alignItems: 'center' }}>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="form-label">Image URL</label>
+                                                    <input
+                                                        className="admin-input"
+                                                        value={slide.image}
+                                                        onChange={(e) => {
+                                                            const newSlides = [...settings.home.carousel];
+                                                            newSlides[idx].image = e.target.value;
+                                                            setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="form-label">Titre</label>
+                                                    <input
+                                                        className="admin-input"
+                                                        value={slide.title}
+                                                        onChange={(e) => {
+                                                            const newSlides = [...settings.home.carousel];
+                                                            newSlides[idx].title = e.target.value;
+                                                            setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="form-label">Sous-titre</label>
+                                                    <input
+                                                        className="admin-input"
+                                                        value={slide.subtitle}
+                                                        onChange={(e) => {
+                                                            const newSlides = [...settings.home.carousel];
+                                                            newSlides[idx].subtitle = e.target.value;
+                                                            setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="form-label">Couleur</label>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="color"
+                                                            value={slide.color}
+                                                            onChange={(e) => {
+                                                                const newSlides = [...settings.home.carousel];
+                                                                newSlides[idx].color = e.target.value;
+                                                                setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
+                                                            }}
+                                                            style={{ width: '30px', height: '30px', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+                                                        />
+                                                        <input
+                                                            className="admin-input"
+                                                            value={slide.color}
+                                                            style={{ padding: '8px' }}
+                                                            onChange={(e) => {
+                                                                const newSlides = [...settings.home.carousel];
+                                                                newSlides[idx].color = e.target.value;
+                                                                setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        const newSlides = settings.home.carousel.filter((_, i) => i !== idx);
+                                                        setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
+                                                    }}
+                                                    className="action-btn delete"
+                                                >
+                                                    <FaTrash size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Stats Cards Manager */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff' }}>Cartes Statistiques (Gestion Cards)</h3>
+                                        <button
+                                            onClick={() => {
+                                                const currentCards = settings.home?.statsCards || [];
+                                                const newCards = [...currentCards, { title: "Nouveau", value: "0", icon: "FaShoppingCart", accent: "#0099ff", label: "INFO" }];
+                                                setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
+                                            }}
+                                            className="btn"
+                                            style={{ background: 'var(--success)', color: '#000', fontSize: '0.8rem', padding: '10px 20px', borderRadius: '12px', fontWeight: '800', boxShadow: '0 5px 15px rgba(46, 213, 115, 0.2)' }}
+                                        >
+                                            <FaPlus style={{ marginRight: '8px' }} /> AJOUTER CARTE
+                                        </button>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                                        {(settings.home?.statsCards || []).map((card, idx) => (
+                                            <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                                                <button
+                                                    onClick={() => {
+                                                        const newCards = settings.home.statsCards.filter((_, i) => i !== idx);
+                                                        setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
+                                                    }}
+                                                    className="action-btn delete"
+                                                    style={{ position: 'absolute', top: '15px', right: '15px', width: '30px', height: '30px' }}
+                                                >
+                                                    <FaTrash size={12} />
+                                                </button>
+
+                                                <div className="flex flex-col gap-3">
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="form-label">Titre</label>
+                                                        <input
+                                                            className="admin-input"
+                                                            value={card.title}
+                                                            onChange={(e) => {
+                                                                const newCards = [...settings.home.statsCards];
+                                                                newCards[idx].title = e.target.value;
+                                                                setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                                        <div className="flex flex-col gap-1">
+                                                            <label className="form-label">Valeur</label>
+                                                            <input
+                                                                className="admin-input"
+                                                                value={card.value}
+                                                                onChange={(e) => {
+                                                                    const newCards = [...settings.home.statsCards];
+                                                                    newCards[idx].value = e.target.value;
+                                                                    setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <label className="form-label">Badge</label>
+                                                            <input
+                                                                className="admin-input"
+                                                                value={card.label}
+                                                                onChange={(e) => {
+                                                                    const newCards = [...settings.home.statsCards];
+                                                                    newCards[idx].label = e.target.value;
+                                                                    setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                                        <div className="flex flex-col gap-1">
+                                                            <label className="form-label">Icône (Nom)</label>
+                                                            <input
+                                                                className="admin-input"
+                                                                placeholder="ex: FaUser"
+                                                                value={card.icon}
+                                                                onChange={(e) => {
+                                                                    const newCards = [...settings.home.statsCards];
+                                                                    newCards[idx].icon = e.target.value;
+                                                                    setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <label className="form-label">Couleur</label>
+                                                            <input
+                                                                type="color"
+                                                                value={card.accent}
+                                                                onChange={(e) => {
+                                                                    const newCards = [...settings.home.statsCards];
+                                                                    newCards[idx].accent = e.target.value;
+                                                                    setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
+                                                                }}
+                                                                style={{ width: '100%', height: '45px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', borderRadius: '10px' }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Best Sellers Manager */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff', marginBottom: '20px' }}>Sélection Meilleures Ventes</h3>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', marginBottom: '20px' }}>Cochez les produits à afficher en page d'accueil.</p>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
+                                        {products.map(p => (
+                                            <div key={p._id}
+                                                onClick={() => {
+                                                    const currentList = settings.home?.bestSellers || [];
+                                                    let newList;
+                                                    if (currentList.includes(p._id)) {
+                                                        newList = currentList.filter(id => id !== p._id);
+                                                    } else {
+                                                        newList = [...currentList, p._id];
+                                                    }
+                                                    setSettings({ ...settings, home: { ...settings.home, bestSellers: newList } });
+                                                }}
+                                                style={{
+                                                    padding: '15px',
+                                                    borderRadius: '16px',
+                                                    background: (settings.home?.bestSellers || []).includes(p._id) ? 'rgba(255, 153, 0, 0.15)' : 'rgba(255,255,255,0.03)',
+                                                    border: (settings.home?.bestSellers || []).includes(p._id) ? '1px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.05)',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '20px', height: '20px', borderRadius: '6px',
+                                                    border: '2px solid rgba(255,255,255,0.3)',
+                                                    background: (settings.home?.bestSellers || []).includes(p._id) ? 'var(--accent-color)' : 'transparent',
+                                                    borderColor: (settings.home?.bestSellers || []).includes(p._id) ? 'var(--accent-color)' : 'rgba(255,255,255,0.3)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    {(settings.home?.bestSellers || []).includes(p._id) && <FaCheck color="white" size={12} />}
+                                                </div>
+                                                <div style={{ overflow: 'hidden' }}>
+                                                    <div style={{ fontWeight: '800', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>${p.price}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button onClick={handleUpdateSettings} className="btn btn-primary" style={{ padding: '16px 40px', borderRadius: '16px', fontWeight: '900', fontSize: '1.1rem', marginTop: '20px', boxShadow: '0 10px 30px rgba(255, 87, 34, 0.4)' }}>
+                                    ENREGISTER LES CHANGEMENTS HOME
+                                </button>
+                            </>
+                        )}
+                    </div>
                 ) : (
                     <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -888,6 +1464,7 @@ const Admin = () => {
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Utilisateur</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Solde Actuel</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Rang / Achats</th>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Statut</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                 </tr>
                             </thead>
@@ -926,8 +1503,20 @@ const Admin = () => {
                                             })()}
                                         </td>
                                         <td style={{ padding: '20px 24px' }}>
+                                            {u.isApproved !== false ? (
+                                                <span style={{ color: 'var(--success)', fontSize: '0.75rem', fontWeight: '900', background: 'rgba(46, 213, 115, 0.1)', padding: '5px 10px', borderRadius: '8px' }}>APPROUVÉ</span>
+                                            ) : (
+                                                <span style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '900', background: 'rgba(255, 153, 0, 0.1)', padding: '5px 10px', borderRadius: '8px' }}>EN ATTENTE</span>
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '20px 24px' }}>
                                             <div className="flex gap-2">
                                                 <button onClick={() => setShowBalanceModal(u)} className="action-btn success" title="Ajouter Solde"><FaWallet size={18} /></button>
+                                                {u.isApproved === false && (
+                                                    <button onClick={() => handleApproveUser(u)} className="action-btn" title="Approuver le compte" style={{ background: 'rgba(46, 213, 115, 0.1)', color: '#2ed573' }}>
+                                                        <FaCheck size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -1201,7 +1790,7 @@ const Admin = () => {
 
                             <div className="flex gap-4 mt-8">
                                 <button onClick={handleAddBalance} className="btn btn-primary flex-1" style={{ borderRadius: '12px' }}>CONFIRMER</button>
-                                <button onClick={() => setShowBalanceModal(null)} className="btn" style={{ background: 'rgba(255,255,255,0.05)', flex: 1, borderRadius: '12px' }}>ANNULER</button>
+                                <button onClick={() => setShowBalanceModal(null)} className="btn" style={{ background: 'rgba(255,255,255,0.05)', flex: 1, borderRadius: '12px', color: '#fff' }}>ANNULER</button>
                             </div>
                         </div>
                     </div>
@@ -1344,12 +1933,32 @@ const Admin = () => {
 
                             <div className="flex gap-4 mt-8">
                                 <button onClick={handleFulfillOrder} className="btn btn-primary flex-1" style={{ borderRadius: '12px', background: 'var(--success)' }}>ENVOYER LE CODE</button>
-                                <button onClick={() => setShowFulfillModal(null)} className="btn" style={{ background: 'rgba(255,255,255,0.05)', flex: 1, borderRadius: '12px' }}>ANNULER</button>
+                                <button onClick={() => setShowFulfillModal(null)} className="btn" style={{ background: 'rgba(255,255,255,0.05)', flex: 1, borderRadius: '12px', color: '#fff' }}>ANNULER</button>
                             </div>
                         </div>
                     </div>
                 )
             }
+
+            {/* Modals */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                confirmText={confirmModal.confirmText}
+                confirmColor={confirmModal.confirmColor}
+            />
+
+            <AlertModal
+                isOpen={alertModal.isOpen}
+                onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+                title={alertModal.title}
+                message={alertModal.message}
+                type={alertModal.type}
+            />
         </div >
     );
 };

@@ -1,62 +1,78 @@
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { FaShoppingCart, FaUser, FaWallet } from "react-icons/fa";
-import { MdOndemandVideo } from "react-icons/md";
+import * as FaIcons from "react-icons/fa";
+import * as MdIcons from "react-icons/md";
+import { HiLightningBolt } from "react-icons/hi";
 
-const StatsCards = () => {
+const StatsCards = ({ statsCards = [] }) => {
     const { user } = useContext(AuthContext);
+    const [isSmall, setIsSmall] = useState(typeof window !== 'undefined' ? window.innerWidth <= 660 : false);
 
-    const cards = [
-        {
-            id: 1,
-            title: "Total Codes",
-            value: "2,245",
-            icon: <FaShoppingCart />,
-            accent: "#0099ff",
-            label: "ACHETÉS"
-        },
-        {
-            id: 2,
-            title: "Abos Actifs",
-            value: "16",
-            icon: <MdOndemandVideo />,
-            accent: "#ff4757",
-            label: "beIN Sports"
-        },
-        {
-            id: 3,
-            title: "Sur Demande",
-            value: "51",
-            icon: <FaUser />,
-            accent: "#00d285",
-            label: "REQUÊTES"
-        },
-        {
-            id: 4,
+    useEffect(() => {
+        const handleResize = () => {
+            setIsSmall(window.innerWidth <= 660);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Dynamic Icon Helpers
+    const getIcon = (iconName) => {
+        if (!iconName) return <FaIcons.FaShoppingCart />;
+        if (FaIcons[iconName]) {
+            const Icon = FaIcons[iconName];
+            return <Icon />;
+        }
+        if (MdIcons[iconName]) {
+            const Icon = MdIcons[iconName];
+            return <Icon />;
+        }
+        return <FaIcons.FaShoppingCart />;
+    };
+
+    // Balance Card (Always present if user is logged in, or configured?)
+    // Custom cards from DB
+    const displayCards = statsCards.map((c, idx) => ({
+        id: c._id || `custom-${idx}`,
+        title: c.title,
+        value: c.value,
+        icon: getIcon(c.icon),
+        accent: c.accent || "#0099ff",
+        label: c.label
+    }));
+
+    // Add Balance Card
+    if (user) {
+        displayCards.push({
+            id: 'balance-card',
             title: "Solde",
-            value: user ? `${(user.balance || 0).toFixed(2)}` : "0.00",
-            icon: <FaWallet />,
+            value: `${(user.balance || 0).toFixed(2)}`,
+            icon: <FaIcons.FaWallet />,
             accent: "#ff9900",
             label: "USD DISPONIBLE"
-        }
-    ];
+        });
+    }
 
     return (
-        <section className="container" style={{ marginTop: '-40px', position: 'relative', zIndex: 100 }}>
+        <section className="container" style={{
+            marginTop: isSmall ? '10px' : '-40px',
+            position: 'relative',
+            zIndex: 100
+        }}>
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '20px'
+                gridTemplateColumns: isSmall ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: isSmall ? '12px' : '20px'
             }}>
-                {cards.map(card => (
+                {displayCards.map(card => (
                     <div key={card.id} className="glass hover-lift" style={{
-                        borderRadius: '20px',
-                        padding: '24px',
+                        borderRadius: isSmall ? '16px' : '20px',
+                        padding: isSmall ? '16px' : '24px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '20px',
+                        gap: isSmall ? '12px' : '20px',
                         border: '1px solid rgba(255,255,255,0.05)',
-                        boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
                         overflow: 'hidden',
                         position: 'relative'
                     }}>
@@ -75,28 +91,28 @@ const StatsCards = () => {
 
                         <div className="flex justify-between items-center" style={{ position: 'relative', zIndex: 1 }}>
                             <div style={{
-                                width: '42px',
-                                height: '42px',
-                                borderRadius: '12px',
+                                width: isSmall ? '32px' : '42px',
+                                height: isSmall ? '32px' : '42px',
+                                borderRadius: isSmall ? '8px' : '12px',
                                 background: `${card.accent}15`,
                                 border: `1px solid ${card.accent}30`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: card.accent,
-                                fontSize: '1.2rem'
+                                fontSize: isSmall ? '1rem' : '1.2rem'
                             }}>
                                 {card.icon}
                             </div>
                             <div style={{
-                                fontSize: '0.65rem',
+                                fontSize: isSmall ? '0.55rem' : '0.65rem',
                                 fontWeight: '900',
                                 color: card.accent,
                                 background: `${card.accent}10`,
-                                padding: '4px 10px',
+                                padding: isSmall ? '2px 8px' : '4px 10px',
                                 borderRadius: '6px',
                                 textTransform: 'uppercase',
-                                letterSpacing: '1px',
+                                letterSpacing: '0.5px',
                                 border: `1px solid ${card.accent}20`
                             }}>
                                 {card.label}
@@ -105,24 +121,24 @@ const StatsCards = () => {
 
                         <div style={{ position: 'relative', zIndex: 1 }}>
                             <h4 style={{
-                                fontSize: '0.75rem',
+                                fontSize: isSmall ? '0.6rem' : '0.75rem',
                                 fontWeight: '700',
                                 color: 'var(--text-muted)',
-                                marginBottom: '6px',
+                                marginBottom: '4px',
                                 textTransform: 'uppercase',
-                                letterSpacing: '1px'
+                                letterSpacing: '0.5px'
                             }}>
                                 {card.title}
                             </h4>
                             <div style={{
-                                fontSize: '2.2rem',
+                                fontSize: isSmall ? '1.4rem' : '2.2rem',
                                 fontWeight: '900',
                                 color: '#fff',
                                 fontFamily: 'var(--font-main)',
-                                letterSpacing: '-1.5px',
+                                letterSpacing: isSmall ? '-0.5px' : '-1.5px',
                                 lineHeight: '1'
                             }}>
-                                {card.id === 4 && <span style={{ fontSize: '1.2rem', verticalAlign: 'middle', marginRight: '4px', opacity: 0.7 }}>$</span>}
+                                {card.id === 4 && <span style={{ fontSize: isSmall ? '0.9rem' : '1.2rem', verticalAlign: 'middle', marginRight: '4px', opacity: 0.7 }}>$</span>}
                                 {card.value}
                             </div>
                         </div>

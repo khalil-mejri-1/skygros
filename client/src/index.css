@@ -70,6 +70,31 @@ body {
   background: var(--text-muted);
 }
 
+/* Hide Scrollbar (for horizontal scroll elements) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Horizontal Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 10px;
+}
+
 a {
   text-decoration: none;
   color: inherit;
@@ -84,6 +109,18 @@ ul {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 12px;
+  }
 }
 
 /* Layout Utilities */
@@ -215,6 +252,13 @@ ul {
   letter-spacing: 0.5px;
 }
 
+@media (max-width: 660px) {
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+}
+
 .btn-primary {
   background: var(--accent-color);
   color: #000;
@@ -284,6 +328,20 @@ ul {
   letter-spacing: -0.02em;
   position: relative;
   display: inline-block;
+}
+
+@media (max-width: 930px) {
+  .section-title {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 660px) {
+  .section-title {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 .section-title::after {

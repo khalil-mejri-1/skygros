@@ -12,7 +12,7 @@ import {
     ResponsiveContainer,
     Cell
 } from 'recharts';
-import { FaUser, FaEnvelope, FaWallet, FaCalendarAlt, FaChartBar, FaFilter, FaClock, FaMedal, FaTrophy, FaStar } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaWallet, FaCalendarAlt, FaChartBar, FaFilter, FaClock, FaMedal, FaTrophy, FaStar, FaGift } from 'react-icons/fa';
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -40,11 +40,25 @@ const Profile = () => {
     const [loading, setLoading] = useState(true);
     const [rankSettings, setRankSettings] = useState([]);
     const [timeFilter, setTimeFilter] = useState('month'); // 'month', 'day', 'hour'
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1000);
+    const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth <= 480);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 1000);
+            setIsSmallMobile(window.innerWidth <= 480);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const fetchUserData = async () => {
             if (!user?._id) return;
             try {
+                // Check rewards first
+                await axios.post(`${API_BASE_URL}/api/users/check-rank-rewards`, { userId: user._id });
+                // Then fetch updated user data
                 const res = await axios.get(`${API_BASE_URL}/api/users/${user._id}`);
                 dispatch({ type: "UPDATE_USER", payload: res.data });
             } catch (err) {
@@ -157,7 +171,77 @@ const Profile = () => {
 
     }, [orders, timeFilter]);
 
-    if (loading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>Chargement...</div>;
+    const Skeleton = ({ height, width, style, borderRadius = '20px' }) => (
+        <div style={{
+            width: width || '100%',
+            height,
+            background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%)',
+            backgroundSize: '200% 100%',
+            borderRadius,
+            animation: 'skeletonLoading 1.5s infinite',
+            ...style
+        }}>
+            <style>{`
+            @keyframes skeletonLoading {
+                0% { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+            }
+        `}</style>
+        </div>
+    );
+
+    if (loading) {
+        return (
+            <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', padding: '60px 0' }}>
+                <div className="container">
+                    {/* Title Skeleton */}
+                    <div style={{ marginBottom: '40px', display: 'flex', gap: '10px' }}>
+                        <Skeleton width="150px" height="40px" />
+                        <Skeleton width="100px" height="40px" />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr', gap: '30px' }}>
+
+                        {/* User Card Skeleton */}
+                        <div className="glass" style={{ padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '25px', height: '600px' }}>
+                            {/* Avatar */}
+                            <div style={{ margin: '0 auto' }}>
+                                <Skeleton width="100px" height="100px" borderRadius="50%" />
+                            </div>
+
+                            {/* Name & Email */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                                <Skeleton width="180px" height="30px" />
+                                <Skeleton width="120px" height="20px" borderRadius="10px" />
+                            </div>
+
+                            {/* Balance */}
+                            <Skeleton height="100px" width="100%" />
+
+                            {/* Rank */}
+                            <Skeleton height="200px" width="100%" style={{ marginTop: 'auto' }} />
+                        </div>
+
+                        {/* Chart Card Skeleton */}
+                        <div className="glass" style={{ padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '30px', height: '500px' }}>
+                            {/* Header */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Skeleton width="200px" height="30px" />
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <Skeleton width="60px" height="30px" borderRadius="8px" />
+                                    <Skeleton width="60px" height="30px" borderRadius="8px" />
+                                    <Skeleton width="60px" height="30px" borderRadius="8px" />
+                                </div>
+                            </div>
+
+                            {/* Chart Area */}
+                            <Skeleton height="100%" width="100%" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const COLORS = ['#ff9f43', '#00d2d3', '#5f27cd', '#ff6b6b', '#2e86de'];
 
@@ -168,7 +252,7 @@ const Profile = () => {
                     Mon <span style={{ color: 'var(--accent-color)' }}>Profil</span>
                 </h1>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '30px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr', gap: '30px' }}>
 
                     {/* User Info Card */}
                     <div className="glass" style={{ padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '25px' }}>
@@ -187,20 +271,31 @@ const Profile = () => {
                         </div>
 
                         <div style={{ textAlign: 'center' }}>
-                            <h2 style={{ color: '#fff', fontWeight: '900', fontSize: '1.8rem', marginBottom: '5px' }}>{user?.username || 'Utilisateur'}</h2>
+                            <h2 style={{ color: '#fff', fontWeight: '900', fontSize: isSmallMobile ? '1.5rem' : '1.8rem', marginBottom: '5px' }}>{user?.username || 'Utilisateur'}</h2>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '5px 15px', borderRadius: '20px' }}>
                                 <FaEnvelope size={12} style={{ color: 'var(--text-muted)' }} />
                                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{user?.email}</span>
                             </div>
                         </div>
 
-                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '20px' }}>
-                            <div className="flex justify-between items-center mb-1">
-                                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Solde Actuel</span>
-                                <FaWallet style={{ color: 'var(--accent-color)' }} />
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                            <div>
+                                <div className="flex justify-between items-center mb-1">
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Solde Actuel</span>
+                                    <FaWallet style={{ color: 'var(--accent-color)' }} />
+                                </div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#fff' }}>
+                                    ${Number(user?.balance || 0).toFixed(2)}
+                                </div>
                             </div>
-                            <div style={{ fontSize: '2rem', fontWeight: '900', color: '#fff' }}>
-                                ${Number(user?.balance || 0).toFixed(2)}
+                            <div style={{ paddingLeft: '15px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                                <div className="flex justify-between items-center mb-1">
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Solde Demo</span>
+                                    <FaGift style={{ color: 'var(--warning)' }} />
+                                </div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#fff' }}>
+                                    {user?.demoBalance || 0}
+                                </div>
                             </div>
                         </div>
 
@@ -320,9 +415,13 @@ const Profile = () => {
                     `}</style>
 
                     {/* Stats Chart Section */}
-                    <div className="glass" style={{ padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div className="flex justify-between items-center mb-8">
-                            <h3 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div className="glass" style={{
+                        padding: isSmallMobile ? '12px' : '30px',
+                        borderRadius: '30px',
+                        border: '1px solid rgba(255,255,255,0.05)'
+                    }}>
+                        <div className="flex justify-between items-center mb-8" style={{ flexDirection: isSmallMobile ? 'column' : 'row', gap: isSmallMobile ? '15px' : '0', alignItems: isSmallMobile ? 'flex-start' : 'center' }}>
+                            <h3 style={{ color: '#fff', fontSize: isSmallMobile ? '1.2rem' : '1.4rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <FaChartBar style={{ color: 'var(--accent-color)' }} />
                                 Statistiques d'Achats
                             </h3>
@@ -359,7 +458,7 @@ const Profile = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                     data={chartData}
-                                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                    margin={{ top: 20, right: isSmallMobile ? 5 : 30, left: isSmallMobile ? 0 : 20, bottom: 5 }}
                                 >
                                     <defs>
                                         <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
@@ -378,10 +477,11 @@ const Profile = () => {
                                     />
                                     <YAxis
                                         stroke="var(--text-muted)"
-                                        tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                                        tick={{ fill: 'var(--text-muted)', fontSize: isSmallMobile ? 10 : 12 }}
                                         axisLine={false}
                                         tickLine={false}
                                         tickFormatter={(value) => `$${value}`}
+                                        width={isSmallMobile ? 40 : 60}
                                     />
                                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                                     <Bar

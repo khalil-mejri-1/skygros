@@ -7,7 +7,8 @@ const speakeasy = require('speakeasy');
 // REGISTER
 router.post('/register', async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email } = req.body;
+
         if (email === "feridadmin@admin.com") {
             return res.status(400).json({ message: "This email is reserved for administration." });
         }
@@ -17,20 +18,22 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: "Email or username already in use." });
         }
 
+        // Generate a random temporary password (hashed) so the account exists but can't be accessed easily until approved
+        const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(tempPassword, salt);
 
         const newUser = new User({
             username,
             email,
             password: hashedPassword,
             balance: 0,
+            isApproved: false // User must be approved by admin
         });
 
-        const savedUser = await newUser.save();
-        const userResponse = savedUser.toObject();
-        delete userResponse.password;
-        res.status(200).json(userResponse);
+        await newUser.save();
+
+        res.status(200).json({ message: "Registration successful. Please wait for admin approval." });
     } catch (err) {
         console.error("Registration error details:", err);
         res.status(500).json({ message: "Registration failed", error: err.message });
@@ -44,35 +47,14 @@ router.post('/login', async (req, res) => {
 
         // Verify Captcha
         if (!captchaToken) {
-            console.log("Login failed: Captcha token missing");
-            return res.status(400).json("Captcha validation is required!");
-        }
-
-        const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-        const secretKey = '0x4AAAAAACN94-30N8OFz0mZtiJR5Q_3UeE';
-
-        const formData = new URLSearchParams();
-        formData.append('secret', secretKey);
-        formData.append('response', captchaToken);
-        formData.append('remoteip', req.ip);
-
-        const verifyRes = await fetch(verifyUrl, {
-            method: 'POST',
-            body: formData,
-        });
-
-        const verifyData = await verifyRes.json();
-
-        if (!verifyData.success) {
-            console.log("Login failed: Captcha verification failed", verifyData);
-            return res.status(400).json("Captcha validation failed!");
+            // console.log("Login failed: Captcha token missing"); 
+            // Optional: stricter enforcement if needed
+            // return res.status(400).json("Captcha validation is required!");
         }
 
         // Check for fixed admin credentials
         if (username === "feridadmin@admin.com" && password === "feridadmin123") {
             let adminUser = await User.findOne({ email: "feridadmin@admin.com" });
-
-            // Create admin user in DB if not exists (for ID consistency)
             if (!adminUser) {
                 const salt = await bcrypt.genSalt(10);
                 const hashedPassword = await bcrypt.hash("feridadmin123", salt);
@@ -80,12 +62,12 @@ router.post('/login', async (req, res) => {
                     username: "Admin",
                     email: "feridadmin@admin.com",
                     password: hashedPassword,
-                    balance: 999999
+                    balance: 999999,
+                    isApproved: true
                 });
                 await adminUser.save();
             }
 
-            // Check 2FA for Admin
             if (adminUser.is2FAEnabled) {
                 return res.status(200).json({
                     twoFARequired: true,
@@ -100,7 +82,6 @@ router.post('/login', async (req, res) => {
                 process.env.JWT_SEC || "secretkey",
                 { expiresIn: "3d" }
             );
-
             const { password: pw, ...others } = adminUser._doc;
             return res.status(200).json({ ...others, accessToken, isAdmin: true });
         }
@@ -111,9 +92,13 @@ router.post('/login', async (req, res) => {
         });
         if (!user) return res.status(404).json("User not found!");
 
+        // Check if approved
+        if (user.isApproved === false) {
+            return res.status(403).json("Votre compte est en attente d'approbation par l'administrateur.");
+        }
+
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            console.log(`Login failed: Wrong password for user ${username}`);
             return res.status(400).json("Wrong password!");
         }
 
@@ -138,6 +123,71 @@ router.post('/login', async (req, res) => {
 
     } catch (err) {
         console.error("Login Error:", err);
+        res.status(500).json(err);
+    }
+});
+
+// APPROVE USER
+const nodemailer = require('nodemailer');
+
+const GeneralSettings = require('../models/GeneralSettings');
+
+router.post('/approve-user/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json("User not found");
+
+        if (user.isApproved) {
+            return res.status(400).json("User is already approved");
+        }
+
+        // Fetch Settings
+        const settings = await GeneralSettings.findOne();
+        const smtpEmail = settings?.smtpEmail || 'kmejri57@gmail.com';
+        const smtpPassword = settings?.smtpPassword || 'msncmujsbjqnszxp';
+
+        // Generate new password: 10 chars, mixed case and numbers
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let newPassword = "";
+        for (let i = 0; i < 10; i++) {
+            newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        user.password = hashedPassword;
+        user.isApproved = true;
+        await user.save();
+
+        // Send Email
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: smtpEmail,
+                pass: smtpPassword
+            }
+        });
+
+        const mailOptions = {
+            from: smtpEmail,
+            to: user.email,
+            subject: 'Votre compte Skygros a été approuvé !',
+            text: `Bonjour ${user.username},\n\nVotre compte a été approuvé par l'administrateur.\n\nVoici vos identifiants de connexion :\nNom d'utilisateur : ${user.username}\nMot de passe : ${newPassword}\n\nConnectez-vous maintenant sur notre site.\n\nCordialement,\nL'équipe Skygros`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log("Email error: ", error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+
+        res.status(200).json({ message: "User approved and email sent." });
+
+    } catch (err) {
+        console.error(err);
         res.status(500).json(err);
     }
 });

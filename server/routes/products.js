@@ -105,12 +105,12 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// PURCHASE PRODUCT
+// PURCHASE PRODUCT (ATOMIC)
 router.post('/purchase', async (req, res) => {
     const { userId, productId } = req.body;
     try {
         const user = await User.findById(userId);
-        const product = await Product.findById(productId);
+        let product = await Product.findById(productId);
 
         if (!user || !product) {
             return res.status(404).json({ message: "Utilisateur ou Produit non trouvé" });
@@ -120,27 +120,38 @@ router.post('/purchase', async (req, res) => {
             return res.status(400).json({ message: "Solde insuffisant" });
         }
 
-        // Deduct balance
-        user.balance -= product.price;
-        await user.save();
-
-        // Find available key
-        const availableKeyIndex = product.keys.findIndex(k => !k.isSold);
+        // Attempt Atomic Purchase
+        const now = new Date();
+        const updatedProduct = await Product.findOneAndUpdate(
+            { _id: productId, "keys.isSold": false },
+            {
+                $set: {
+                    "keys.$.isSold": true,
+                    "keys.$.soldTo": userId,
+                    "keys.$.soldAt": now
+                }
+            },
+            { new: true }
+        );
 
         let licenseKey = "PENDING";
-        if (availableKeyIndex !== -1) {
-            const selectedKey = product.keys[availableKeyIndex];
-            selectedKey.isSold = true;
-            selectedKey.soldTo = userId;
-            selectedKey.soldAt = new Date();
-            licenseKey = selectedKey.key;
-            await product.save();
+
+        // Logic: If updatedProduct exists, we successfully claimed a key.
+        if (updatedProduct) {
+            // Find the key we just claimed. 
+            // We look for key sold to this user at this exact time (or reasonably close)
+            const claimedKey = updatedProduct.keys.find(k => k.soldTo && k.soldTo.toString() === userId && new Date(k.soldAt).getTime() === now.getTime());
+            if (claimedKey) {
+                licenseKey = claimedKey.key;
+            }
         }
 
+        // Deduct balance
+        user.balance -= product.price;
         if (licenseKey !== "PENDING") {
             user.purchaseCount += 1;
-            await user.save();
         }
+        await user.save();
 
         res.status(200).json({
             message: licenseKey === "PENDING" ? "Commande reçue (Stock épuisé)" : "Achat réussi",
@@ -163,6 +174,7 @@ router.post('/purchase', async (req, res) => {
         await newOrder.save();
 
     } catch (err) {
+        console.error(err);
         res.status(500).json(err);
     }
 });

@@ -73,7 +73,7 @@ const TwoFAVerify = () => {
                     <FaShieldAlt size={35} />
                 </div>
 
-                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#fff', marginBottom: '10px' }}>Verification 2FA</h2>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#fff', marginBottom: '10px' }}>Vérification 2FA</h2>
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', marginBottom: '32px', lineHeight: '1.6' }}>
                     Entrez le code de 6 chiffres généré par votre application Authenticator.
                 </p>
@@ -135,7 +135,7 @@ const TwoFAVerify = () => {
                             cursor: (loading || token.length < 6) ? 'not-allowed' : 'pointer'
                         }}
                     >
-                        {loading ? "VERIFICATION..." : "VALIDER LE CODE"}
+                        {loading ? "VÉRIFICATION..." : "VALIDER LE CODE"}
                     </button>
                 </form>
 

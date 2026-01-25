@@ -8,7 +8,7 @@ const OrderSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     quantity: { type: Number, default: 1 },
     licenseKey: { type: String, default: 'PENDING' },
-    status: { type: String, enum: ['PENDING', 'COMPLETED'], default: 'PENDING' },
+    status: { type: String, enum: ['PENDING', 'COMPLETED', 'REFUNDED'], default: 'PENDING' },
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

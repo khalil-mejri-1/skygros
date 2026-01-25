@@ -7,6 +7,8 @@ const UserSchema = new mongoose.Schema({
 
     balance: { type: Number, default: 0 },
     purchaseCount: { type: Number, default: 0 },
+    demoBalance: { type: Number, default: 0 },
+    claimedRankRewards: [{ type: String }], // Stores IDs or Names of ranks reward was claimed for
     avatar: { type: String, default: '' },
 
     // ===== 2FA =====
@@ -18,6 +20,11 @@ const UserSchema = new mongoose.Schema({
     twoFASecret: {
         type: String,
         default: null
+    },
+
+    isApproved: {
+        type: Boolean,
+        default: false
     }
 
 }, { timestamps: true });

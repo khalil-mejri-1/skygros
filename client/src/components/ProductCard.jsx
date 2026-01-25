@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 
 import API_BASE_URL from "../config/api";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import { AuthContext } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
 import { FaShoppingCart, FaWindows, FaXbox, FaPlaystation, FaCheck, FaPlus } from "react-icons/fa";
 import LicenseKeyModal from "./LicenseKeyModal";
+import AlertModal from "./AlertModal";
 import axios from "axios";
 
 const ProductCard = ({ product }) => {
@@ -16,17 +17,36 @@ const ProductCard = ({ product }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [showKeyModal, setShowKeyModal] = useState(false);
     const [lastPurchasedKey, setLastPurchasedKey] = useState("");
+    const [isSmall, setIsSmall] = useState(window.innerWidth <= 660);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const handleResize = () => setIsSmall(window.innerWidth <= 660);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "success" });
 
     const handleBuy = async (e) => {
         if (e) e.stopPropagation();
 
         if (!user) {
-            alert("Veuillez vous connecter pour acheter !");
+            setAlertModal({
+                isOpen: true,
+                title: "Connexion Requise",
+                message: "Veuillez vous connecter pour acheter !",
+                type: "info"
+            });
             return;
         }
         if (user.balance < product.price) {
-            alert("Solde insuffisant !");
+            setAlertModal({
+                isOpen: true,
+                title: "Solde Insuffisant",
+                message: "Votre solde est insuffisant pour cet achat.",
+                type: "error"
+            });
             return;
         }
 
@@ -52,7 +72,12 @@ const ProductCard = ({ product }) => {
                 setTimeout(() => setIsPurchased(false), 5000);
             }
         } catch (err) {
-            alert(err.response?.data?.message || "Erreur lors de l'achat");
+            setAlertModal({
+                isOpen: true,
+                title: "Erreur d'Achat",
+                message: err.response?.data?.message || "Erreur lors de l'achat",
+                type: "error"
+            });
         } finally {
             setIsLoading(false);
         }
@@ -89,11 +114,19 @@ const ProductCard = ({ product }) => {
                 licenseKey={lastPurchasedKey}
             />
 
+            <AlertModal
+                isOpen={alertModal.isOpen}
+                onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+                title={alertModal.title}
+                message={alertModal.message}
+                type={alertModal.type}
+            />
+
             {/* Image Container */}
             <div style={{
                 position: 'relative',
                 overflow: 'hidden',
-                aspectRatio: '2/3',
+                aspectRatio: '1/1',
                 background: '#000'
             }}>
                 <img
@@ -111,13 +144,13 @@ const ProductCard = ({ product }) => {
                 {(product.hasDiscount || discountPercentage > 0) && (
                     <div style={{
                         position: 'absolute',
-                        top: '12px',
-                        left: '12px',
+                        top: isSmall ? '8px' : '12px',
+                        left: isSmall ? '8px' : '12px',
                         background: 'var(--accent-color)',
                         color: '#000',
-                        fontSize: '0.75rem',
+                        fontSize: isSmall ? '0.65rem' : '0.75rem',
                         fontWeight: '900',
-                        padding: '4px 10px',
+                        padding: isSmall ? '2px 8px' : '4px 10px',
                         borderRadius: '4px',
                         zIndex: 2,
                         boxShadow: '0 4px 10px rgba(255, 153, 0, 0.3)'
@@ -135,9 +168,9 @@ const ProductCard = ({ product }) => {
             </div>
 
             {/* Details Section */}
-            <div style={{ padding: '16px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: isSmall ? '12px' : '16px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                 <h3 style={{
-                    fontSize: '0.95rem',
+                    fontSize: isSmall ? '0.85rem' : '0.95rem',
                     fontWeight: '700',
                     color: '#fff',
                     marginBottom: '10px',
@@ -147,19 +180,19 @@ const ProductCard = ({ product }) => {
                     WebkitLineClamp: '2',
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
-                    height: '2.6em'
+                    height: isSmall ? '2.4em' : '2.6em'
                 }}>
                     {product.title}
                 </h3>
 
-                <div className="flex justify-between items-center" style={{ marginBottom: '16px' }}>
+                <div className="flex justify-between items-center" style={{ marginBottom: isSmall ? '10px' : '16px' }}>
                     <div className="flex flex-col">
                         {product.oldPrice > 0 && (
-                            <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: '0.7rem', marginBottom: '-2px' }}>
+                            <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: isSmall ? '0.6rem' : '0.7rem', marginBottom: '-2px' }}>
                                 ${product.oldPrice.toFixed(2)}
                             </span>
                         )}
-                        <span style={{ color: 'var(--accent-color)', fontWeight: '900', fontSize: '1.1rem' }}>
+                        <span style={{ color: 'var(--accent-color)', fontWeight: '900', fontSize: isSmall ? '0.95rem' : '1.1rem' }}>
                             ${product.price ? product.price.toFixed(2) : "0.00"}
                         </span>
                     </div>
@@ -171,7 +204,7 @@ const ProductCard = ({ product }) => {
                 </div>
 
                 {/* Action Buttons Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isSmall ? '1fr 45px' : '1fr 60px', gap: '8px' }}>
                     <button
                         onClick={(e) => { e.stopPropagation(); if (!isPurchased) handleBuy(); }}
                         className="btn"
@@ -180,14 +213,14 @@ const ProductCard = ({ product }) => {
                             background: isPurchased ? 'var(--success)' : 'rgba(255, 153, 0, 0.15)',
                             border: '1px solid rgba(255, 153, 0, 0.3)',
                             color: isPurchased ? '#000' : 'var(--accent-color)',
-                            padding: '10px',
-                            fontSize: '0.75rem',
+                            padding: isSmall ? '8px' : '10px',
+                            fontSize: isSmall ? '0.65rem' : '0.75rem',
                             fontWeight: '900',
                             borderRadius: '10px',
                             textTransform: 'uppercase'
                         }}
                     >
-                        {isLoading ? "Chargement..." :
+                        {isLoading ? (isSmall ? "..." : "Chargement...") :
                             (isPurchased ? <FaCheck /> :
                                 (product.keys?.filter(k => !k.isSold).length > 0 ? "ACHETER" : "COMMANDER"))}
                     </button>
@@ -199,7 +232,7 @@ const ProductCard = ({ product }) => {
                             background: isAdded ? 'var(--success)' : 'rgba(255,255,255,0.05)',
                             border: '1px solid rgba(255,255,255,0.1)',
                             color: isAdded ? '#000' : '#fff',
-                            padding: '10px',
+                            padding: isSmall ? '8px' : '10px',
                             borderRadius: '10px',
                             display: 'flex',
                             alignItems: 'center',
@@ -221,7 +254,7 @@ const ProductCard = ({ product }) => {
                     border-color: rgba(255, 153, 0, 0.4);
                 }
             `}</style>
-        </div>
+        </div >
     );
 };
 

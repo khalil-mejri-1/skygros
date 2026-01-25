@@ -116,4 +116,56 @@ router.post('/2fa/disable', async (req, res) => {
     }
 });
 
+// CHECK & CLAIM RANK REWARDS
+router.post('/check-rank-rewards', async (req, res) => {
+    const { userId } = req.body;
+    try {
+        const user = await User.findById(userId);
+        const GeneralSettings = require('../models/GeneralSettings'); // Lazy load
+        const settings = await GeneralSettings.findOne();
+
+        if (!user || !settings || !settings.ranks) return res.status(200).json({ message: "No action" });
+
+        const count = user.purchaseCount || 0;
+        let totalReward = 0;
+        let newClaims = [];
+
+        // Check if user qualifies for any rank reward they haven't claimed
+        settings.ranks.forEach(rank => {
+            // If user has enough purchases for this rank
+            if (count >= rank.minPurchases) {
+                // Check if already claimed
+                // We use rank.name as ID. Ideally should use _id if stable, but name works if unique.
+                const rankId = rank.name;
+
+                if (!user.claimedRankRewards.includes(rankId)) {
+                    // Award!
+                    if (rank.rewardDemoCount > 0) {
+                        totalReward += rank.rewardDemoCount;
+                        newClaims.push(rankId);
+                    }
+                }
+            }
+        });
+
+        if (totalReward > 0) {
+            user.demoBalance += totalReward;
+            user.claimedRankRewards = [...user.claimedRankRewards, ...newClaims];
+            await user.save();
+            return res.status(200).json({
+                message: "Rewarded",
+                rewardAmount: totalReward,
+                newBalance: user.demoBalance,
+                newClaims
+            });
+        }
+
+        res.status(200).json({ message: "No new rewards" });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json(err);
+    }
+});
+
 module.exports = router;

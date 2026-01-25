@@ -16,6 +16,8 @@ import Admin from "./pages/Admin.jsx";
 import GlobalNotifications from "./components/GlobalNotifications.jsx";
 import TwoFAVerify from "./pages/TwoFAVerify.jsx";
 import TwoFASetup from "./pages/TwoFASetup.jsx";
+import Demos from "./pages/Demos.jsx";
+import TwoFAEnforcer from "./components/TwoFAEnforcer.jsx";
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -23,6 +25,7 @@ function App() {
   return (
     <BrowserRouter>
       <GlobalNotifications />
+      <TwoFAEnforcer />
       <Navbar />
       <Routes>
         <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
@@ -31,6 +34,7 @@ function App() {
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/panier" element={<Panier />} />
         <Route path="/historique" element={<Historique />} />
+        <Route path="/demos" element={user ? <Demos /> : <Navigate to="/login" />} />
         <Route path="/2fa-setup" element={user ? <TwoFASetup /> : <Navigate to="/login" />} />
         <Route path="/2fa-verify" element={<TwoFAVerify />} />
         <Route path="/admin" element={user?.isAdmin ? <Admin /> : <Navigate to="/" />} />

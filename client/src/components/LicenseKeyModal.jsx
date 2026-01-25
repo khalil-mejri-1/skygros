@@ -131,7 +131,7 @@ const LicenseKeyModal = ({ isOpen, onClose, productTitle, licenseKey }) => {
                 </div>
 
                 <div style={{ marginTop: '25px', fontSize: '0.9rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '10px' }}>
-                    💡 Tip: {isPending ? "Vérifiez votre page" : "Consultable dans votre"} <Link to="/historique" onClick={onClose} style={{ color: 'var(--accent-color)', fontWeight: 'bold', textDecoration: 'none' }}>Historique</Link> {isPending ? "à tout moment." : "."}
+                    💡 Conseil : {isPending ? "Vérifiez votre page" : "Consultable dans votre"} <Link to="/historique" onClick={onClose} style={{ color: 'var(--accent-color)', fontWeight: 'bold', textDecoration: 'none' }}>Historique</Link> {isPending ? "à tout moment." : "."}
                 </div>
 
                 <style>{`

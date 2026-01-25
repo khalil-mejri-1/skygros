@@ -16,7 +16,18 @@ const TwoFASetup = () => {
     const [error, setError] = useState("");
     const [showDisableModal, setShowDisableModal] = useState(false);
     const [disableToken, setDisableToken] = useState("");
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth <= 480);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+            setIsSmallMobile(window.innerWidth <= 480);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         if (!user) navigate("/login");
@@ -85,7 +96,7 @@ const TwoFASetup = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            padding: '120px 20px 60px',
+            padding: isMobile ? '80px 15px 40px' : '120px 20px 60px',
             background: '#0a0b14',
             display: 'flex',
             justifyContent: 'center'
@@ -93,23 +104,24 @@ const TwoFASetup = () => {
             <div className="glass" style={{
                 width: '100%',
                 maxWidth: '600px',
-                padding: '50px',
-                borderRadius: '32px',
+                padding: isSmallMobile ? '30px 20px' : isMobile ? '40px' : '50px',
+                borderRadius: isMobile ? '24px' : '32px',
                 border: '1px solid rgba(255,153,0,0.1)',
                 height: 'fit-content'
             }}>
-                <div className="flex items-center gap-4 mb-10">
+                <div className="flex items-center gap-4 mb-8" style={{ gap: isSmallMobile ? '12px' : '16px' }}>
                     <div style={{
-                        width: '60px', height: '60px', borderRadius: '18px',
+                        width: isSmallMobile ? '50px' : '60px', height: isSmallMobile ? '50px' : '60px', borderRadius: isSmallMobile ? '14px' : '18px',
                         background: 'rgba(255, 153, 0, 0.1)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: 'var(--accent-color)'
+                        color: 'var(--accent-color)',
+                        flexShrink: 0
                     }}>
-                        <FaShieldAlt size={28} />
+                        <FaShieldAlt size={isSmallMobile ? 22 : 28} />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#fff' }}>Sécurité Compte</h1>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Double Authentification (2FA)</p>
+                        <h1 style={{ fontSize: isSmallMobile ? '1.4rem' : '1.8rem', fontWeight: '900', color: '#fff' }}>Sécurité Compte</h1>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600', fontSize: isSmallMobile ? '0.8rem' : '1rem' }}>Double Authentification (2FA)</p>
                     </div>
                 </div>
 
@@ -138,12 +150,12 @@ const TwoFASetup = () => {
                     <>
                         {step === 1 && (
                             <div>
-                                <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: '1.8', marginBottom: '30px' }}>
+                                <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: '1.8', marginBottom: '30px', fontSize: isSmallMobile ? '0.9rem' : '1rem' }}>
                                     L'authentification à deux facteurs ajoute une couche de sécurité supplémentaire à votre compte.
                                     En plus de votre mot de passe, vous devrez fournir un code généré par une application comme
                                     <strong> Google Authenticator</strong> ou <strong>Authy</strong>.
                                 </p>
-                                <button onClick={startSetup} disabled={loading} className="btn btn-primary" style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: '900' }}>
+                                <button onClick={startSetup} disabled={loading} className="btn btn-primary" style={{ width: '100%', padding: isSmallMobile ? '15px' : '18px', borderRadius: '16px', fontWeight: '900' }}>
                                     {loading ? "INITIALISATION..." : "CONFIGURER LE 2FA MAINTENANT"}
                                 </button>
                             </div>
@@ -151,21 +163,21 @@ const TwoFASetup = () => {
 
                         {step === 2 && (
                             <div style={{ textAlign: 'center' }}>
-                                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                <h3 style={{ fontSize: isSmallMobile ? '1rem' : '1.2rem', fontWeight: '800', marginBottom: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                                     <FaQrcode /> Scannez le QR Code
                                 </h3>
                                 <div style={{
-                                    background: '#fff', padding: '15px', borderRadius: '20px',
+                                    background: '#fff', padding: isSmallMobile ? '10px' : '15px', borderRadius: '20px',
                                     display: 'inline-block', marginBottom: '25px',
                                     boxShadow: '0 0 40px rgba(255,255,255,0.1)'
                                 }}>
-                                    <img src={qrCode} alt="QR Code 2FA" style={{ width: '220px', height: '220px' }} />
+                                    <img src={qrCode} alt="QR Code 2FA" style={{ width: isSmallMobile ? '160px' : '220px', height: isSmallMobile ? '160px' : '220px' }} />
                                 </div>
-                                <div className="glass" style={{ padding: '20px', borderRadius: '16px', marginBottom: '30px', textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
-                                    <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', fontWeight: '800' }}>OU ENTREZ LE CODE MANUELLEMENT :</p>
-                                    <p style={{ fontFamily: 'monospace', fontSize: '1.2rem', color: 'var(--accent-color)', fontWeight: '900', letterSpacing: '2px' }}>{secret}</p>
+                                <div className="glass" style={{ padding: isSmallMobile ? '15px' : '20px', borderRadius: '16px', marginBottom: '30px', textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
+                                    <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', fontWeight: '800' }}>OU ENTREZ LE CODE MANUELLEMENT :</p>
+                                    <p style={{ fontFamily: 'monospace', fontSize: isSmallMobile ? '0.9rem' : '1.2rem', color: 'var(--accent-color)', fontWeight: '900', letterSpacing: isSmallMobile ? '1px' : '2px', wordBreak: 'break-all' }}>{secret}</p>
                                 </div>
-                                <button onClick={() => setStep(3)} className="btn btn-primary" style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: '900' }}>
+                                <button onClick={() => setStep(3)} className="btn btn-primary" style={{ width: '100%', padding: isSmallMobile ? '15px' : '18px', borderRadius: '16px', fontWeight: '900' }}>
                                     CONTINUER VERS LA VÉRIFICATION
                                 </button>
                             </div>
@@ -185,18 +197,18 @@ const TwoFASetup = () => {
                                     style={{
                                         width: '100%', background: 'rgba(255,255,255,0.05)',
                                         border: '2px solid rgba(255,255,255,0.1)', borderRadius: '16px',
-                                        padding: '18px', color: '#fff', fontSize: '1.5rem', fontWeight: '900',
-                                        textAlign: 'center', letterSpacing: '8px', marginBottom: '20px', outline: 'none'
+                                        padding: isSmallMobile ? '15px' : '18px', color: '#fff', fontSize: isSmallMobile ? '1.2rem' : '1.5rem', fontWeight: '900',
+                                        textAlign: 'center', letterSpacing: isSmallMobile ? '4px' : '8px', marginBottom: '20px', outline: 'none'
                                     }}
                                     value={token}
                                     onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
                                     maxLength="6"
                                 />
-                                {error && <p style={{ color: '#ff4757', textAlign: 'center', fontWeight: '700', marginBottom: '15px' }}>{error}</p>}
-                                <button onClick={confirmSetup} disabled={loading || token.length < 6} className="btn btn-primary" style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: '900' }}>
+                                {error && <p style={{ color: '#ff4757', textAlign: 'center', fontWeight: '700', marginBottom: '15px', fontSize: '0.85rem' }}>{error}</p>}
+                                <button onClick={confirmSetup} disabled={loading || token.length < 6} className="btn btn-primary" style={{ width: '100%', padding: isSmallMobile ? '15px' : '18px', borderRadius: '16px', fontWeight: '900' }}>
                                     {loading ? "VÉRIFICATION..." : "ACTIVER LE 2FA"}
                                 </button>
-                                <button onClick={() => setStep(2)} style={{ width: '100%', marginTop: '15px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
+                                <button onClick={() => setStep(2)} style={{ width: '100%', marginTop: '15px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', fontWeight: '700', fontSize: '0.9rem' }}>
                                     RETOUR AU QR CODE
                                 </button>
                             </div>
@@ -250,7 +262,7 @@ const TwoFASetup = () => {
                             style={{
                                 width: '100%', background: 'rgba(255,255,255,0.05)',
                                 border: '2px solid rgba(255,255,255,0.1)', borderRadius: '16px',
-                                padding: '15px', color: '#fff', fontSize: '1.4rem', fontWeight: '900',
+                                padding: isSmallMobile ? '12px' : '15px', color: '#fff', fontSize: isSmallMobile ? '1.2rem' : '1.4rem', fontWeight: '900',
                                 textAlign: 'center', letterSpacing: '4px', marginBottom: '15px', outline: 'none'
                             }}
                             value={disableToken}
@@ -259,19 +271,19 @@ const TwoFASetup = () => {
 
                         {error && <p style={{ color: '#ff4757', fontWeight: '700', marginBottom: '20px', fontSize: '0.85rem' }}>{error}</p>}
 
-                        <div style={{ display: 'flex', gap: '15px' }}>
+                        <div style={{ display: 'flex', gap: isSmallMobile ? '10px' : '15px', flexDirection: isSmallMobile ? 'column' : 'row' }}>
                             <button
                                 onClick={handleDisableConfirm}
                                 disabled={loading || disableToken.length < 6}
                                 className="btn"
-                                style={{ flex: 1, padding: '14px', borderRadius: '14px', background: '#ff4757', color: '#fff', fontWeight: '800', opacity: (loading || disableToken.length < 6) ? 0.6 : 1 }}
+                                style={{ flex: 1, padding: isSmallMobile ? '12px' : '14px', borderRadius: '14px', background: '#ff4757', color: '#fff', fontWeight: '800', opacity: (loading || disableToken.length < 6) ? 0.6 : 1 }}
                             >
                                 {loading ? "CHARGEMENT..." : "CONFIRMER"}
                             </button>
                             <button
                                 onClick={() => { setShowDisableModal(false); setDisableToken(""); setError(""); }}
                                 className="btn"
-                                style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', color: '#fff', fontWeight: '800' }}
+                                style={{ flex: 1, padding: isSmallMobile ? '12px' : '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', color: '#fff', fontWeight: '800' }}
                             >
                                 ANNULER
                             </button>

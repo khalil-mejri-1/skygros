@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const Order = require('../models/Order');
-
 const mongoose = require('mongoose');
 
 // GET ALL ORDERS (ADMIN)
@@ -50,6 +49,34 @@ router.put('/fulfill/:orderId', async (req, res) => {
 
         res.status(200).json(updatedOrder);
     } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
+// REFUND ORDER (ADMIN)
+router.post('/refund/:orderId', async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.orderId);
+        if (!order) return res.status(404).json("Order not found!");
+        if (order.status === 'REFUNDED') return res.status(400).json("Order already refunded!");
+
+        const User = require('../models/User');
+        const user = await User.findById(order.userId);
+        if (!user) return res.status(404).json("User not found!");
+
+        // Update User Balance
+        const refundAmount = order.price * (order.quantity || 1);
+        user.balance += refundAmount;
+
+        // Update Order Status
+        order.status = 'REFUNDED';
+
+        await user.save();
+        await order.save();
+
+        res.status(200).json({ message: "Refund successful!", order });
+    } catch (err) {
+        console.error("Refund error:", err);
         res.status(500).json(err);
     }
 });

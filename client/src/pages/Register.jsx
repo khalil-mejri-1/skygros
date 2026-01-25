@@ -5,7 +5,7 @@ import bg from "../assets/bg.mp4";
 import API_BASE_URL from "../config/api";
 
 const Register = () => {
-    const [credentials, setCredentials] = useState({ username: "", email: "", password: "" });
+    const [credentials, setCredentials] = useState({ username: "", email: "" });
     const [error, setError] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const navigate = useNavigate();
@@ -101,20 +101,7 @@ const Register = () => {
                             fontSize: '1rem'
                         }}
                     />
-                    <input
-                        type="password"
-                        placeholder="Mot de passe"
-                        id="password"
-                        onChange={handleChange}
-                        style={{
-                            padding: '12px 15px',
-                            borderRadius: '8px',
-                            border: '1px solid #242542',
-                            background: '#121326',
-                            color: 'white',
-                            fontSize: '1rem'
-                        }}
-                    />
+
                     <button
                         onClick={handleClick}
                         className="btn btn-primary"
