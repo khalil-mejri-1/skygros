@@ -41,7 +41,7 @@ app.use('/api/settings', settingsRoute);
 app.use('/api/demos', demoRoute);
 
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    res.send('update 1/25/2026');
 });
 const PORT = process.env.PORT || 5000;
 
