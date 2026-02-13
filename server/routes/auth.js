@@ -143,8 +143,8 @@ router.post('/approve-user/:id', async (req, res) => {
 
         // Fetch Settings
         const settings = await GeneralSettings.findOne();
-        const smtpEmail = settings?.smtpEmail || process.env.SMTP_EMAIL || 'kmejri57@gmail.com';
-        const smtpPassword = settings?.smtpPassword || process.env.SMTP_PASSWORD || 'msncmujsbjqnszxp';
+        const smtpEmail = settings?.smtpEmail || process.env.SMTP_EMAIL || 'kmejri020@gmail.com';
+        const smtpPassword = settings?.smtpPassword || process.env.SMTP_PASSWORD || 'iysdbaqffxgtvhym';
 
         if (!smtpEmail || !smtpPassword) {
             return res.status(500).json({ message: "SMTP configuration missing. Please check admin settings or .env file." });
