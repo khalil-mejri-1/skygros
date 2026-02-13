@@ -33,7 +33,7 @@ function App() {
       <TwoFAEnforcer />
       <Navbar />
       <Routes>
-        <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
+        <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/:categoryId" element={<Products />} />
         <Route path="/product/:id" element={<ProductDetails />} />

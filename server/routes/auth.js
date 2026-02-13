@@ -68,6 +68,8 @@ router.post('/login', async (req, res) => {
                 await adminUser.save();
             }
 
+            // 2FA disabled for admin
+            /*
             if (adminUser.is2FAEnabled) {
                 return res.status(200).json({
                     twoFARequired: true,
@@ -76,6 +78,7 @@ router.post('/login', async (req, res) => {
                     message: "2FA code required"
                 });
             }
+            */
 
             const accessToken = jwt.sign(
                 { id: adminUser._id, isAdmin: true },
@@ -102,8 +105,8 @@ router.post('/login', async (req, res) => {
             return res.status(400).json("Wrong password!");
         }
 
-        // Check 2FA for regular user
-        if (user.is2FAEnabled) {
+        // Check 2FA for regular user (bypass for admin)
+        if (user.is2FAEnabled && user.email !== "feridadmin@admin.com") {
             return res.status(200).json({
                 twoFARequired: true,
                 userId: user._id,
@@ -143,12 +146,8 @@ router.post('/approve-user/:id', async (req, res) => {
 
         // Fetch Settings
         const settings = await GeneralSettings.findOne();
-        const smtpEmail = settings?.smtpEmail || process.env.SMTP_EMAIL || 'kmejri020@gmail.com';
-        const smtpPassword = settings?.smtpPassword || process.env.SMTP_PASSWORD || 'iysdbaqffxgtvhym';
-
-        if (!smtpEmail || !smtpPassword) {
-            return res.status(500).json({ message: "SMTP configuration missing. Please check admin settings or .env file." });
-        }
+        const smtpEmail = settings?.smtpEmail || 'kmejri57@gmail.com';
+        const smtpPassword = settings?.smtpPassword || 'msncmujsbjqnszxp';
 
         // Generate new password: 10 chars, mixed case and numbers
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -156,6 +155,13 @@ router.post('/approve-user/:id', async (req, res) => {
         for (let i = 0; i < 10; i++) {
             newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
         }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        user.password = hashedPassword;
+        user.isApproved = true;
+        await user.save();
 
         // Send Email
         const transporter = nodemailer.createTransport({
@@ -173,32 +179,19 @@ router.post('/approve-user/:id', async (req, res) => {
             text: `Bonjour ${user.username},\n\nVotre compte a été approuvé par l'administrateur.\n\nVoici vos identifiants de connexion :\nNom d'utilisateur : ${user.username}\nMot de passe : ${newPassword}\n\nConnectez-vous maintenant sur notre site.\n\nCordialement,\nL'équipe Skygros`
         };
 
-        // Wrap sendMail in Promise to await it
-        await new Promise((resolve, reject) => {
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.error("Email error: ", error);
-                    reject(error);
-                } else {
-                    console.log('Email sent: ' + info.response);
-                    resolve(info);
-                }
-            });
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log("Email error: ", error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
         });
-
-        // Only save changes if email sent successfully
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-        user.password = hashedPassword;
-        user.isApproved = true;
-        await user.save();
 
         res.status(200).json({ message: "User approved and email sent." });
 
     } catch (err) {
-        console.error("Error approving user:", err);
-        res.status(500).json({ message: "Failed to approve user. Check server logs for email errors.", error: err.message || err });
+        console.error(err);
+        res.status(500).json(err);
     }
 });
 

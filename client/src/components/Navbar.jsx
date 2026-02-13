@@ -531,9 +531,22 @@ const Navbar = () => {
                                 )}
                             </>
                         ) : (
-                            <Link to="/login" className="btn btn-primary" style={{ padding: '8px 20px' }}>
-                                CONNEXION
-                            </Link>
+                            <div className="flex items-center gap-3">
+                                <a href="https://wa.me/21696086581" target="_blank" rel="noopener noreferrer" className="btn" style={{
+                                    padding: '8px 20px',
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: '#fff',
+                                    textDecoration: 'none',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    CONSULTER
+                                </a>
+                                <Link to="/login" className="btn btn-primary" style={{ padding: '8px 20px' }}>
+                                    CONNEXION
+                                </Link>
+                            </div>
                         )}
 
 
@@ -541,158 +554,135 @@ const Navbar = () => {
                 </div>
             </nav>
 
-            {/* Support/Categories Sub-navbar */}
-            <div
-                ref={subNavRef}
-                style={{
-                    background: 'var(--bg-secondary)',
-                    borderBottom: '1px solid rgba(255,255,255,0.03)',
-                    padding: '8px 0',
-                    position: 'relative'
-                }}>
+            {/* Support/Categories Sub-navbar - Hidden for unauthenticated users */}
+            {user && (
                 <div
-                    className="container flex flex-col"
-                    onMouseLeave={() => !isSmallMobile && setHoveredCategory(null)}
-                >
-                    <div className="flex justify-between items-center" style={{ flexDirection: isSmallMobile ? 'column' : 'row', gap: isSmallMobile ? '8px' : '0' }}>
-                        <div className="flex gap-6 custom-scrollbar" style={{
-                            overflowX: 'auto',
-                            whiteSpace: 'nowrap',
-                            paddingBottom: '8px',
-                            width: '100%',
-                            flexShrink: 0
-                        }}>
-                            {categories.length === 0 ? (
-                                // Skeleton Loading State
-                                [1, 2, 3, 4].map(i => (
-                                    <div key={i} style={{
-                                        width: '100px',
-                                        height: '20px',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        borderRadius: '4px',
-                                        animation: 'pulse 1.5s infinite'
-                                    }}></div>
-                                ))
-                            ) : (
-                                categories.map((cat) => (
-                                    <div
-                                        key={cat._id}
-                                        style={{ position: 'relative' }}
-                                        onMouseEnter={() => !isSmallMobile && setHoveredCategory(cat._id)}
-                                        onClick={(e) => {
-                                            if (isSmallMobile && cat.subcategories?.length > 0) {
-                                                e.preventDefault();
-                                                setActiveMobileCategory(activeMobileCategory === cat._id ? null : cat._id);
-                                            }
-                                        }}
-                                    >
-                                        <Link
-                                            to={isSmallMobile && cat.subcategories?.length > 0 ? "#" : `/products/${cat.name}`}
-                                            className="nav-item-link flex items-center gap-2"
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                height: '100%',
-                                                padding: isSmallMobile ? '4px 12px' : '0 0 10px 0',
-                                                borderRadius: isSmallMobile ? '8px' : '0',
-                                                background: (isSmallMobile && activeMobileCategory === cat._id) ? 'rgba(255, 153, 0, 0.1)' : 'transparent',
-                                                borderBottom: (!isSmallMobile && hoveredCategory === cat._id) ? '2px solid var(--accent-color)' : '2px solid transparent',
-                                                transition: 'all 0.3s ease'
+                    ref={subNavRef}
+                    style={{
+                        background: 'var(--bg-secondary)',
+                        borderBottom: '1px solid rgba(255,255,255,0.03)',
+                        padding: '8px 0',
+                        position: 'relative'
+                    }}>
+                    <div
+                        className="container flex flex-col"
+                        onMouseLeave={() => !isSmallMobile && setHoveredCategory(null)}
+                    >
+                        <div className="flex justify-between items-center" style={{ flexDirection: isSmallMobile ? 'column' : 'row', gap: isSmallMobile ? '8px' : '0' }}>
+                            <div className="flex gap-6 custom-scrollbar" style={{
+                                overflowX: 'auto',
+                                whiteSpace: 'nowrap',
+                                paddingBottom: '8px',
+                                width: '100%',
+                                flexShrink: 0
+                            }}>
+                                {categories.length === 0 ? (
+                                    // Skeleton Loading State
+                                    [1, 2, 3, 4].map(i => (
+                                        <div key={i} style={{
+                                            width: '100px',
+                                            height: '20px',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            borderRadius: '4px',
+                                            animation: 'pulse 1.5s infinite'
+                                        }}></div>
+                                    ))
+                                ) : (
+                                    categories.map((cat) => (
+                                        <div
+                                            key={cat._id}
+                                            style={{ position: 'relative' }}
+                                            onMouseEnter={() => !isSmallMobile && setHoveredCategory(cat._id)}
+                                            onClick={(e) => {
+                                                if (isSmallMobile && cat.subcategories?.length > 0) {
+                                                    e.preventDefault();
+                                                    setActiveMobileCategory(activeMobileCategory === cat._id ? null : cat._id);
+                                                }
                                             }}
                                         >
-                                            {renderIcon(cat.icon)}
-                                            <span style={{
-                                                color: (isSmallMobile ? activeMobileCategory === cat._id : hoveredCategory === cat._id) ? 'var(--accent-color)' : 'inherit',
-                                                fontWeight: (isSmallMobile ? activeMobileCategory === cat._id : hoveredCategory === cat._id) ? '800' : '600'
-                                            }}>
-                                                {cat.name.toUpperCase()}
-                                            </span>
-                                            {cat.subcategories?.length > 0 && (
-                                                <FaChevronDown size={10} style={{
-                                                    opacity: 0.6,
-                                                    marginTop: '2px',
-                                                    transition: 'transform 0.3s',
-                                                    transform: (isSmallMobile ? activeMobileCategory === cat._id : hoveredCategory === cat._id) ? 'rotate(180deg)' : 'rotate(0deg)'
-                                                }} />
-                                            )}
-                                        </Link>
-                                    </div>
-                                ))
-                            )}
+                                            <Link
+                                                to={isSmallMobile && cat.subcategories?.length > 0 ? "#" : `/products/${cat.name}`}
+                                                className="nav-item-link flex items-center gap-2"
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    height: '100%',
+                                                    padding: isSmallMobile ? '4px 12px' : '0 0 10px 0',
+                                                    borderRadius: isSmallMobile ? '8px' : '0',
+                                                    background: (isSmallMobile && activeMobileCategory === cat._id) ? 'rgba(255, 153, 0, 0.1)' : 'transparent',
+                                                    borderBottom: (!isSmallMobile && hoveredCategory === cat._id) ? '2px solid var(--accent-color)' : '2px solid transparent',
+                                                    transition: 'all 0.3s ease'
+                                                }}
+                                            >
+                                                {renderIcon(cat.icon)}
+                                                <span style={{
+                                                    color: (isSmallMobile ? activeMobileCategory === cat._id : hoveredCategory === cat._id) ? 'var(--accent-color)' : 'inherit',
+                                                    fontWeight: (isSmallMobile ? activeMobileCategory === cat._id : hoveredCategory === cat._id) ? '800' : '600'
+                                                }}>
+                                                    {cat.name.toUpperCase()}
+                                                </span>
+                                                {cat.subcategories?.length > 0 && (
+                                                    <FaChevronDown size={10} style={{
+                                                        opacity: 0.6,
+                                                        marginTop: '2px',
+                                                        transition: 'transform 0.3s',
+                                                        transform: (isSmallMobile ? activeMobileCategory === cat._id : hoveredCategory === cat._id) ? 'rotate(180deg)' : 'rotate(0deg)'
+                                                    }} />
+                                                )}
+                                            </Link>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
 
-                        {/* {!isSmallMobile && (
-                            <Link to="/products" style={{
-                                fontSize: '0.75rem',
-                                fontWeight: '800',
-                                color: 'var(--accent-color)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '1px',
-                                paddingBottom: '10px'
-                            }} className="hover:underline">
-                                VOIR TOUS LES PRODUITS
-                            </Link>
-                        )} */}
+                        {/* Unified Subcategories Window/Bar */}
+                        {(isSmallMobile ? activeMobileCategory : hoveredCategory) &&
+                            categories.find(c => c._id === (isSmallMobile ? activeMobileCategory : hoveredCategory))?.subcategories?.length > 0 && (
+                                <div
+                                    className="glass custom-scrollbar"
+                                    style={{
+                                        display: 'flex',
+                                        gap: '10px',
+                                        overflowX: 'auto',
+                                        padding: '15px 20px',
+                                        borderRadius: '16px',
+                                        whiteWhiteSpace: 'nowrap',
+                                        animation: 'slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                        background: 'rgba(20, 21, 38, 0.7)',
+                                        border: '1px solid rgba(255, 153, 0, 0.1)',
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
+                                        width: '100%',
+                                        marginTop: isSmallMobile ? '5px' : '0px'
+                                    }}
+                                >
+                                    {categories.find(c => c._id === (isSmallMobile ? activeMobileCategory : hoveredCategory)).subcategories.map((sub, idx) => (
+                                        <Link
+                                            key={idx}
+                                            onClick={() => isSmallMobile && setActiveMobileCategory(null)}
+                                            to={`/products/${categories.find(c => c._id === (isSmallMobile ? activeMobileCategory : hoveredCategory)).name}?subcategory=${sub}`}
+                                            style={{
+                                                padding: '8px 18px',
+                                                borderRadius: '10px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: '700',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                color: '#fff',
+                                                border: '1px solid rgba(255,255,255,0.08)',
+                                                flexShrink: 0,
+                                                textDecoration: 'none',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                            className="subcategory-pill"
+                                        >
+                                            {sub}
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
                     </div>
-
-                    {/* Unified Subcategories Window/Bar */}
-                    {(isSmallMobile ? activeMobileCategory : hoveredCategory) &&
-                        categories.find(c => c._id === (isSmallMobile ? activeMobileCategory : hoveredCategory))?.subcategories?.length > 0 && (
-                            <div
-                                className="glass custom-scrollbar"
-                                style={{
-                                    display: 'flex',
-                                    gap: '10px',
-                                    overflowX: 'auto',
-                                    padding: '15px 20px',
-                                    borderRadius: '16px',
-                                    whiteSpace: 'nowrap',
-                                    animation: 'slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                    background: 'rgba(20, 21, 38, 0.7)',
-                                    border: '1px solid rgba(255, 153, 0, 0.1)',
-                                    boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
-                                    width: '100%',
-                                    marginTop: isSmallMobile ? '5px' : '0px'
-                                }}
-                            >
-                                {/* <span style={{
-                                    color: 'var(--accent-color)',
-                                    fontSize: '0.75rem',
-                                    fontWeight: '900',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    marginRight: '10px',
-                                    borderRight: '1px solid rgba(255,255,255,0.1)',
-                                    paddingRight: '15px'
-                                }}>
-                                    SOUS-CATÉGORIES
-                                </span> */}
-                                {categories.find(c => c._id === (isSmallMobile ? activeMobileCategory : hoveredCategory)).subcategories.map((sub, idx) => (
-                                    <Link
-                                        key={idx}
-                                        onClick={() => isSmallMobile && setActiveMobileCategory(null)}
-                                        to={`/products/${categories.find(c => c._id === (isSmallMobile ? activeMobileCategory : hoveredCategory)).name}?subcategory=${sub}`}
-                                        style={{
-                                            padding: '8px 18px',
-                                            borderRadius: '10px',
-                                            fontSize: '0.85rem',
-                                            fontWeight: '700',
-                                            background: 'rgba(255,255,255,0.03)',
-                                            color: '#fff',
-                                            border: '1px solid rgba(255,255,255,0.08)',
-                                            flexShrink: 0,
-                                            textDecoration: 'none',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                        className="subcategory-pill"
-                                    >
-                                        {sub}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
                 </div>
-            </div>
+            )}
 
             {/* Bottom Navigation for Small Mobile (<= 660px) */}
             {isSmallMobile && (
@@ -783,9 +773,22 @@ const Navbar = () => {
                             <FaBars />
                         </button>
                     ) : (
-                        <Link to="/login" className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.8rem', borderRadius: 'var(--radius-xl)' }}>
-                            CONNEXION
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <a href="https://wa.me/21696086581" target="_blank" rel="noopener noreferrer" className="btn" style={{
+                                padding: '8px 15px',
+                                fontSize: '0.8rem',
+                                borderRadius: 'var(--radius-xl)',
+                                background: 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                color: '#fff',
+                                textDecoration: 'none'
+                            }}>
+                                CONSULTER
+                            </a>
+                            <Link to="/login" className="btn btn-primary" style={{ padding: '8px 15px', fontSize: '0.8rem', borderRadius: 'var(--radius-xl)' }}>
+                                CONNEXION
+                            </Link>
+                        </div>
                     )}
                 </div>
             )}
