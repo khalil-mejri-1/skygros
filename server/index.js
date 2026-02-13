@@ -41,7 +41,7 @@ app.use('/api/settings', settingsRoute);
 app.use('/api/demos', demoRoute);
 
 app.get('/', (req, res) => {
-    res.send('update 2/13/2026');
+    res.send('update-2 2/13/2026');
 });
 const PORT = process.env.PORT || 5000;
 
