@@ -1,14 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import bg from "../assets/bg.mp4";
 import API_BASE_URL from "../config/api";
+import SEO from "../components/SEO";
 
 const Register = () => {
+
     const [credentials, setCredentials] = useState({ username: "", email: "" });
     const [error, setError] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleChange = (e) => {
         setCredentials((prev) => ({ ...prev, [e.target.id]: e.target.value }));
@@ -32,7 +41,18 @@ const Register = () => {
     };
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{
+            position: 'relative',
+            width: '100%',
+            height: '100vh',
+            overflowY: 'auto',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: isMobile ? 'flex-start' : 'center',
+            paddingTop: isMobile ? '60px' : '0'
+        }}>
+            <SEO title="Inscription | Skygros" description="Créez votre compte Skygros dès aujourd'hui." />
+
             {/* Background Video */}
             <video
                 autoPlay
@@ -57,12 +77,13 @@ const Register = () => {
             <div style={{
                 background: 'rgba(26, 27, 50, 0.85)',
                 backdropFilter: 'blur(10px)',
-                padding: '40px',
-                borderRadius: '15px',
+                padding: isMobile ? '30px 20px' : '40px',
+                borderRadius: '24px',
                 boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-                width: '100%',
-                maxWidth: '400px',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                width: '92%',
+                maxWidth: '420px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                margin: '20px'
             }}>
                 <h2 style={{ textAlign: 'center', marginBottom: '20px', color: 'white', fontSize: '2rem', fontWeight: 'bold' }}>
                     skygros<span style={{ color: 'var(--accent-color)' }}>.</span>

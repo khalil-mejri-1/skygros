@@ -5,6 +5,7 @@ import axios from "axios";
 import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory } from "react-icons/fa";
 import ConfirmModal from "../components/ConfirmModal";
 import AlertModal from "../components/AlertModal";
+import SEO from "../components/SEO";
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState("products");
@@ -471,6 +472,7 @@ const Admin = () => {
 
     return (
         <div style={{ minHeight: '100vh', background: '#0a0b14', display: 'flex', color: '#fff' }}>
+            <SEO title="Administration | Skygros Panel" noindex={true} />
             {/* Sidebar */}
             <div style={{
                 width: '300px',
@@ -1205,6 +1207,77 @@ const Admin = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                         {settings && (
                             <>
+                                {/* Ligues & Sports (Logos) - NEW SECTION REQUESTED */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff' }}>Ligues & Sports (Cartes avec Images)</h3>
+                                        <button
+                                            onClick={() => {
+                                                const currentSports = settings.home?.sports || [];
+                                                const newSports = [...currentSports, { name: "", image: "" }];
+                                                setSettings({ ...settings, home: { ...settings.home, sports: newSports } });
+                                            }}
+                                            className="btn"
+                                            style={{ background: 'var(--success)', color: '#000', fontSize: '0.8rem', padding: '10px 20px', borderRadius: '12px', fontWeight: '800' }}
+                                        >
+                                            <FaPlus style={{ marginRight: '8px' }} /> AJOUTER UNE CARTE
+                                        </button>
+                                    </div>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', marginBottom: '20px' }}>
+                                        Ajoutez les logos des ligues ou partenaires. Si l'image est vide, le nom sera affiché à la place.
+                                    </p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                                        {(settings.home?.sports || []).map((sport, idx) => (
+                                            <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                                                <button
+                                                    onClick={() => {
+                                                        const newSports = settings.home.sports.filter((_, i) => i !== idx);
+                                                        setSettings({ ...settings, home: { ...settings.home, sports: newSports } });
+                                                    }}
+                                                    className="action-btn delete"
+                                                    style={{ position: 'absolute', top: '15px', right: '15px', width: '30px', height: '30px' }}
+                                                >
+                                                    <FaTrash size={12} />
+                                                </button>
+
+                                                <div className="flex flex-col gap-3">
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="form-label" style={{ fontSize: '0.65rem' }}>Nom de la Ligue/Sport</label>
+                                                        <input
+                                                            className="admin-input"
+                                                            value={sport.name}
+                                                            placeholder="ex: LaLiga"
+                                                            onChange={(e) => {
+                                                                const newSports = [...settings.home.sports];
+                                                                newSports[idx].name = e.target.value;
+                                                                setSettings({ ...settings, home: { ...settings.home, sports: newSports } });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="form-label" style={{ fontSize: '0.65rem' }}>URL de l'Image (Logo)</label>
+                                                        <input
+                                                            className="admin-input"
+                                                            value={sport.image}
+                                                            placeholder="https://...logo.png"
+                                                            onChange={(e) => {
+                                                                const newSports = [...settings.home.sports];
+                                                                newSports[idx].image = e.target.value;
+                                                                setSettings({ ...settings, home: { ...settings.home, sports: newSports } });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    {sport.image && (
+                                                        <div style={{ width: '100%', height: '60px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '5px' }}>
+                                                            <img src={sport.image} alt="Preview" style={{ maxHeight: '40px', maxWidth: '80%' }} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* Carousel Manager */}
                                 <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -1216,14 +1289,14 @@ const Admin = () => {
                                                 setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
                                             }}
                                             className="btn"
-                                            style={{ background: 'var(--accent-color)', color: '#fff', fontSize: '0.8rem', padding: '10px 20px', borderRadius: '12px', fontWeight: '800', boxShadow: '0 5px 15px rgba(255, 153, 0, 0.2)' }}
+                                            style={{ background: 'var(--accent-color)', color: '#fff', fontSize: '0.8rem', padding: '10px 20px', borderRadius: '12px', fontWeight: '800' }}
                                         >
                                             <FaPlus style={{ marginRight: '8px' }} /> AJOUTER SLIDE
                                         </button>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                         {(settings.home?.carousel || []).map((slide, idx) => (
-                                            <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 0.5fr 50px', gap: '15px', alignItems: 'center' }}>
+                                            <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 0.5fr 50px', gap: '15px', alignItems: 'center' }}>
                                                 <div className="flex flex-col gap-1">
                                                     <label className="form-label">Image URL</label>
                                                     <input
@@ -1262,28 +1335,16 @@ const Admin = () => {
                                                 </div>
                                                 <div className="flex flex-col gap-1">
                                                     <label className="form-label">Couleur</label>
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            type="color"
-                                                            value={slide.color}
-                                                            onChange={(e) => {
-                                                                const newSlides = [...settings.home.carousel];
-                                                                newSlides[idx].color = e.target.value;
-                                                                setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
-                                                            }}
-                                                            style={{ width: '30px', height: '30px', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
-                                                        />
-                                                        <input
-                                                            className="admin-input"
-                                                            value={slide.color}
-                                                            style={{ padding: '8px' }}
-                                                            onChange={(e) => {
-                                                                const newSlides = [...settings.home.carousel];
-                                                                newSlides[idx].color = e.target.value;
-                                                                setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
-                                                            }}
-                                                        />
-                                                    </div>
+                                                    <input
+                                                        type="color"
+                                                        value={slide.color}
+                                                        onChange={(e) => {
+                                                            const newSlides = [...settings.home.carousel];
+                                                            newSlides[idx].color = e.target.value;
+                                                            setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
+                                                        }}
+                                                        style={{ width: '100%', height: '40px', padding: 0, border: 'none', background: 'none' }}
+                                                    />
                                                 </div>
                                                 <button
                                                     onClick={() => {
@@ -1299,159 +1360,8 @@ const Admin = () => {
                                     </div>
                                 </div>
 
-                                {/* Stats Cards Manager */}
-                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff' }}>Cartes Statistiques (Gestion Cards)</h3>
-                                        <button
-                                            onClick={() => {
-                                                const currentCards = settings.home?.statsCards || [];
-                                                const newCards = [...currentCards, { title: "Nouveau", value: "0", icon: "FaShoppingCart", accent: "#0099ff", label: "INFO" }];
-                                                setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
-                                            }}
-                                            className="btn"
-                                            style={{ background: 'var(--success)', color: '#000', fontSize: '0.8rem', padding: '10px 20px', borderRadius: '12px', fontWeight: '800', boxShadow: '0 5px 15px rgba(46, 213, 115, 0.2)' }}
-                                        >
-                                            <FaPlus style={{ marginRight: '8px' }} /> AJOUTER CARTE
-                                        </button>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-                                        {(settings.home?.statsCards || []).map((card, idx) => (
-                                            <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
-                                                <button
-                                                    onClick={() => {
-                                                        const newCards = settings.home.statsCards.filter((_, i) => i !== idx);
-                                                        setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
-                                                    }}
-                                                    className="action-btn delete"
-                                                    style={{ position: 'absolute', top: '15px', right: '15px', width: '30px', height: '30px' }}
-                                                >
-                                                    <FaTrash size={12} />
-                                                </button>
-
-                                                <div className="flex flex-col gap-3">
-                                                    <div className="flex flex-col gap-1">
-                                                        <label className="form-label">Titre</label>
-                                                        <input
-                                                            className="admin-input"
-                                                            value={card.title}
-                                                            onChange={(e) => {
-                                                                const newCards = [...settings.home.statsCards];
-                                                                newCards[idx].title = e.target.value;
-                                                                setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                                        <div className="flex flex-col gap-1">
-                                                            <label className="form-label">Valeur</label>
-                                                            <input
-                                                                className="admin-input"
-                                                                value={card.value}
-                                                                onChange={(e) => {
-                                                                    const newCards = [...settings.home.statsCards];
-                                                                    newCards[idx].value = e.target.value;
-                                                                    setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <div className="flex flex-col gap-1">
-                                                            <label className="form-label">Badge</label>
-                                                            <input
-                                                                className="admin-input"
-                                                                value={card.label}
-                                                                onChange={(e) => {
-                                                                    const newCards = [...settings.home.statsCards];
-                                                                    newCards[idx].label = e.target.value;
-                                                                    setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                                        <div className="flex flex-col gap-1">
-                                                            <label className="form-label">Icône (Nom)</label>
-                                                            <input
-                                                                className="admin-input"
-                                                                placeholder="ex: FaUser"
-                                                                value={card.icon}
-                                                                onChange={(e) => {
-                                                                    const newCards = [...settings.home.statsCards];
-                                                                    newCards[idx].icon = e.target.value;
-                                                                    setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <div className="flex flex-col gap-1">
-                                                            <label className="form-label">Couleur</label>
-                                                            <input
-                                                                type="color"
-                                                                value={card.accent}
-                                                                onChange={(e) => {
-                                                                    const newCards = [...settings.home.statsCards];
-                                                                    newCards[idx].accent = e.target.value;
-                                                                    setSettings({ ...settings, home: { ...settings.home, statsCards: newCards } });
-                                                                }}
-                                                                style={{ width: '100%', height: '45px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', borderRadius: '10px' }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Best Sellers Manager */}
-                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff', marginBottom: '20px' }}>Sélection Meilleures Ventes</h3>
-                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', marginBottom: '20px' }}>Cochez les produits à afficher en page d'accueil.</p>
-
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
-                                        {products.map(p => (
-                                            <div key={p._id}
-                                                onClick={() => {
-                                                    const currentList = settings.home?.bestSellers || [];
-                                                    let newList;
-                                                    if (currentList.includes(p._id)) {
-                                                        newList = currentList.filter(id => id !== p._id);
-                                                    } else {
-                                                        newList = [...currentList, p._id];
-                                                    }
-                                                    setSettings({ ...settings, home: { ...settings.home, bestSellers: newList } });
-                                                }}
-                                                style={{
-                                                    padding: '15px',
-                                                    borderRadius: '16px',
-                                                    background: (settings.home?.bestSellers || []).includes(p._id) ? 'rgba(255, 153, 0, 0.15)' : 'rgba(255,255,255,0.03)',
-                                                    border: (settings.home?.bestSellers || []).includes(p._id) ? '1px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.05)',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '12px',
-                                                    transition: 'all 0.2s'
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: '20px', height: '20px', borderRadius: '6px',
-                                                    border: '2px solid rgba(255,255,255,0.3)',
-                                                    background: (settings.home?.bestSellers || []).includes(p._id) ? 'var(--accent-color)' : 'transparent',
-                                                    borderColor: (settings.home?.bestSellers || []).includes(p._id) ? 'var(--accent-color)' : 'rgba(255,255,255,0.3)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                }}>
-                                                    {(settings.home?.bestSellers || []).includes(p._id) && <FaCheck color="white" size={12} />}
-                                                </div>
-                                                <div style={{ overflow: 'hidden' }}>
-                                                    <div style={{ fontWeight: '800', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>${p.price}</div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <button onClick={handleUpdateSettings} className="btn btn-primary" style={{ padding: '16px 40px', borderRadius: '16px', fontWeight: '900', fontSize: '1.1rem', marginTop: '20px', boxShadow: '0 10px 30px rgba(255, 87, 34, 0.4)' }}>
-                                    ENREGISTER LES CHANGEMENTS HOME
+                                <button onClick={handleUpdateSettings} className="btn btn-primary" style={{ padding: '16px 40px', borderRadius: '16px', fontWeight: '900', fontSize: '1.1rem', marginTop: '20px' }}>
+                                    ENREGISTRER LA CONFIGURATION ACCUEIL
                                 </button>
                             </>
                         )}

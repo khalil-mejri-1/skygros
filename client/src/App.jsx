@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -21,6 +21,11 @@ import TwoFAEnforcer from "./components/TwoFAEnforcer.jsx";
 
 function App() {
   const { user } = useContext(AuthContext);
+
+  useEffect(() => {
+    // إشارة فورية للمحرك بأن التطبيق جاهز
+    document.dispatchEvent(new Event('render-event'));
+  }, []);
 
   return (
     <BrowserRouter>

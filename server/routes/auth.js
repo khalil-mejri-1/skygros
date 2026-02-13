@@ -143,8 +143,12 @@ router.post('/approve-user/:id', async (req, res) => {
 
         // Fetch Settings
         const settings = await GeneralSettings.findOne();
-        const smtpEmail = settings?.smtpEmail || 'kmejri57@gmail.com';
-        const smtpPassword = settings?.smtpPassword || 'msncmujsbjqnszxp';
+        const smtpEmail = settings?.smtpEmail || process.env.SMTP_EMAIL || 'kmejri57@gmail.com';
+        const smtpPassword = settings?.smtpPassword || process.env.SMTP_PASSWORD || 'msncmujsbjqnszxp';
+
+        if (!smtpEmail || !smtpPassword) {
+            return res.status(500).json({ message: "SMTP configuration missing. Please check admin settings or .env file." });
+        }
 
         // Generate new password: 10 chars, mixed case and numbers
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -152,13 +156,6 @@ router.post('/approve-user/:id', async (req, res) => {
         for (let i = 0; i < 10; i++) {
             newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
         }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-        user.password = hashedPassword;
-        user.isApproved = true;
-        await user.save();
 
         // Send Email
         const transporter = nodemailer.createTransport({
@@ -176,19 +173,32 @@ router.post('/approve-user/:id', async (req, res) => {
             text: `Bonjour ${user.username},\n\nVotre compte a été approuvé par l'administrateur.\n\nVoici vos identifiants de connexion :\nNom d'utilisateur : ${user.username}\nMot de passe : ${newPassword}\n\nConnectez-vous maintenant sur notre site.\n\nCordialement,\nL'équipe Skygros`
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log("Email error: ", error);
-            } else {
-                console.log('Email sent: ' + info.response);
-            }
+        // Wrap sendMail in Promise to await it
+        await new Promise((resolve, reject) => {
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error("Email error: ", error);
+                    reject(error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+                    resolve(info);
+                }
+            });
         });
+
+        // Only save changes if email sent successfully
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        user.password = hashedPassword;
+        user.isApproved = true;
+        await user.save();
 
         res.status(200).json({ message: "User approved and email sent." });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json(err);
+        console.error("Error approving user:", err);
+        res.status(500).json({ message: "Failed to approve user. Check server logs for email errors.", error: err.message || err });
     }
 });
 

@@ -558,8 +558,8 @@ const Navbar = () => {
                         <div className="flex gap-6 custom-scrollbar" style={{
                             overflowX: 'auto',
                             whiteSpace: 'nowrap',
-                            paddingBottom: isSmallMobile ? '4px' : '0',
-                            width: isSmallMobile ? '100%' : 'auto',
+                            paddingBottom: '8px',
+                            width: '100%',
                             flexShrink: 0
                         }}>
                             {categories.length === 0 ? (

@@ -9,8 +9,10 @@ import ProductCard from "../components/ProductCard";
 import LicenseKeyModal from "../components/LicenseKeyModal";
 import AlertModal from "../components/AlertModal";
 import axios from "axios";
+import SEO from "../components/SEO";
 
 const ProductDetails = () => {
+
     const { id } = useParams();
     const { user, updateBalance } = useContext(AuthContext);
     const { addToCart } = useContext(CartContext);
@@ -23,6 +25,7 @@ const ProductDetails = () => {
     const [lastPurchasedKey, setLastPurchasedKey] = useState("");
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [isUltraSmall, setIsUltraSmall] = useState(window.innerWidth <= 660);
+
 
     useEffect(() => {
         const handleResize = () => {
@@ -143,6 +146,7 @@ const ProductDetails = () => {
     if (!product) {
         return (
             <div style={{ background: 'var(--bg-primary)', padding: '40px 0', minHeight: '100vh' }}>
+                <SEO title="Chargement..." />
                 <div className="container">
                     <Skeleton width="200px" height="20px" style={{ marginBottom: '30px' }} />
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.2fr', gap: isMobile ? '30px' : '60px', alignItems: 'start' }}>
@@ -193,6 +197,11 @@ const ProductDetails = () => {
 
     return (
         <div style={{ background: 'var(--bg-primary)', padding: '40px 0', minHeight: '100vh' }}>
+            <SEO
+                title={product.title}
+                description={product.description || `Achetez ${product.title} au meilleur prix sur Skygros.`}
+                image={product.image}
+            />
             <LicenseKeyModal
                 isOpen={showKeyModal}
                 onClose={() => setShowKeyModal(false)}

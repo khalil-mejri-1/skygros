@@ -4,12 +4,15 @@ import ProductCard from "../components/ProductCard";
 import { FaFilter, FaList, FaThLarge, FaSearch } from "react-icons/fa";
 import axios from "axios";
 import API_BASE_URL from "../config/api";
+import SEO from "../components/SEO";
 
 const initialCategory = { id: "all", label: "Tous les Produits", subcategories: [] };
 
 const Products = () => {
+    // ... existing code ...
     const { categoryId } = useParams();
     const [selectedCategory, setSelectedCategory] = useState(categoryId || "all");
+    // ... other hooks ...
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("latest");
     const { search } = useLocation();
@@ -134,6 +137,10 @@ const Products = () => {
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', paddingTop: '40px', paddingBottom: '80px' }}>
+            <SEO
+                title={selectedCategory === 'all' ? 'Nos Produits' : `${selectedCategory} - Skygros`}
+                description="Explorez notre catalogue de produits IPTV et numériques."
+            />
             <div className="container">
                 {/* Header Section */}
                 <div style={{ marginBottom: screenSize.isUltraSmall ? '20px' : '30px' }}>

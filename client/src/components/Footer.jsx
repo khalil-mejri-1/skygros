@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-
 import API_BASE_URL from "../config/api";
 import axios from "axios";
 import { FaFacebook, FaTwitter, FaInstagram, FaDiscord, FaYoutube, FaTelegramPlane } from "react-icons/fa";
@@ -71,10 +70,10 @@ const Footer = () => {
 
             <div className="container" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                 <p>&copy; {new Date().getFullYear()} Skygros. Tous droits réservés.</p>
-                <div className="flex gap-4">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" height="20" style={{ filter: 'grayscale(100%)', opacity: 0.5 }} />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" height="20" style={{ filter: 'grayscale(100%)', opacity: 0.5 }} />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" height="20" style={{ filter: 'grayscale(100%)', opacity: 0.5 }} />
+                <div className="flex gap-4 items-center">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" className="h-8 w-auto object-contain" style={{ filter: 'grayscale(100%)', opacity: 0.5 }} alt="Visa" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" className="h-8 w-auto object-contain" style={{ filter: 'grayscale(100%)', opacity: 0.5 }} alt="Mastercard" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" className="h-8 w-auto object-contain" style={{ filter: 'grayscale(100%)', opacity: 0.5 }} alt="PayPal" />
                 </div>
             </div>
         </footer>

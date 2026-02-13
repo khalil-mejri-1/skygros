@@ -110,7 +110,14 @@ const GeneralSettingsSchema = new mongoose.Schema({
                 }
             ]
         },
-        bestSellers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
+        bestSellers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+        sports: {
+            type: [{
+                name: { type: String },
+                image: { type: String }
+            }],
+            default: []
+        }
     }
 }, { timestamps: true });
 
