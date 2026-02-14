@@ -1,5 +1,6 @@
 import { FaExclamationTriangle, FaCheckCircle, FaInfoCircle, FaTimes } from "react-icons/fa";
 import { createPortal } from "react-dom";
+import { useEffect } from "react";
 
 const ConfirmModal = ({
     isOpen,
@@ -13,6 +14,17 @@ const ConfirmModal = ({
     confirmColor = "#ff4757",
     loading = false
 }) => {
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const icons = {
@@ -29,14 +41,14 @@ const ConfirmModal = ({
             style={{
                 position: 'fixed',
                 inset: 0,
-                background: 'rgba(5, 6, 12, 0.95)',
+                background: 'rgba(5, 6, 12, 0.4)',
                 zIndex: 10000,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backdropFilter: 'blur(15px)',
+                backdropFilter: 'blur(20px)',
                 padding: '20px',
-                animation: 'fadeIn 0.2s ease-out'
+                animation: 'fadeIn 0.3s ease-out forwards'
             }}
             onClick={(e) => {
                 e.preventDefault();
@@ -54,7 +66,7 @@ const ConfirmModal = ({
                     border: `1px solid ${color}33`,
                     textAlign: 'center',
                     boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px ${color}22`,
-                    animation: 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
                     position: 'relative'
                 }}
                 onClick={(e) => e.stopPropagation()}

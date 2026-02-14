@@ -7,7 +7,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Profile from "./pages/Profile.jsx";
 
-import Footer from "./components/Footer";
+
 import Products from "./pages/Products.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
 import Panier from "./pages/Panier.jsx";
@@ -47,7 +47,7 @@ function App() {
         <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
         <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
       </Routes>
-      <Footer />
+
     </BrowserRouter>
   );
 }

@@ -16,6 +16,7 @@ const ProductSchema = new mongoose.Schema({
         soldAt: { type: Date }
     }],
     isFeatured: { type: Boolean, default: false },
+    isHidden: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', ProductSchema);

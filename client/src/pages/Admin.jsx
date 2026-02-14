@@ -64,6 +64,18 @@ const Admin = () => {
         fetchDemos(); // Fetch demos
     }, []);
 
+    useEffect(() => {
+        const isAnyModalOpen = showBalanceModal || showLogModal || showFulfillModal || showAddForm || isEditingCategory || showCategoryForm;
+        if (isAnyModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [showBalanceModal, showLogModal, showFulfillModal, showAddForm, isEditingCategory, showCategoryForm]);
+
     const fetchDemos = async () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/api/demos`);
@@ -485,7 +497,9 @@ const Admin = () => {
                 height: '100vh',
                 zIndex: 100
             }}>
-
+                <div style={{ padding: '0 0 40px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
+                    <img src="/logo.png" alt="SKYGROS" style={{ height: '40px', width: 'auto' }} />
+                </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
                     <SidebarItem id="products" label="Gestion Produits" icon={FaBoxOpen} />
@@ -496,7 +510,6 @@ const Admin = () => {
                     <SidebarItem id="ranks" label="Système de Rangs" icon={FaMedal} />
                     <SidebarItem id="demos" label="Gestion Demos" icon={FaGift} />
                     <SidebarItem id="settings" label="Paramètres Généraux" icon={FaCog} />
-                    <SidebarItem id="home" label="Gestion Page Home" icon={FaHome} />
                 </div>
 
                 <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)' }}>
@@ -521,8 +534,7 @@ const Admin = () => {
                                         activeTab === "historique" ? "Historique des Ventes" :
                                             activeTab === "ranks" ? "Système de Rangs" :
                                                 activeTab === "demos" ? "Gestion des Demos" :
-                                                    activeTab === "settings" ? "Paramètres Généraux" :
-                                                        activeTab === "home" ? "Gestion Page Home" : "Base de Données Clients"}
+                                                    activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
                         </h1>
                         <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>
                             {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
@@ -531,8 +543,7 @@ const Admin = () => {
                                         activeTab === "historique" ? "Consultez toutes les transactions passées." :
                                             activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
                                                 activeTab === "demos" ? "Gérez les comptes d'essai et démos." :
-                                                    activeTab === "settings" ? "Configurez les informations globales du site." :
-                                                        activeTab === "home" ? "Modifiez le contenu de la page d'accueil." : "Gérez les permissions et soldes de vos clients."}
+                                                    activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
                         </p>
                     </div>
                     {activeTab === "products" && (
@@ -1022,348 +1033,12 @@ const Admin = () => {
                                         </div>
                                     </div>
                                 </div>
-                                {/* Pied de page (Footer) */}
-                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
-                                    <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Pied de page (Footer)</h3>
 
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        <div className="flex flex-col gap-2">
-                                            <label className="form-label">Description (À Propos)</label>
-                                            <textarea
-                                                className="admin-input"
-                                                style={{ height: '100px', resize: 'vertical' }}
-                                                value={settings.footer.aboutText}
-                                                onChange={(e) => setSettings({ ...settings, footer: { ...settings.footer, aboutText: e.target.value } })}
-                                            />
-                                        </div>
-
-                                        <div className="flex flex-col gap-2">
-                                            <label className="form-label">Numéro de Contact</label>
-                                            <input
-                                                className="admin-input"
-                                                value={settings.footer.contactNumber}
-                                                onChange={(e) => setSettings({ ...settings, footer: { ...settings.footer, contactNumber: e.target.value } })}
-                                            />
-                                        </div>
-
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                            <div className="flex flex-col gap-2">
-                                                <label className="form-label">Lien Facebook</label>
-                                                <input
-                                                    className="admin-input"
-                                                    value={settings.footer.facebookLink}
-                                                    onChange={(e) => setSettings({ ...settings, footer: { ...settings.footer, facebookLink: e.target.value } })}
-                                                />
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                <label className="form-label">Lien Telegram</label>
-                                                <input
-                                                    className="admin-input"
-                                                    value={settings.footer.telegramLink}
-                                                    onChange={(e) => setSettings({ ...settings, footer: { ...settings.footer, telegramLink: e.target.value } })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Réseaux Sociaux Dynamiques */}
-                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: '900', marginBottom: '20px', color: '#fff' }}>Réseaux Sociaux Dynamiques (Icônes supplémentaires)</h3>
-
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                        {settings.footer.dynamicSocials?.map((social, idx) => (
-                                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 50px', gap: '15px', alignItems: 'end' }}>
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label" style={{ fontSize: '0.65rem' }}>Nom (ex: Instagram)</label>
-                                                    <input
-                                                        className="admin-input"
-                                                        value={social.name}
-                                                        onChange={(e) => {
-                                                            const newSocials = [...settings.footer.dynamicSocials];
-                                                            newSocials[idx].name = e.target.value;
-                                                            setSettings({ ...settings, footer: { ...settings.footer, dynamicSocials: newSocials } });
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label" style={{ fontSize: '0.65rem' }}>URL Icône</label>
-                                                    <input
-                                                        className="admin-input"
-                                                        value={social.icon}
-                                                        onChange={(e) => {
-                                                            const newSocials = [...settings.footer.dynamicSocials];
-                                                            newSocials[idx].icon = e.target.value;
-                                                            setSettings({ ...settings, footer: { ...settings.footer, dynamicSocials: newSocials } });
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label" style={{ fontSize: '0.65rem' }}>Lien (URL)</label>
-                                                    <input
-                                                        className="admin-input"
-                                                        value={social.url}
-                                                        onChange={(e) => {
-                                                            const newSocials = [...settings.footer.dynamicSocials];
-                                                            newSocials[idx].url = e.target.value;
-                                                            setSettings({ ...settings, footer: { ...settings.footer, dynamicSocials: newSocials } });
-                                                        }}
-                                                    />
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const newSocials = settings.footer.dynamicSocials.filter((_, i) => i !== idx);
-                                                        setSettings({ ...settings, footer: { ...settings.footer, dynamicSocials: newSocials } });
-                                                    }}
-                                                    className="action-btn delete"
-                                                    style={{ width: '100%', height: '45px' }}
-                                                ><FaTrash size={14} /></button>
-                                            </div>
-                                        ))}
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const newSocials = [...(settings.footer.dynamicSocials || []), { name: "", icon: "", url: "" }];
-                                                setSettings({ ...settings, footer: { ...settings.footer, dynamicSocials: newSocials } });
-                                            }}
-                                            style={{ alignSelf: 'flex-start', background: 'transparent', border: '1px dashed var(--accent-color)', color: 'var(--accent-color)', padding: '10px 20px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}
-                                        >
-                                            + Ajouter un réseau social
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Colonnes de Liens */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
-                                    {[1, 2, 3].map(num => (
-                                        <div key={num} className="glass" style={{ padding: '25px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <div className="flex flex-col gap-4">
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label">Titre Colonne {num}</label>
-                                                    <input
-                                                        className="admin-input"
-                                                        value={settings.footer[`col${num}Title`]}
-                                                        onChange={(e) => setSettings({ ...settings, footer: { ...settings.footer, [`col${num}Title`]: e.target.value } })}
-                                                    />
-                                                </div>
-
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label">Liens Colonne {num}</label>
-                                                    <div style={{ position: 'relative' }}>
-                                                        <input
-                                                            className="admin-input"
-                                                            placeholder="Nom du lien + Entrée"
-                                                            value={num === 1 ? col1Input : num === 2 ? col2Input : col3Input}
-                                                            onChange={(e) => num === 1 ? setCol1Input(e.target.value) : num === 2 ? setCol2Input(e.target.value) : setCol3Input(e.target.value)}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    e.preventDefault();
-                                                                    const val = e.target.value.trim();
-                                                                    if (val) {
-                                                                        const newLinks = [...settings.footer[`col${num}Links`], { name: val, url: "#" }];
-                                                                        setSettings({ ...settings, footer: { ...settings.footer, [`col${num}Links`]: newLinks } });
-                                                                        num === 1 ? setCol1Input("") : num === 2 ? setCol2Input("") : setCol3Input("");
-                                                                    }
-                                                                }
-                                                            }}
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', padding: '5px', borderRadius: '5px' }}
-                                                        >
-                                                            <FaPlus size={10} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    {settings.footer[`col${num}Links`].map((link, lIdx) => (
-                                                        <span key={lIdx} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '5px 12px', borderRadius: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            {link.name}
-                                                            <FaTimes
-                                                                size={10}
-                                                                style={{ cursor: 'pointer', opacity: 0.5 }}
-                                                                onClick={() => {
-                                                                    const newLinks = settings.footer[`col${num}Links`].filter((_, i) => i !== lIdx);
-                                                                    setSettings({ ...settings, footer: { ...settings.footer, [`col${num}Links`]: newLinks } });
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
 
                                 <button type="submit" className="btn btn-primary" style={{ padding: '15px 40px', borderRadius: '15px', fontWeight: '900', boxShadow: '0 10px 30px rgba(255, 153, 0, 0.2)' }}>
                                     ENREGISTRER TOUS LES PARAMÈTRES
                                 </button>
                             </form>
-                        )}
-                    </div>
-                ) : activeTab === "home" ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                        {settings && (
-                            <>
-                                {/* Ligues & Sports (Logos) - NEW SECTION REQUESTED */}
-                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff' }}>Ligues & Sports (Cartes avec Images)</h3>
-                                        <button
-                                            onClick={() => {
-                                                const currentSports = settings.home?.sports || [];
-                                                const newSports = [...currentSports, { name: "", image: "" }];
-                                                setSettings({ ...settings, home: { ...settings.home, sports: newSports } });
-                                            }}
-                                            className="btn"
-                                            style={{ background: 'var(--success)', color: '#000', fontSize: '0.8rem', padding: '10px 20px', borderRadius: '12px', fontWeight: '800' }}
-                                        >
-                                            <FaPlus style={{ marginRight: '8px' }} /> AJOUTER UNE CARTE
-                                        </button>
-                                    </div>
-                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', marginBottom: '20px' }}>
-                                        Ajoutez les logos des ligues ou partenaires. Si l'image est vide, le nom sera affiché à la place.
-                                    </p>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-                                        {(settings.home?.sports || []).map((sport, idx) => (
-                                            <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
-                                                <button
-                                                    onClick={() => {
-                                                        const newSports = settings.home.sports.filter((_, i) => i !== idx);
-                                                        setSettings({ ...settings, home: { ...settings.home, sports: newSports } });
-                                                    }}
-                                                    className="action-btn delete"
-                                                    style={{ position: 'absolute', top: '15px', right: '15px', width: '30px', height: '30px' }}
-                                                >
-                                                    <FaTrash size={12} />
-                                                </button>
-
-                                                <div className="flex flex-col gap-3">
-                                                    <div className="flex flex-col gap-1">
-                                                        <label className="form-label" style={{ fontSize: '0.65rem' }}>Nom de la Ligue/Sport</label>
-                                                        <input
-                                                            className="admin-input"
-                                                            value={sport.name}
-                                                            placeholder="ex: LaLiga"
-                                                            onChange={(e) => {
-                                                                const newSports = [...settings.home.sports];
-                                                                newSports[idx].name = e.target.value;
-                                                                setSettings({ ...settings, home: { ...settings.home, sports: newSports } });
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <label className="form-label" style={{ fontSize: '0.65rem' }}>URL de l'Image (Logo)</label>
-                                                        <input
-                                                            className="admin-input"
-                                                            value={sport.image}
-                                                            placeholder="https://...logo.png"
-                                                            onChange={(e) => {
-                                                                const newSports = [...settings.home.sports];
-                                                                newSports[idx].image = e.target.value;
-                                                                setSettings({ ...settings, home: { ...settings.home, sports: newSports } });
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    {sport.image && (
-                                                        <div style={{ width: '100%', height: '60px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '5px' }}>
-                                                            <img src={sport.image} alt="Preview" style={{ maxHeight: '40px', maxWidth: '80%' }} />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Carousel Manager */}
-                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#fff' }}>Carousel Principal</h3>
-                                        <button
-                                            onClick={() => {
-                                                const currentCarousel = settings.home?.carousel || [];
-                                                const newSlides = [...currentCarousel, { image: "", title: "", subtitle: "", color: "#ffffff", buttonText: "DÉCOUVRIR" }];
-                                                setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
-                                            }}
-                                            className="btn"
-                                            style={{ background: 'var(--accent-color)', color: '#fff', fontSize: '0.8rem', padding: '10px 20px', borderRadius: '12px', fontWeight: '800' }}
-                                        >
-                                            <FaPlus style={{ marginRight: '8px' }} /> AJOUTER SLIDE
-                                        </button>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                        {(settings.home?.carousel || []).map((slide, idx) => (
-                                            <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 0.5fr 50px', gap: '15px', alignItems: 'center' }}>
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label">Image URL</label>
-                                                    <input
-                                                        className="admin-input"
-                                                        value={slide.image}
-                                                        onChange={(e) => {
-                                                            const newSlides = [...settings.home.carousel];
-                                                            newSlides[idx].image = e.target.value;
-                                                            setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label">Titre</label>
-                                                    <input
-                                                        className="admin-input"
-                                                        value={slide.title}
-                                                        onChange={(e) => {
-                                                            const newSlides = [...settings.home.carousel];
-                                                            newSlides[idx].title = e.target.value;
-                                                            setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label">Sous-titre</label>
-                                                    <input
-                                                        className="admin-input"
-                                                        value={slide.subtitle}
-                                                        onChange={(e) => {
-                                                            const newSlides = [...settings.home.carousel];
-                                                            newSlides[idx].subtitle = e.target.value;
-                                                            setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="form-label">Couleur</label>
-                                                    <input
-                                                        type="color"
-                                                        value={slide.color}
-                                                        onChange={(e) => {
-                                                            const newSlides = [...settings.home.carousel];
-                                                            newSlides[idx].color = e.target.value;
-                                                            setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
-                                                        }}
-                                                        style={{ width: '100%', height: '40px', padding: 0, border: 'none', background: 'none' }}
-                                                    />
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        const newSlides = settings.home.carousel.filter((_, i) => i !== idx);
-                                                        setSettings({ ...settings, home: { ...settings.home, carousel: newSlides } });
-                                                    }}
-                                                    className="action-btn delete"
-                                                >
-                                                    <FaTrash size={14} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <button onClick={handleUpdateSettings} className="btn btn-primary" style={{ padding: '16px 40px', borderRadius: '16px', fontWeight: '900', fontSize: '1.1rem', marginTop: '20px' }}>
-                                    ENREGISTRER LA CONFIGURATION ACCUEIL
-                                </button>
-                            </>
                         )}
                     </div>
                 ) : (
@@ -1438,128 +1113,130 @@ const Admin = () => {
             </div>
 
             {/* Modals - Refined for Premium Feel */}
-            {(showAddForm || isEditing) && (
-                <div className="modal-overlay">
-                    <div className="glass modal-content" style={{ animation: 'modalSlideUp 0.3s ease-out' }}>
-                        <div className="flex justify-between items-center mb-8">
-                            <h2 style={{ fontSize: '1.6rem', fontWeight: '900' }}>
-                                {showAddForm ? "Créer un Produit" : "Modifier le Produit"}
-                            </h2>
-                            <FaTimes
-                                onClick={() => { setShowAddForm(false); setIsEditing(null); }}
-                                style={{ color: 'rgba(255,255,255,0.3)', cursor: 'pointer', transition: '0.3s' }}
-                                className="hover:text-error"
-                            />
-                        </div>
-                        <form onSubmit={showAddForm ? handleAddProduct : handleUpdateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <label className="form-label">Titre du Produit</label>
-                                <input
-                                    type="text"
-                                    value={showAddForm ? newProduct.title : isEditing.title}
-                                    className="admin-input"
-                                    placeholder="Nom unique du produit"
-                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, title: e.target.value }) : setIsEditing({ ...isEditing, title: e.target.value })}
-                                    required
+            {
+                (showAddForm || isEditing) && (
+                    <div className="modal-overlay">
+                        <div className="glass modal-content" style={{ animation: 'modalSlideUp 0.3s ease-out' }}>
+                            <div className="flex justify-between items-center mb-8">
+                                <h2 style={{ fontSize: '1.6rem', fontWeight: '900' }}>
+                                    {showAddForm ? "Créer un Produit" : "Modifier le Produit"}
+                                </h2>
+                                <FaTimes
+                                    onClick={() => { setShowAddForm(false); setIsEditing(null); }}
+                                    style={{ color: 'rgba(255,255,255,0.3)', cursor: 'pointer', transition: '0.3s' }}
+                                    className="hover:text-error"
                                 />
                             </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <form onSubmit={showAddForm ? handleAddProduct : handleUpdateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label className="form-label">Prix Actuel ($)</label>
-                                    <input
-                                        type="number"
-                                        value={showAddForm ? newProduct.price : isEditing.price}
-                                        className="admin-input"
-                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, price: parseFloat(e.target.value) }) : setIsEditing({ ...isEditing, price: parseFloat(e.target.value) })}
-                                        required
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label className="form-label">Prix Barré ($)</label>
-                                    <input
-                                        type="number"
-                                        value={showAddForm ? newProduct.oldPrice : isEditing.oldPrice}
-                                        className="admin-input"
-                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, oldPrice: parseFloat(e.target.value) }) : setIsEditing({ ...isEditing, oldPrice: parseFloat(e.target.value) })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label className="form-label">URL de l'Image</label>
+                                    <label className="form-label">Titre du Produit</label>
                                     <input
                                         type="text"
-                                        value={showAddForm ? newProduct.image : isEditing.image}
+                                        value={showAddForm ? newProduct.title : isEditing.title}
                                         className="admin-input"
-                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, image: e.target.value }) : setIsEditing({ ...isEditing, image: e.target.value })}
+                                        placeholder="Nom unique du produit"
+                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, title: e.target.value }) : setIsEditing({ ...isEditing, title: e.target.value })}
                                         required
                                     />
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label className="form-label">Catégorie</label>
-                                    <select
-                                        className="admin-input"
-                                        value={showAddForm ? newProduct.category : isEditing.category}
-                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, category: e.target.value, subcategory: "" }) : setIsEditing({ ...isEditing, category: e.target.value, subcategory: "" })}
-                                    >
-                                        <option value="">Sélectionner une catégorie</option>
-                                        {categories.map((c) => (
-                                            <option key={c._id} value={c.name}>{c.name}</option>
-                                        ))}
-                                    </select>
 
-                                    {/* Subcategory Select - Rendered inside the same column */}
-                                    {(showAddForm ? newProduct.category : isEditing.category) &&
-                                        categories.find(c => c.name === (showAddForm ? newProduct.category : isEditing.category))?.subcategories?.length > 0 && (
-                                            <div style={{ marginTop: '8px' }}>
-                                                <label className="form-label" style={{ fontSize: '0.85rem' }}>Sous-catégorie</label>
-                                                <select
-                                                    className="admin-input"
-                                                    value={showAddForm ? newProduct.subcategory : isEditing.subcategory}
-                                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, subcategory: e.target.value }) : setIsEditing({ ...isEditing, subcategory: e.target.value })}
-                                                >
-                                                    <option value="">Sélectionner une sous-catégorie</option>
-                                                    {categories.find(c => c.name === (showAddForm ? newProduct.category : isEditing.category)).subcategories.map((sub, idx) => (
-                                                        <option key={idx} value={sub}>{sub}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label className="form-label">Prix Actuel ($)</label>
+                                        <input
+                                            type="number"
+                                            value={showAddForm ? newProduct.price : isEditing.price}
+                                            className="admin-input"
+                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, price: parseFloat(e.target.value) }) : setIsEditing({ ...isEditing, price: parseFloat(e.target.value) })}
+                                            required
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label className="form-label">Prix Barré ($)</label>
+                                        <input
+                                            type="number"
+                                            value={showAddForm ? newProduct.oldPrice : isEditing.oldPrice}
+                                            className="admin-input"
+                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, oldPrice: parseFloat(e.target.value) }) : setIsEditing({ ...isEditing, oldPrice: parseFloat(e.target.value) })}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <label className="form-label">Clés de Licence (Séparez par des virgules)</label>
-                                <textarea
-                                    placeholder="ABCD-1234, EFGH-5678..."
-                                    className="admin-input"
-                                    style={{ height: '120px', fontFamily: 'monospace', resize: 'none' }}
-                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, keysInput: e.target.value }) : setIsEditing({ ...isEditing, keysInput: e.target.value })}
-                                    required={showAddForm}
-                                ></textarea>
-                                {isEditing && <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '800', opacity: 0.8 }}>* Les nouvelles clés seront ajoutées au stock existant.</p>}
-                            </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label className="form-label">URL de l'Image</label>
+                                        <input
+                                            type="text"
+                                            value={showAddForm ? newProduct.image : isEditing.image}
+                                            className="admin-input"
+                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, image: e.target.value }) : setIsEditing({ ...isEditing, image: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label className="form-label">Catégorie</label>
+                                        <select
+                                            className="admin-input"
+                                            value={showAddForm ? newProduct.category : isEditing.category}
+                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, category: e.target.value, subcategory: "" }) : setIsEditing({ ...isEditing, category: e.target.value, subcategory: "" })}
+                                        >
+                                            <option value="">Sélectionner une catégorie</option>
+                                            {categories.map((c) => (
+                                                <option key={c._id} value={c.name}>{c.name}</option>
+                                            ))}
+                                        </select>
 
-                            <button type="submit" className="btn btn-primary btn-submit" style={{
-                                padding: '18px',
-                                borderRadius: '16px',
-                                fontWeight: '900',
-                                fontSize: '1rem',
-                                letterSpacing: '1px',
-                                border: 'none',
-                                background: 'linear-gradient(135deg, var(--accent-color) 0%, #ff5722 100%)',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s',
-                                marginTop: '10px'
-                            }}>
-                                {showAddForm ? "PUBLIER LE PRODUIT" : "ENREGISTRER LES MODIFICATIONS"}
-                            </button>
-                        </form>
-                    </div>
-                </div >
-            )}
+                                        {/* Subcategory Select - Rendered inside the same column */}
+                                        {(showAddForm ? newProduct.category : isEditing.category) &&
+                                            categories.find(c => c.name === (showAddForm ? newProduct.category : isEditing.category))?.subcategories?.length > 0 && (
+                                                <div style={{ marginTop: '8px' }}>
+                                                    <label className="form-label" style={{ fontSize: '0.85rem' }}>Sous-catégorie</label>
+                                                    <select
+                                                        className="admin-input"
+                                                        value={showAddForm ? newProduct.subcategory : isEditing.subcategory}
+                                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, subcategory: e.target.value }) : setIsEditing({ ...isEditing, subcategory: e.target.value })}
+                                                    >
+                                                        <option value="">Sélectionner une sous-catégorie</option>
+                                                        {categories.find(c => c.name === (showAddForm ? newProduct.category : isEditing.category)).subcategories.map((sub, idx) => (
+                                                            <option key={idx} value={sub}>{sub}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label className="form-label">Clés de Licence (Séparez par des virgules)</label>
+                                    <textarea
+                                        placeholder="ABCD-1234, EFGH-5678..."
+                                        className="admin-input"
+                                        style={{ height: '120px', fontFamily: 'monospace', resize: 'none' }}
+                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, keysInput: e.target.value }) : setIsEditing({ ...isEditing, keysInput: e.target.value })}
+                                        required={showAddForm}
+                                    ></textarea>
+                                    {isEditing && <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '800', opacity: 0.8 }}>* Les nouvelles clés seront ajoutées au stock existant.</p>}
+                                </div>
+
+                                <button type="submit" className="btn btn-primary btn-submit" style={{
+                                    padding: '18px',
+                                    borderRadius: '16px',
+                                    fontWeight: '900',
+                                    fontSize: '1rem',
+                                    letterSpacing: '1px',
+                                    border: 'none',
+                                    background: 'linear-gradient(135deg, var(--accent-color) 0%, #ff5722 100%)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s',
+                                    marginTop: '10px'
+                                }}>
+                                    {showAddForm ? "PUBLIER LE PRODUIT" : "ENREGISTRER LES MODIFICATIONS"}
+                                </button>
+                            </form>
+                        </div>
+                    </div >
+                )
+            }
 
             {/* Category Form Modal */}
             {
@@ -1721,15 +1398,17 @@ const Admin = () => {
                 .action-btn.success:hover { background: var(--success); color: #000; border-color: var(--success); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 213, 115, 0.2); }
                 
                 .modal-overlay { 
-                    position: fixed; inset: 0; background: rgba(5,6,12,0.92); 
+                    position: fixed; inset: 0; background: rgba(5,6,12,0.4); 
                     z-index: 2000; display: flex; align-items: center; justify-content: center; 
-                    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+                    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                    animation: modalBackdropIn 0.4s ease-out forwards;
                 }
                 .modal-content { 
                     width: 95%; maxWidth: 600px; padding: 40px; borderRadius: 32px; 
                     border: 1px solid rgba(255,255,255,0.1); position: relative;
                     background: linear-gradient(135deg, rgba(20,22,40,0.95), rgba(15,16,32,0.98));
                     box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+                    animation: modalContentIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
                 }
                 .admin-input { 
                     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); 
@@ -1739,34 +1418,22 @@ const Admin = () => {
                 .admin-input:focus { border-color: var(--accent-color); background: rgba(255,153,0,0.05); box-shadow: 0 0 20px rgba(255, 153, 0, 0.1); }
                 .form-label { font-size: 0.75rem; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; }
                 .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(255, 87, 34, 0.3); filter: brightness(1.1); }
-                @keyframes modalSlideUp {
-                    from { opacity: 0; transform: translateY(40px) scale(0.95); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
+                
+                @keyframes modalBackdropIn {
+                    from { opacity: 0; backdrop-filter: blur(0); }
+                    to { opacity: 1; backdrop-filter: blur(20px); }
+                }
+
+                @keyframes modalContentIn {
+                    from { opacity: 0; transform: scale(0.9) translateY(30px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
                 }
             `}</style>
             {/* Fulfillment Logs Modal */}
             {
                 showLogModal && (
-                    <div style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.85)',
-                        backdropFilter: 'blur(10px)',
-                        zIndex: 2000,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '20px'
-                    }}>
-                        <div className="glass" style={{
-                            width: '100%',
-                            maxWidth: '550px',
-                            padding: '40px',
-                            borderRadius: '24px',
-                            background: 'linear-gradient(135deg, rgba(13, 14, 26, 0.95) 0%, rgba(20, 21, 38, 0.95) 100%)',
-                            border: '1px solid rgba(46, 213, 115, 0.3)',
-                            boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
-                        }}>
+                    <div className="modal-overlay" onClick={() => setShowLogModal(false)}>
+                        <div className="glass modal-content" style={{ maxWidth: '550px' }} onClick={e => e.stopPropagation()}>
                             <div style={{
                                 width: '64px',
                                 height: '64px',
