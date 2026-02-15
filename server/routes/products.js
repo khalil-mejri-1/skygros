@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const Order = require('../models/Order');
@@ -106,11 +107,12 @@ router.delete('/:id', async (req, res) => {
 });
 
 // PURCHASE PRODUCT (ATOMIC)
+// PURCHASE PRODUCT (ATOMIC + NEO 4K INTEGRATION)
 router.post('/purchase', async (req, res) => {
     const { userId, productId } = req.body;
     try {
         const user = await User.findById(userId);
-        let product = await Product.findById(productId);
+        const product = await Product.findById(productId);
 
         if (!user || !product) {
             return res.status(404).json({ message: "Utilisateur ou Produit non trouvé" });
@@ -120,48 +122,76 @@ router.post('/purchase', async (req, res) => {
             return res.status(400).json({ message: "Solde insuffisant" });
         }
 
-        // Attempt Atomic Purchase
-        const now = new Date();
-        const updatedProduct = await Product.findOneAndUpdate(
-            { _id: productId, "keys.isSold": false },
-            {
-                $set: {
-                    "keys.$.isSold": true,
-                    "keys.$.soldTo": userId,
-                    "keys.$.soldAt": now
-                }
-            },
-            { new: true }
-        );
-
         let licenseKey = "PENDING";
+        let subscriptionData = null;
+        let orderStatus = "PENDING";
 
-        // Logic: If updatedProduct exists, we successfully claimed a key.
-        if (updatedProduct) {
-            // Find the key we just claimed. 
-            // We look for key sold to this user at this exact time (or reasonably close)
-            const claimedKey = updatedProduct.keys.find(k => k.soldTo && k.soldTo.toString() === userId && new Date(k.soldAt).getTime() === now.getTime());
-            if (claimedKey) {
-                licenseKey = claimedKey.key;
+        // --- HANDLE M3U / NEO 4K ---
+        if (product.type === 'm3u') {
+            try {
+                // Generate a temporary Order ID for reference
+                const orderRef = new mongoose.Types.ObjectId();
+                const { createSubscription } = require('../utils/neoApi');
+
+                // Get options from request body (sent from frontend)
+                const options = req.body.subscriptionDetails || {};
+
+                // Use values from frontend or fallback to product defaults
+                const subOptions = {
+                    duration: options.packId || product.duration || 12, // packId in frontend was actually duration
+                    packId: options.region || product.pack, // region in frontend was actually packId (Sort Bouquets)
+                    country: options.country || 'TN'
+                };
+
+                // Call API
+                const subInfo = await createSubscription(subOptions, orderRef.toString());
+
+                subscriptionData = subInfo;
+                orderStatus = "COMPLETED";
+                // URL contains the m3u link with username/password
+                licenseKey = subInfo.url;
+            } catch (apiError) {
+                console.error("NEO 4K API Failed:", apiError);
+                // Depending on requirement, we might want to FAIL the order or keep it PENDING
+                licenseKey = "ERROR_API";
+                orderStatus = "PENDING";
+            }
+        }
+        // --- HANDLE NORMAL PRODUCTS (KEYS) ---
+        else {
+            const now = new Date();
+            const updatedProduct = await Product.findOneAndUpdate(
+                { _id: productId, "keys.isSold": false },
+                {
+                    $set: {
+                        "keys.$.isSold": true,
+                        "keys.$.soldTo": userId,
+                        "keys.$.soldAt": now
+                    }
+                },
+                { new: true }
+            );
+
+            if (updatedProduct) {
+                const claimedKey = updatedProduct.keys.find(k => k.soldTo && k.soldTo.toString() === userId && new Date(k.soldAt).getTime() === now.getTime());
+                if (claimedKey) {
+                    licenseKey = claimedKey.key;
+                    orderStatus = "COMPLETED";
+                }
             }
         }
 
-        // Deduct balance
+        // --- DEDUCT BALANCE ---
+        // Only deduct if successful or pending (reserved)
+        // If API completely failed and we decide to fail the order, we shouldn't deduct.
+        // But here we set status to PENDING on API error, implying manual fix, so we deduct.
         user.balance -= product.price;
-        if (licenseKey !== "PENDING") {
+        if (orderStatus === "COMPLETED") {
             user.purchaseCount += 1;
         }
         await user.save();
 
-        res.status(200).json({
-            message: licenseKey === "PENDING" ? "Commande reçue (Stock épuisé)" : "Achat réussi",
-            newBalance: user.balance,
-            purchaseCount: user.purchaseCount,
-            licenseKey: licenseKey,
-            isPending: licenseKey === "PENDING"
-        });
-
-        // SAVE TO ORDERS COLLECTION
+        // --- SAVE ORDER ---
         const newOrder = new Order({
             userId: user._id,
             productId: product._id,
@@ -169,9 +199,20 @@ router.post('/purchase', async (req, res) => {
             productImage: product.image,
             price: product.price,
             licenseKey: licenseKey,
-            status: licenseKey === "PENDING" ? "PENDING" : "COMPLETED"
+            status: orderStatus,
+            subscription: subscriptionData
         });
+
         await newOrder.save();
+
+        res.status(200).json({
+            message: orderStatus === "COMPLETED" ? "Achat réussi" : "Commande reçue (En attente)",
+            newBalance: user.balance,
+            purchaseCount: user.purchaseCount,
+            licenseKey: licenseKey,
+            isPending: orderStatus === "PENDING",
+            subscription: subscriptionData
+        });
 
     } catch (err) {
         console.error(err);

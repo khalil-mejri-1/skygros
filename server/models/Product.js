@@ -17,6 +17,10 @@ const ProductSchema = new mongoose.Schema({
     }],
     isFeatured: { type: Boolean, default: false },
     isHidden: { type: Boolean, default: false },
+    // New Fields for NEO 4K Integration
+    type: { type: String, enum: ['normal', 'm3u', 'mag'], default: 'normal' },
+    pack: { type: Number }, // NEO 4K Pack ID
+    duration: { type: Number } // Duration in months
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', ProductSchema);

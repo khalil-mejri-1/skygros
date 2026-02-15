@@ -9,6 +9,12 @@ const OrderSchema = new mongoose.Schema({
     quantity: { type: Number, default: 1 },
     licenseKey: { type: String, default: 'PENDING' },
     status: { type: String, enum: ['PENDING', 'COMPLETED', 'REFUNDED'], default: 'PENDING' },
+    // New Field for Subscription Details
+    subscription: {
+        userId: { type: String },
+        url: { type: String },
+        status: { type: String }
+    },
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -26,6 +26,43 @@ const ProductDetails = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [isUltraSmall, setIsUltraSmall] = useState(window.innerWidth <= 660);
 
+    // M3U Options State
+    const [packages, setPackages] = useState([]);
+    const [countries, setCountries] = useState([]);
+    const [selectedDuration, setSelectedDuration] = useState("");
+    const [selectedCountry, setSelectedCountry] = useState("TN");
+    const [selectedRegion, setSelectedRegion] = useState("");
+
+    // Fetch NEO Options if M3U
+    useEffect(() => {
+        if (product?.type === 'm3u') {
+            const fetchNeoOptions = async () => {
+                try {
+                    const [pkgRes, countryRes] = await Promise.all([
+                        axios.get(`${API_BASE_URL}/neo/packages`),
+                        axios.get(`${API_BASE_URL}/neo/countries`)
+                    ]);
+
+                    // Handle Packages
+                    const pkgs = Array.isArray(pkgRes.data) ? pkgRes.data : Object.values(pkgRes.data || {});
+                    setPackages(pkgs);
+                    // Auto-select first package if available
+                    if (pkgs.length > 0) {
+                        setSelectedRegion(pkgs[0].id);
+                    }
+
+                    // Handle Countries
+                    const cnts = Array.isArray(countryRes.data) ? countryRes.data : Object.values(countryRes.data || {});
+                    setCountries(cnts);
+
+                } catch (err) {
+                    console.error("Failed to load options", err);
+                }
+            };
+            fetchNeoOptions();
+        }
+    }, [product]);
+
 
     useEffect(() => {
         const handleResize = () => {
@@ -70,6 +107,20 @@ const ProductDetails = () => {
             });
             return;
         }
+
+        // Validation for M3U options
+        if (product.type === 'm3u') {
+            if (!selectedDuration || !selectedRegion) {
+                setAlertModal({
+                    isOpen: true,
+                    title: "Configuration Requise",
+                    message: "Veuillez sélectionner une durée et un bouquet avant d'acheter.",
+                    type: "warning"
+                });
+                return;
+            }
+        }
+
         if (user.balance < product.price) {
             setAlertModal({
                 isOpen: true,
@@ -84,7 +135,12 @@ const ProductDetails = () => {
         try {
             const res = await axios.post(`${API_BASE_URL}/products/purchase`, {
                 userId: user._id,
-                productId: product._id
+                productId: product._id,
+                subscriptionDetails: product.type === 'm3u' ? {
+                    packId: selectedDuration,
+                    country: selectedCountry,
+                    region: selectedRegion
+                } : null
             });
 
             if (res.status === 200) {
@@ -338,6 +394,57 @@ const ProductDetails = () => {
                         </div>
 
                         <div style={{ marginBottom: '40px' }}>
+                            {product.type === 'm3u' && (
+                                <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
+                                    <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'abonnement</h3>
+
+                                    {/* Subscription Duration */}
+                                    <div className="mb-4">
+                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Duration (Subscription)</label>
+                                        <select
+                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                            value={selectedDuration}
+                                            onChange={(e) => setSelectedDuration(e.target.value)}
+                                        >
+                                            <option value="">Sélectionner une durée</option>
+                                            <option value="1">1 Month</option>
+                                            <option value="3">3 Months</option>
+                                            <option value="6">6 Months</option>
+                                            <option value="12">12 Months</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Sort Bouquets (Packages) */}
+                                    <div className="mb-4">
+                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
+                                        <select
+                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                            value={selectedRegion}
+                                            onChange={(e) => setSelectedRegion(e.target.value)}
+                                        >
+                                            <option value="">Sélectionner un bouquet</option>
+                                            {packages.map(pkg => (
+                                                <option key={pkg.id} value={pkg.id}>{pkg.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Country */}
+                                    <div className="mb-2">
+                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
+                                        <select
+                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                            value={selectedCountry}
+                                            onChange={(e) => setSelectedCountry(e.target.value)}
+                                        >
+                                            {countries.map(c => (
+                                                <option key={c.code} value={c.code}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
                             <h3 style={{ color: '#fff', marginBottom: '15px', fontSize: '1.2rem', fontWeight: '800' }}>DESCRIPTION</h3>
                             <p style={{ color: 'var(--text-secondary)', lineHeight: '1.8', fontSize: '1.05rem' }}>
                                 {product.description || "Ce produit numérique premium vous offre un accès instantané à votre contenu. Utilisez le code secret fourni après l'achat pour activer votre produit sur la plateforme correspondante."}

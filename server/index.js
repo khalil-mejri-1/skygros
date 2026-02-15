@@ -30,6 +30,8 @@ const orderRoute = require('./routes/orders');
 const categoryRoute = require('./routes/categories');
 const settingsRoute = require('./routes/settings');
 const demoRoute = require('./routes/demos');
+const resetCodeRoute = require('./routes/resetCodes');
+const neoRoute = require('./routes/neo');
 const path = require('path');
 
 app.use('/api/auth', authRoute);
@@ -39,6 +41,8 @@ app.use('/api/orders', orderRoute);
 app.use('/api/categories', categoryRoute);
 app.use('/api/settings', settingsRoute);
 app.use('/api/demos', demoRoute);
+app.use('/api/reset-codes', resetCodeRoute);
+app.use('/api/neo', neoRoute);
 
 app.get('/', (req, res) => {
     res.send('update-9 2/15/2026');

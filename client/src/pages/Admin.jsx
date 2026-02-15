@@ -14,6 +14,9 @@ const Admin = () => {
     const [orders, setOrders] = useState([]);
     const [demos, setDemos] = useState([]); // demos state
     const [newDemo, setNewDemo] = useState({ serviceName: "", description: "", image: "", contentListText: "" }); // new demo state
+    const [resetRequests, setResetRequests] = useState([]);
+    const [resetOptions, setResetOptions] = useState([]);
+    const [newOptionLabel, setNewOptionLabel] = useState("");
 
     // ... existing states ...
     const [isEditing, setIsEditing] = useState(null);
@@ -62,6 +65,7 @@ const Admin = () => {
         fetchCategories();
         fetchSettings();
         fetchDemos(); // Fetch demos
+        fetchResetData();
     }, []);
 
     useEffect(() => {
@@ -82,6 +86,47 @@ const Admin = () => {
             setDemos(res.data);
         } catch (err) {
             console.error("Error fetching demos:", err);
+        }
+    };
+
+    const fetchResetData = async () => {
+        try {
+            const reqRes = await axios.get(`${API_BASE_URL}/reset-codes`);
+            setResetRequests(reqRes.data);
+            const optRes = await axios.get(`${API_BASE_URL}/reset-codes/options`);
+            setResetOptions(optRes.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleAddOption = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.post(`${API_BASE_URL}/reset-codes/options`, { label: newOptionLabel, value: newOptionLabel.toLowerCase().replace(/\s+/g, '-') });
+            setNewOptionLabel("");
+            fetchResetData();
+            setAlertModal({ isOpen: true, title: "Succès", message: "Option ajoutée", type: "success" });
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDeleteOption = async (id) => {
+        try {
+            await axios.delete(`${API_BASE_URL}/reset-codes/options/${id}`);
+            fetchResetData();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleUpdateResetStatus = async (id, status) => {
+        try {
+            await axios.put(`${API_BASE_URL}/reset-codes/${id}`, { status });
+            fetchResetData();
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -509,6 +554,7 @@ const Admin = () => {
                     <SidebarItem id="users" label="Gestion Clients" icon={FaUsers} />
                     <SidebarItem id="ranks" label="Système de Rangs" icon={FaMedal} />
                     <SidebarItem id="demos" label="Gestion Demos" icon={FaGift} />
+                    <SidebarItem id="resetcodes" label="Gestion Reset Codes" icon={FaTimes} />
                     <SidebarItem id="settings" label="Paramètres Généraux" icon={FaCog} />
                 </div>
 
@@ -534,7 +580,8 @@ const Admin = () => {
                                         activeTab === "historique" ? "Historique des Ventes" :
                                             activeTab === "ranks" ? "Système de Rangs" :
                                                 activeTab === "demos" ? "Gestion des Demos" :
-                                                    activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
+                                                    activeTab === "resetcodes" ? "Demandes de Reset Code" :
+                                                        activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
                         </h1>
                         <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>
                             {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
@@ -1003,10 +1050,130 @@ const Admin = () => {
                             </div>
                         </div>
                     </div>
+                ) : activeTab === "resetcodes" ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        {/* Options Management */}
+                        <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff' }}>Gérer les Types</h3>
+                            <form onSubmit={handleAddOption} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                                <input
+                                    className="admin-input"
+                                    placeholder="Nouveau Type (ex: IPTV)"
+                                    value={newOptionLabel}
+                                    onChange={(e) => setNewOptionLabel(e.target.value)}
+                                    required
+                                />
+                                <button type="submit" className="btn btn-primary" style={{ padding: '0 20px', borderRadius: '14px', background: 'var(--accent-color)', fontWeight: 'bold' }}>AJOUTER</button>
+                            </form>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                {resetOptions.map(opt => (
+                                    <div key={opt._id} style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', fontSize: '0.9rem' }}>
+                                        {opt.label}
+                                        <FaTimes
+                                            size={12}
+                                            className="cursor-pointer hover:text-red-500 transition-colors"
+                                            onClick={() => handleDeleteOption(opt._id)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Requests Table */}
+                        <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <tr>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Client</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Type / Code</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Produit (Mdp)</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Date</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Statut</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {resetRequests.map(req => (
+                                        <tr key={req._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <td style={{ padding: '20px' }}>
+                                                <div style={{ fontWeight: '800', color: '#fff' }}>{req.userId?.username || 'Inconnu'}</div>
+                                                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>{req.userId?.email}</div>
+                                            </td>
+                                            <td style={{ padding: '20px' }}>
+                                                <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem', marginRight: '8px', fontWeight: '700' }}>{req.type}</span>
+                                                <span style={{ fontFamily: 'monospace', color: 'var(--accent-color)' }}>{req.code}</span>
+                                            </td>
+                                            <td style={{ padding: '20px' }}>
+                                                <div className="flex items-center gap-2">
+                                                    {req.productImage && <img src={req.productImage} style={{ width: '24px', height: '24px', borderRadius: '4px' }} />}
+                                                    <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{req.productTitle || 'N/A'}</span>
+                                                </div>
+                                                {req.password && (
+                                                    <div style={{ marginTop: '4px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Pass: {req.password}</div>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '20px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>
+                                                {new Date(req.createdAt).toLocaleString()}
+                                            </td>
+                                            <td style={{ padding: '20px' }}>
+                                                {req.status === 'PENDING' ? (
+                                                    <span style={{ color: 'var(--accent-color)', fontWeight: '900', fontSize: '0.75rem' }}>EN ATTENTE</span>
+                                                ) : req.status === 'COMPLETED' ? (
+                                                    <span style={{ color: 'var(--success)', fontWeight: '900', fontSize: '0.75rem' }}>TRAITÉ</span>
+                                                ) : (
+                                                    <span style={{ color: 'var(--error)', fontWeight: '900', fontSize: '0.75rem' }}>REJETÉ</span>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '20px' }}>
+                                                {req.status === 'PENDING' && (
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => handleUpdateResetStatus(req._id, 'COMPLETED')}
+                                                            title="Marquer comme traité"
+                                                            className="action-btn success"
+                                                        >
+                                                            <FaCheck size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleUpdateResetStatus(req._id, 'REJETÉ')}
+                                                            title="Rejeter"
+                                                            className="action-btn delete"
+                                                        >
+                                                            <FaTimes size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {resetRequests.length === 0 && (
+                                        <tr>
+                                            <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Aucune demande pour le moment.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 ) : activeTab === "settings" ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                         {settings && (
                             <form onSubmit={handleUpdateSettings}>
+                                {/* Contact Settings */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
+                                    <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Paramètres de Contact</h3>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="form-label">Numéro WhatsApp Admin</label>
+                                        <input
+                                            className="admin-input"
+                                            type="text"
+                                            value={settings.whatsappNumber || ""}
+                                            onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
+                                            placeholder="ex: +216..."
+                                        />
+                                    </div>
+                                </div>
+
                                 {/* SMTP Settings */}
                                 <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
                                     <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Configuration Email (SMTP)</h3>

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const GeneralSettingsSchema = new mongoose.Schema({
     smtpEmail: { type: String, default: "" },
     smtpPassword: { type: String, default: "" },
+    whatsappNumber: { type: String, default: "" }, // Admin WhatsApp Number for notifications
     footer: {
         aboutText: { type: String, default: "satpromax est en train de devenir un leader mondial dans le domaine du divertissement numérique..." },
         contactNumber: { type: String, default: "+216 22 484 915" },

@@ -6,6 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { FaShoppingCart, FaUser, FaSearch, FaDesktop, FaPlaystation, FaXbox, FaGamepad, FaGift, FaWallet, FaHistory, FaShieldAlt, FaChevronDown, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
+import ResetCodeModal from './ResetCodeModal';
 
 const Navbar = () => {
     const { user, dispatch } = useContext(AuthContext);
@@ -23,6 +24,7 @@ const Navbar = () => {
     const [allProducts, setAllProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [showSearchResults, setShowSearchResults] = useState(false);
+    const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const subNavRef = useRef(null);
     const searchRef = useRef(null);
 
@@ -634,6 +636,23 @@ const Navbar = () => {
                                     ))
                                 )}
                             </div>
+
+                            {/* Reset Code Button */}
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setIsResetModalOpen(true);
+                                }}
+                                className="ml-4 flex items-center gap-2 px-4 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all font-semibold text-xs whitespace-nowrap uppercase tracking-wider"
+                                style={{
+                                    height: '32px',
+                                    whiteSpace: 'nowrap',
+                                    flexShrink: 0
+                                }}
+                            >
+                                <i className="fas fa-undo-alt text-xs"></i>
+                                <span>Reset Code</span>
+                            </button>
                         </div>
 
                         {/* Unified Subcategories Window/Bar */}
@@ -792,6 +811,8 @@ const Navbar = () => {
                     )}
                 </div>
             )}
+
+            <ResetCodeModal isOpen={isResetModalOpen} onClose={() => setIsResetModalOpen(false)} />
 
             <style jsx>{`
                 :global(body) {
