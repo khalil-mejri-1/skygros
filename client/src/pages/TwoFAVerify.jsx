@@ -29,7 +29,7 @@ const TwoFAVerify = () => {
         setError("");
 
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/auth/2fa/verify`, {
+            const res = await axios.post(`${API_BASE_URL}/auth/2fa/verify`, {
                 userId,
                 token
             });

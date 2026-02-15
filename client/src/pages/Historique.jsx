@@ -25,7 +25,7 @@ const Historique = () => {
         const fetchOrders = async () => {
             if (!user) return;
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/orders/user/${user._id}`);
+                const res = await axios.get(`${API_BASE_URL}/orders/user/${user._id}`);
 
                 if (!Array.isArray(res.data)) {
                     setOrders([]);

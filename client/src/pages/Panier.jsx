@@ -63,7 +63,7 @@ const Panier = () => {
                 }
             });
 
-            const res = await axios.post(`${API_BASE_URL}/api/products/purchase-cart`, {
+            const res = await axios.post(`${API_BASE_URL}/products/purchase-cart`, {
                 userId: user._id,
                 productIds: expandedIds
             });

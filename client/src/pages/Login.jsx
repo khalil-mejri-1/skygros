@@ -37,7 +37,7 @@ const Login = () => {
 
         dispatch({ type: "LOGIN_START" });
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { ...credentials, captchaToken });
+            const res = await axios.post(`${API_BASE_URL}/auth/login`, { ...credentials, captchaToken });
 
             // Handle 2FA requirement
             if (res.data.twoFARequired) {

@@ -57,9 +57,9 @@ const Profile = () => {
             if (!user?._id) return;
             try {
                 // Check rewards first
-                await axios.post(`${API_BASE_URL}/api/users/check-rank-rewards`, { userId: user._id });
+                await axios.post(`${API_BASE_URL}/users/check-rank-rewards`, { userId: user._id });
                 // Then fetch updated user data
-                const res = await axios.get(`${API_BASE_URL}/api/users/${user._id}`);
+                const res = await axios.get(`${API_BASE_URL}/users/${user._id}`);
                 dispatch({ type: "UPDATE_USER", payload: res.data });
             } catch (err) {
                 console.error("Error fetching user data:", err);
@@ -69,7 +69,7 @@ const Profile = () => {
         const fetchOrders = async () => {
             if (!user?._id) return;
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/orders/user/${user._id}`);
+                const res = await axios.get(`${API_BASE_URL}/orders/user/${user._id}`);
                 if (Array.isArray(res.data)) {
                     setOrders(res.data);
                 }
@@ -82,7 +82,7 @@ const Profile = () => {
 
         const fetchSettings = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/settings`);
+                const res = await axios.get(`${API_BASE_URL}/settings`);
                 setRankSettings(res.data.ranks || []);
             } catch (err) {
                 console.error("Error fetching rank settings:", err);

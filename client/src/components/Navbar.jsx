@@ -38,7 +38,7 @@ const Navbar = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/categories`);
+                const res = await axios.get(`${API_BASE_URL}/categories`);
                 if (Array.isArray(res.data)) {
                     setCategories(res.data);
                 } else {
@@ -53,7 +53,7 @@ const Navbar = () => {
 
         const fetchAllProducts = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/products`);
+                const res = await axios.get(`${API_BASE_URL}/products`);
                 if (Array.isArray(res.data)) {
                     setAllProducts(res.data);
                 }

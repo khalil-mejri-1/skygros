@@ -66,7 +66,7 @@ const Home = () => {
 
     const fetchSettings = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/settings`);
+            const response = await fetch(`${API_BASE_URL}/settings`);
             if (response.ok) {
                 const data = await response.json();
                 setSettings(data);
@@ -93,7 +93,7 @@ const Home = () => {
         const fetchProducts = async () => {
             try {
                 setLoadingProducts(true);
-                const response = await axios.get(`${API_BASE_URL}/api/products`);
+                const response = await axios.get(`${API_BASE_URL}/products`);
                 if (response.status === 200) {
                     setAllProducts(response.data);
                 }
@@ -192,7 +192,7 @@ const Home = () => {
             if (editingSection === 'memberships') updatedSettings.home.membershipsSection = editData;
             if (editingSection === 'giftCards') updatedSettings.home.giftCardsSection = editData;
 
-            const response = await axios.put(`${API_BASE_URL}/api/settings`, updatedSettings);
+            const response = await axios.put(`${API_BASE_URL}/settings`, updatedSettings);
             if (response.status === 200) {
                 setSettings(response.data);
                 setIsEditModalOpen(false);
@@ -999,7 +999,7 @@ const Home = () => {
                                                         <button
                                                             onClick={async () => {
                                                                 try {
-                                                                    await axios.put(`${API_BASE_URL}/api/products/${product._id}`, { isHidden: !product.isHidden });
+                                                                    await axios.put(`${API_BASE_URL}/products/${product._id}`, { isHidden: !product.isHidden });
                                                                     const updated = allProducts.map(p => p._id === product._id ? { ...p, isHidden: !p.isHidden } : p);
                                                                     setAllProducts(updated);
                                                                 } catch (err) { showNotify("Erreur", "error"); }
@@ -1013,7 +1013,7 @@ const Home = () => {
                                                             onClick={async () => {
                                                                 if (window.confirm("Supprimer définitivement ce produit ?")) {
                                                                     try {
-                                                                        await axios.delete(`${API_BASE_URL}/api/products/${product._id}`);
+                                                                        await axios.delete(`${API_BASE_URL}/products/${product._id}`);
                                                                         setAllProducts(allProducts.filter(p => p._id !== product._id));
                                                                         setEditData({ ...editData, items: (editData.items || []).filter(id => id !== product._id) });
                                                                     } catch (err) { showNotify("Erreur", "error"); }
@@ -2827,7 +2827,7 @@ const Home = () => {
                                                         <button
                                                             onClick={async () => {
                                                                 try {
-                                                                    await axios.put(`${API_BASE_URL}/api/products/${product._id}`, { isHidden: !product.isHidden });
+                                                                    await axios.put(`${API_BASE_URL}/products/${product._id}`, { isHidden: !product.isHidden });
                                                                     const updated = allProducts.map(p => p._id === product._id ? { ...p, isHidden: !p.isHidden } : p);
                                                                     setAllProducts(updated);
                                                                 } catch (err) { showNotify("Erreur", "error"); }
@@ -2841,7 +2841,7 @@ const Home = () => {
                                                             onClick={async () => {
                                                                 if (window.confirm("Supprimer définitivement ce produit ?")) {
                                                                     try {
-                                                                        await axios.delete(`${API_BASE_URL}/api/products/${product._id}`);
+                                                                        await axios.delete(`${API_BASE_URL}/products/${product._id}`);
                                                                         setAllProducts(allProducts.filter(p => p._id !== product._id));
                                                                         setEditData({ ...editData, items: (editData.items || []).filter(id => id !== product._id) });
                                                                     } catch (err) { showNotify("Erreur", "error"); }

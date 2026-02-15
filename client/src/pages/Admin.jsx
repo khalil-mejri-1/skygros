@@ -78,7 +78,7 @@ const Admin = () => {
 
     const fetchDemos = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/demos`);
+            const res = await axios.get(`${API_BASE_URL}/demos`);
             setDemos(res.data);
         } catch (err) {
             console.error("Error fetching demos:", err);
@@ -89,7 +89,7 @@ const Admin = () => {
         e.preventDefault();
         try {
             const contentList = newDemo.contentListText.split('\n').filter(line => line.trim() !== "");
-            await axios.post(`${API_BASE_URL}/api/demos`, {
+            await axios.post(`${API_BASE_URL}/demos`, {
                 serviceName: newDemo.serviceName,
                 description: newDemo.description,
                 image: newDemo.image,
@@ -113,7 +113,7 @@ const Admin = () => {
             confirmColor: "#ff4757",
             onConfirm: async () => {
                 try {
-                    await axios.delete(`${API_BASE_URL}/api/demos/${id}`);
+                    await axios.delete(`${API_BASE_URL}/demos/${id}`);
                     fetchDemos();
                     setConfirmModal({ ...confirmModal, isOpen: false });
                     setAlertModal({ isOpen: true, title: "Supprimé !", message: "Le compte demo a été supprimé.", type: "success" });
@@ -136,7 +136,7 @@ const Admin = () => {
             confirmText: "REMBOURSER",
             onConfirm: async () => {
                 try {
-                    await axios.post(`${API_BASE_URL}/api/orders/refund/${orderId}`);
+                    await axios.post(`${API_BASE_URL}/orders/refund/${orderId}`);
                     fetchOrders();
                     fetchUsers();
                     setConfirmModal({ ...confirmModal, isOpen: false });
@@ -152,7 +152,7 @@ const Admin = () => {
 
     const fetchSettings = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/settings`);
+            const res = await axios.get(`${API_BASE_URL}/settings`);
             setSettings(res.data);
         } catch (err) {
             console.error(err);
@@ -162,7 +162,7 @@ const Admin = () => {
     const handleUpdateSettings = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.put(`${API_BASE_URL}/api/settings`, settings);
+            const res = await axios.put(`${API_BASE_URL}/settings`, settings);
             setSettings(res.data);
             setAlertModal({ isOpen: true, title: "Succès !", message: "Les paramètres ont été mis à jour avec succès.", type: "success" });
         } catch (err) {
@@ -173,7 +173,7 @@ const Admin = () => {
 
     const fetchOrders = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/orders`);
+            const res = await axios.get(`${API_BASE_URL}/orders`);
             if (Array.isArray(res.data)) {
                 setOrders(res.data);
             } else {
@@ -188,7 +188,7 @@ const Admin = () => {
 
     const fetchProducts = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/products`);
+            const res = await axios.get(`${API_BASE_URL}/products`);
             if (Array.isArray(res.data)) {
                 setProducts(res.data);
             } else {
@@ -203,7 +203,7 @@ const Admin = () => {
 
     const fetchCategories = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/categories`);
+            const res = await axios.get(`${API_BASE_URL}/categories`);
             if (Array.isArray(res.data)) {
                 setCategories(res.data);
             } else {
@@ -219,7 +219,7 @@ const Admin = () => {
     const handleAddCategory = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(`${API_BASE_URL}/api/categories`, newCategory);
+            await axios.post(`${API_BASE_URL}/categories`, newCategory);
             setNewCategory({ name: "", icon: "", subcategories: [], description: "" });
             setShowCategoryForm(false);
             fetchCategories();
@@ -231,7 +231,7 @@ const Admin = () => {
     const handleUpdateCategory = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`${API_BASE_URL}/api/categories/${isEditingCategory._id}`, isEditingCategory);
+            await axios.put(`${API_BASE_URL}/categories/${isEditingCategory._id}`, isEditingCategory);
             setIsEditingCategory(null);
             fetchCategories();
         } catch (err) {
@@ -249,7 +249,7 @@ const Admin = () => {
             confirmText: "SUPPRIMER",
             onConfirm: async () => {
                 try {
-                    await axios.delete(`${API_BASE_URL}/api/categories/${id}`);
+                    await axios.delete(`${API_BASE_URL}/categories/${id}`);
                     fetchCategories();
                     setConfirmModal({ ...confirmModal, isOpen: false });
                     setAlertModal({ isOpen: true, title: "Supprimé !", message: "La catégorie a été supprimée.", type: "success" });
@@ -264,7 +264,7 @@ const Admin = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/users`);
+            const res = await axios.get(`${API_BASE_URL}/users`);
             if (Array.isArray(res.data)) {
                 setUsers(res.data);
             } else {
@@ -287,7 +287,7 @@ const Admin = () => {
             confirmText: "SUPPRIMER",
             onConfirm: async () => {
                 try {
-                    await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+                    await axios.delete(`${API_BASE_URL}/products/${id}`);
                     fetchProducts();
                     setConfirmModal({ ...confirmModal, isOpen: false });
                     setAlertModal({ isOpen: true, title: "Supprimé !", message: "Le produit a été supprimé.", type: "success" });
@@ -305,7 +305,7 @@ const Admin = () => {
         const keysArray = newProduct.keysInput.split(',').map(k => ({ key: k.trim(), isSold: false })).filter(k => k.key);
 
         try {
-            await axios.post(`${API_BASE_URL}/api/products`, { ...newProduct, keys: keysArray });
+            await axios.post(`${API_BASE_URL}/products`, { ...newProduct, keys: keysArray });
             setNewProduct({
                 title: "",
                 description: "",
@@ -333,7 +333,7 @@ const Admin = () => {
         }
 
         try {
-            const res = await axios.put(`${API_BASE_URL}/api/products/${isEditing._id}`, updatedData);
+            const res = await axios.put(`${API_BASE_URL}/products/${isEditing._id}`, updatedData);
             setIsEditing(null);
             fetchProducts();
 
@@ -349,7 +349,7 @@ const Admin = () => {
 
     const handleAddBalance = async () => {
         try {
-            await axios.post(`${API_BASE_URL}/api/users/add-balance`, {
+            await axios.post(`${API_BASE_URL}/users/add-balance`, {
                 userId: showBalanceModal._id,
                 amount: balanceAmount
             });
@@ -363,7 +363,7 @@ const Admin = () => {
 
     const handleFulfillOrder = async () => {
         try {
-            await axios.put(`${API_BASE_URL}/api/orders/fulfill/${showFulfillModal._id}`, {
+            await axios.put(`${API_BASE_URL}/orders/fulfill/${showFulfillModal._id}`, {
                 licenseKey: manualKey
             });
             setShowFulfillModal(null);
@@ -384,7 +384,7 @@ const Admin = () => {
             confirmText: "APPROUVER & ENVOYER EMAIL",
             onConfirm: async () => {
                 try {
-                    await axios.post(`${API_BASE_URL}/api/auth/approve-user/${user._id}`);
+                    await axios.post(`${API_BASE_URL}/auth/approve-user/${user._id}`);
                     fetchUsers();
                     setConfirmModal({ ...confirmModal, isOpen: false });
                     setAlertModal({ isOpen: true, title: "Succès", message: "Utilisateur approuvé et email envoyé.", type: "success" });

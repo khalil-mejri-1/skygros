@@ -39,7 +39,7 @@ const ProductDetails = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/products`);
+                const res = await axios.get(`${API_BASE_URL}/products`);
                 if (Array.isArray(res.data)) {
                     const currentProduct = res.data.find(p => p._id === id);
                     if (currentProduct) {
@@ -82,7 +82,7 @@ const ProductDetails = () => {
 
         setIsLoading(true);
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/products/purchase`, {
+            const res = await axios.post(`${API_BASE_URL}/products/purchase`, {
                 userId: user._id,
                 productId: product._id
             });
@@ -93,7 +93,7 @@ const ProductDetails = () => {
 
                 // Refresh product data to update stock status immediately
                 try {
-                    const productRes = await axios.get(`${API_BASE_URL}/api/products`);
+                    const productRes = await axios.get(`${API_BASE_URL}/products`);
                     if (Array.isArray(productRes.data)) {
                         const updated = productRes.data.find(p => p._id === id);
                         if (updated) setProduct(updated);

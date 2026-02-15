@@ -37,7 +37,7 @@ const TwoFASetup = () => {
     const startSetup = async () => {
         setLoading(true);
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/users/2fa/setup`, {
+            const res = await axios.post(`${API_BASE_URL}/users/2fa/setup`, {
                 userId: user._id
             });
             setQrCode(res.data.qrCode);
@@ -54,7 +54,7 @@ const TwoFASetup = () => {
         setLoading(true);
         setError("");
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/users/2fa/confirm`, {
+            const res = await axios.post(`${API_BASE_URL}/users/2fa/confirm`, {
                 userId: user._id,
                 token
             });
@@ -78,7 +78,7 @@ const TwoFASetup = () => {
         setLoading(true);
         setError("");
         try {
-            await axios.post(`${API_BASE_URL}/api/users/2fa/disable`, {
+            await axios.post(`${API_BASE_URL}/users/2fa/disable`, {
                 userId: user._id,
                 token: disableToken
             });

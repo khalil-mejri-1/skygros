@@ -52,7 +52,7 @@ const ProductCard = ({ product }) => {
 
         setIsLoading(true);
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/products/purchase`, {
+            const res = await axios.post(`${API_BASE_URL}/products/purchase`, {
                 userId: user._id,
                 productId: product._id
             });

@@ -28,7 +28,7 @@ const Register = () => {
         setError(false);
         setErrorMessage("");
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/auth/register`, credentials);
+            const res = await axios.post(`${API_BASE_URL}/auth/register`, credentials);
             if (res.status === 200) {
                 navigate("/login");
             }

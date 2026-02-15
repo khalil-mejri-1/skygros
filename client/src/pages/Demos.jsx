@@ -26,8 +26,8 @@ const Demos = () => {
         setLoading(true);
         try {
             const [typesRes, myDemosRes] = await Promise.all([
-                axios.get(`${API_BASE_URL}/api/demos/available-types`),
-                axios.get(`${API_BASE_URL}/api/demos/user/${user._id}`)
+                axios.get(`${API_BASE_URL}/demos/available-types`),
+                axios.get(`${API_BASE_URL}/demos/user/${user._id}`)
             ]);
             setAvailableTypes(typesRes.data);
             setMyDemos(myDemosRes.data);
@@ -50,7 +50,7 @@ const Demos = () => {
                 setIsClaiming(true);
                 setConfirmModal({ ...confirmModal, isOpen: false });
                 try {
-                    const res = await axios.post(`${API_BASE_URL}/api/demos/claim`, {
+                    const res = await axios.post(`${API_BASE_URL}/demos/claim`, {
                         userId: user._id,
                         serviceName
                     });

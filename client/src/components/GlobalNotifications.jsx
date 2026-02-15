@@ -18,8 +18,8 @@ const GlobalNotifications = () => {
             try {
                 // Fetch latest user data and orders in parallel
                 const [ordersRes, userRes] = await Promise.all([
-                    axios.get(`${API_BASE_URL}/api/orders/user/${user._id}`),
-                    axios.get(`${API_BASE_URL}/api/users/${user._id}`)
+                    axios.get(`${API_BASE_URL}/orders/user/${user._id}`),
+                    axios.get(`${API_BASE_URL}/users/${user._id}`)
                 ]);
 
                 // Sync Balance

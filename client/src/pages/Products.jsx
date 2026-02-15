@@ -45,7 +45,7 @@ const Products = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/products`);
+                const res = await axios.get(`${API_BASE_URL}/products`);
                 if (Array.isArray(res.data)) {
                     setProducts(res.data);
                 } else {
@@ -62,7 +62,7 @@ const Products = () => {
 
         const fetchCategories = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/categories`);
+                const res = await axios.get(`${API_BASE_URL}/categories`);
                 if (Array.isArray(res.data)) {
                     const fetchedCategories = res.data.map(cat => ({
                         id: cat.name,
