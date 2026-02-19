@@ -17,6 +17,8 @@ const createSubscription = async (options, orderRef) => {
             api_key: apiKey
         };
 
+        console.log("NEO API Request Params:", params); // DEBUG LOG to see what is actually sent
+
         const response = await axios.get('https://neo4kpro.me/api/api.php', { params });
         console.log("NEO RESPONSE:", response.data);
 

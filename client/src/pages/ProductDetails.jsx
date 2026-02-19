@@ -36,16 +36,32 @@ const ProductDetails = () => {
     // Fetch NEO Options if M3U
     useEffect(() => {
         if (product?.type === 'm3u') {
-            const fetchNeoOptions = async () => {
+            const fetchProviderOptions = async () => {
                 try {
+                    let providerPrefix = 'neo'; // Default
+                    if (product.provider === 'strong8k') {
+                        providerPrefix = 'strong8k';
+                    } else if (product.provider === 'activation') {
+                        providerPrefix = 'activation';
+                    } else if (product.provider === 'tivipanel') {
+                        providerPrefix = 'tivipanel';
+                    } else if (product.provider === 'promax') {
+                        providerPrefix = 'promax';
+                    }
+
+                    console.log(`Fetching options for provider: ${providerPrefix}`);
+
                     const [pkgRes, countryRes] = await Promise.all([
-                        axios.get(`${API_BASE_URL}/neo/packages`),
-                        axios.get(`${API_BASE_URL}/neo/countries`)
+                        axios.get(`${API_BASE_URL}/${providerPrefix}/packages`),
+                        // Re-use countries endpoint or provider specific if available
+                        axios.get(`${API_BASE_URL}/${providerPrefix}/countries`).catch(() => axios.get(`${API_BASE_URL}/neo/countries`))
                     ]);
 
                     // Handle Packages
+                    // Both APIs return array of objects: [{id, name}, ...]
                     const pkgs = Array.isArray(pkgRes.data) ? pkgRes.data : Object.values(pkgRes.data || {});
                     setPackages(pkgs);
+
                     // Auto-select first package if available
                     if (pkgs.length > 0) {
                         setSelectedRegion(pkgs[0].id);
@@ -56,10 +72,10 @@ const ProductDetails = () => {
                     setCountries(cnts);
 
                 } catch (err) {
-                    console.error("Failed to load options", err);
+                    console.error(`Failed to load options for ${product.provider}`, err);
                 }
             };
-            fetchNeoOptions();
+            fetchProviderOptions();
         }
     }, [product]);
 
@@ -133,13 +149,22 @@ const ProductDetails = () => {
 
         setIsLoading(true);
         try {
+            // DEBUG SELECTED OPTIONS BEFORE SENDING
+            if (product.type === 'm3u') {
+                console.log("Sending Purchase Request with:", {
+                    duration: selectedDuration,
+                    bouquetId: selectedRegion,
+                    country: selectedCountry
+                });
+            }
+
             const res = await axios.post(`${API_BASE_URL}/products/purchase`, {
                 userId: user._id,
                 productId: product._id,
                 subscriptionDetails: product.type === 'm3u' ? {
-                    packId: selectedDuration,
+                    duration: selectedDuration, // Changed from packId -> duration
                     country: selectedCountry,
-                    region: selectedRegion
+                    bouquetId: selectedRegion  // Changed from region -> bouquetId
                 } : null
             });
 
@@ -348,8 +373,8 @@ const ProductDetails = () => {
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '0.8rem', color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#ff4757', fontWeight: '800', marginBottom: '5px' }}>
-                                        {product.keys?.filter(k => !k.isSold).length > 0 ? "✓ DISPONIBLE IMMÉDIATEMENT" : "✗ DÉSOLÉ, EN RUPTURE DE STOCK"}
+                                    <div style={{ fontSize: '0.8rem', color: (product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? 'var(--success)' : '#ff4757', fontWeight: '800', marginBottom: '5px' }}>
+                                        {(product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? "✓ DISPONIBLE IMMÉDIATEMENT" : "✗ DÉSOLÉ, EN RUPTURE DE STOCK"}
                                     </div>
 
                                 </div>
@@ -373,7 +398,7 @@ const ProductDetails = () => {
                                 >
                                     {isLoading ? "Chargement..." :
                                         (isPurchased ? <FaCheck /> :
-                                            (product.keys?.filter(k => !k.isSold).length > 0 ? "ACHETER MAINTENANT" : "COMMANDER"))}
+                                            ((product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? "ACHETER MAINTENANT" : "COMMANDER"))}
                                 </button>
                                 <button
                                     onClick={handleAddToCart}
@@ -407,6 +432,7 @@ const ProductDetails = () => {
                                             onChange={(e) => setSelectedDuration(e.target.value)}
                                         >
                                             <option value="">Sélectionner une durée</option>
+                                            {product.provider === 'tivipanel' && <option value="trial">24h (Test)</option>}
                                             <option value="1">1 Month</option>
                                             <option value="3">3 Months</option>
                                             <option value="6">6 Months</option>
@@ -415,19 +441,23 @@ const ProductDetails = () => {
                                     </div>
 
                                     {/* Sort Bouquets (Packages) */}
-                                    <div className="mb-4">
-                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
-                                        <select
-                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                            value={selectedRegion}
-                                            onChange={(e) => setSelectedRegion(e.target.value)}
-                                        >
-                                            <option value="">Sélectionner un bouquet</option>
-                                            {packages.map(pkg => (
-                                                <option key={pkg.id} value={pkg.id}>{pkg.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    {product.showBouquetSorter !== false && (
+                                        <div className="mb-4">
+                                            <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
+                                            <select
+                                                className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                value={selectedRegion}
+                                                onChange={(e) => setSelectedRegion(e.target.value)}
+                                            >
+                                                <option value="">Sélectionner un bouquet</option>
+                                                {packages.map(pkg => (
+                                                    <option key={pkg.id} value={pkg.id}>
+                                                        {(product.bouquetNames && product.bouquetNames[pkg.id]) ? product.bouquetNames[pkg.id] : pkg.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
 
                                     {/* Country */}
                                     <div className="mb-2">

@@ -32,8 +32,14 @@ const settingsRoute = require('./routes/settings');
 const demoRoute = require('./routes/demos');
 const resetCodeRoute = require('./routes/resetCodes');
 const neoRoute = require('./routes/neo');
+const strong8kRoute = require('./routes/strong8k');
+const activationRoute = require('./routes/activation');
+const tivipanelRoute = require('./routes/tivipanel');
+const promaxRoute = require('./routes/promax');
+const uploadRoute = require('./routes/upload');
 const path = require('path');
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoute);
 app.use('/api/products', productRoute);
 app.use('/api/users', userRoute);
@@ -43,6 +49,11 @@ app.use('/api/settings', settingsRoute);
 app.use('/api/demos', demoRoute);
 app.use('/api/reset-codes', resetCodeRoute);
 app.use('/api/neo', neoRoute);
+app.use('/api/strong8k', strong8kRoute);
+app.use('/api/activation', activationRoute);
+app.use('/api/tivipanel', tivipanelRoute);
+app.use('/api/promax', promaxRoute);
+app.use('/api/upload', uploadRoute);
 
 app.get('/', (req, res) => {
     res.send('update-9 2/15/2026');

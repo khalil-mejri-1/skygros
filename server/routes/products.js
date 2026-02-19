@@ -126,21 +126,39 @@ router.post('/purchase', async (req, res) => {
         let subscriptionData = null;
         let orderStatus = "PENDING";
 
-        // --- HANDLE M3U / NEO 4K ---
-        if (product.type === 'm3u') {
+        // --- HANDLE M3U / MAG (NEO 4K / STRONG 8K) ---
+        if (product.type === 'm3u' || product.type === 'mag') {
             try {
                 // Generate a temporary Order ID for reference
                 const orderRef = new mongoose.Types.ObjectId();
-                const { createSubscription } = require('../utils/neoApi');
+
+                let apiModule;
+                if (product.provider === 'strong8k') {
+                    apiModule = require('../utils/strong8kApi');
+                } else if (product.provider === 'activation') {
+                    apiModule = require('../utils/activationApi');
+                } else if (product.provider === 'tivipanel') {
+                    apiModule = require('../utils/tivipanelApi');
+                } else if (product.provider === 'promax') {
+                    apiModule = require('../utils/promaxApi');
+                } else {
+                    apiModule = require('../utils/neoApi'); // Default to NEO
+                }
+                const { createSubscription } = apiModule;
 
                 // Get options from request body (sent from frontend)
                 const options = req.body.subscriptionDetails || {};
 
+                console.log(`Backend received ${product.provider || 'NEO'} options:`, options); // DEBUG LOG
+
                 // Use values from frontend or fallback to product defaults
+                // Map frontend/product values to API expected options
                 const subOptions = {
-                    duration: options.packId || product.duration || 12, // packId in frontend was actually duration
-                    packId: options.region || product.pack, // region in frontend was actually packId (Sort Bouquets)
-                    country: options.country || 'TN'
+                    type: product.type, // 'm3u' or 'mag'
+                    duration: options.duration || product.duration || 12,
+                    packId: options.bouquetId || product.pack,
+                    country: options.country, // Let API module handle default (Neo=TN, Strong8k=ALL)
+                    mac: options.mac // Only for MAG
                 };
 
                 // Call API
@@ -148,10 +166,10 @@ router.post('/purchase', async (req, res) => {
 
                 subscriptionData = subInfo;
                 orderStatus = "COMPLETED";
-                // URL contains the m3u link with username/password
-                licenseKey = subInfo.url;
+                // URL contains the m3u link or success message
+                licenseKey = subInfo.url || subInfo.message || "ACTIVE";
             } catch (apiError) {
-                console.error("NEO 4K API Failed:", apiError);
+                console.error(`${product.provider || 'NEO'} API Failed:`, apiError);
                 // Depending on requirement, we might want to FAIL the order or keep it PENDING
                 licenseKey = "ERROR_API";
                 orderStatus = "PENDING";
@@ -211,7 +229,9 @@ router.post('/purchase', async (req, res) => {
             purchaseCount: user.purchaseCount,
             licenseKey: licenseKey,
             isPending: orderStatus === "PENDING",
-            subscription: subscriptionData
+            isPending: orderStatus === "PENDING",
+            subscription: subscriptionData,
+            provider: product.provider || 'neo'
         });
 
     } catch (err) {

@@ -222,7 +222,7 @@ const ProductCard = ({ product }) => {
                     >
                         {isLoading ? (isSmall ? "..." : "Chargement...") :
                             (isPurchased ? <FaCheck /> :
-                                (product.keys?.filter(k => !k.isSold).length > 0 ? "ACHETER" : "COMMANDER"))}
+                                ((product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? "ACHETER" : "COMMANDER"))}
                     </button>
 
                     <button

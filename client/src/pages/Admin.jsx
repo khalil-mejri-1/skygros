@@ -24,6 +24,7 @@ const Admin = () => {
     const [showBalanceModal, setShowBalanceModal] = useState(null);
     const [balanceAmount, setBalanceAmount] = useState(0);
     const [fulfillmentLogs, setFulfillmentLogs] = useState([]);
+    const [providerPackages, setProviderPackages] = useState([]);
     const [showLogModal, setShowLogModal] = useState(false);
     const [showFulfillModal, setShowFulfillModal] = useState(null);
     const [manualKey, setManualKey] = useState("");
@@ -49,7 +50,14 @@ const Admin = () => {
         hasDiscount: false,
         image: "",
         category: "PC",
-        keysInput: ""
+        keysInput: "",
+        type: "normal",
+        provider: "neo",
+        pack: "",
+        pack: "",
+        duration: 12,
+        showBouquetSorter: true,
+        bouquetNames: {}
     });
 
     const getRankDetail = (count, ranks = []) => {
@@ -246,6 +254,31 @@ const Admin = () => {
         }
     };
 
+    const fetchProviderPackages = async (provider) => {
+        if (!provider || provider === 'normal') return;
+        try {
+            const res = await axios.get(`${API_BASE_URL}/${provider}/packages`);
+            // Normalize data (some APIs return array, others object)
+            const pkgs = Array.isArray(res.data) ? res.data : Object.values(res.data || {});
+            setProviderPackages(pkgs);
+        } catch (err) {
+            console.error(`Error fetching packages for ${provider}:`, err);
+            setProviderPackages([]);
+        }
+    };
+
+    useEffect(() => {
+        if (showAddForm && newProduct.type !== 'normal') {
+            fetchProviderPackages(newProduct.provider);
+        }
+    }, [showAddForm, newProduct.provider, newProduct.type]);
+
+    useEffect(() => {
+        if (isEditing && isEditing.type !== 'normal') {
+            fetchProviderPackages(isEditing.provider);
+        }
+    }, [isEditing, isEditing?.provider, isEditing?.type]);
+
     const fetchCategories = async () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/categories`);
@@ -258,6 +291,31 @@ const Admin = () => {
         } catch (err) {
             console.error(err);
             setCategories([]);
+        }
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await axios.post(`${API_BASE_URL}/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (showAddForm) {
+                setNewProduct({ ...newProduct, image: res.data.filePath });
+            } else {
+                setIsEditing({ ...isEditing, image: res.data.filePath });
+            }
+        } catch (err) {
+            console.error("Error uploading image:", err);
+            alert("Erreur lors de l'upload de l'image");
         }
     };
 
@@ -359,7 +417,11 @@ const Admin = () => {
                 hasDiscount: false,
                 image: "",
                 category: "PC",
-                keysInput: ""
+                keysInput: "",
+                type: "normal",
+                provider: "neo",
+                pack: "",
+                duration: 12
             });
             setShowAddForm(false);
             fetchProducts();
@@ -656,18 +718,19 @@ const Admin = () => {
                                     const totalKeys = p.keys?.length || 0;
                                     const availableKeys = p.keys?.filter(k => !k.isSold).length || 0;
                                     const soldKeys = totalKeys - availableKeys;
+                                    const isOutOfStock = p.type === 'normal' && availableKeys === 0;
 
                                     return (
                                         <tr key={p._id} style={{
                                             borderBottom: '1px solid rgba(255,255,255,0.03)',
-                                            filter: availableKeys === 0 ? 'grayscale(0.5)' : 'none',
-                                            opacity: availableKeys === 0 ? 0.8 : 1
+                                            filter: isOutOfStock ? 'grayscale(0.5)' : 'none',
+                                            opacity: isOutOfStock ? 0.8 : 1
                                         }}>
                                             <td style={{ padding: '20px 24px' }}>
                                                 <div className="flex items-center gap-4">
                                                     <div style={{ position: 'relative' }}>
                                                         <img src={p.image} style={{ width: '45px', height: '62px', objectFit: 'cover', borderRadius: '8px' }} alt="" />
-                                                        {availableKeys === 0 && (
+                                                        {isOutOfStock && (
                                                             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', borderRadius: '8px', border: '1px solid var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                 <FaExclamationTriangle size={14} color="var(--error)" />
                                                             </div>
@@ -688,22 +751,36 @@ const Admin = () => {
                                                 <div style={{ color: 'var(--accent-color)', fontWeight: '900', fontSize: '1.1rem' }}>${p.price.toFixed(2)}</div>
                                             </td>
                                             <td style={{ padding: '20px 24px' }}>
-                                                <div className="flex flex-col gap-2">
-                                                    <div className="flex items-center gap-3">
-                                                        <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden', width: '100px' }}>
-                                                            <div style={{
-                                                                width: totalKeys === 0 ? '0%' : `${(availableKeys / totalKeys) * 100}%`,
-                                                                height: '100%',
-                                                                background: availableKeys === 0 ? 'var(--error)' : 'var(--success)',
-                                                                boxShadow: availableKeys > 0 ? '0 0 10px rgba(46, 213, 115, 0.3)' : 'none'
-                                                            }}></div>
+                                                {p.type === 'normal' ? (
+                                                    <div className="flex flex-col gap-2">
+                                                        <div className="flex items-center gap-3">
+                                                            <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden', width: '100px' }}>
+                                                                <div style={{
+                                                                    width: totalKeys === 0 ? '0%' : `${(availableKeys / totalKeys) * 100}%`,
+                                                                    height: '100%',
+                                                                    background: availableKeys === 0 ? 'var(--error)' : 'var(--success)',
+                                                                    boxShadow: availableKeys > 0 ? '0 0 10px rgba(46, 213, 115, 0.3)' : 'none'
+                                                                }}></div>
+                                                            </div>
+                                                            <span style={{ fontWeight: '900', fontSize: '0.85rem', color: availableKeys === 0 ? 'var(--error)' : 'var(--success)' }}>
+                                                                {availableKeys}/{totalKeys}
+                                                            </span>
                                                         </div>
-                                                        <span style={{ fontWeight: '900', fontSize: '0.85rem', color: availableKeys === 0 ? 'var(--error)' : 'var(--success)' }}>
-                                                            {availableKeys}/{totalKeys}
-                                                        </span>
+                                                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{soldKeys} UNITÉS VENDUES</div>
                                                     </div>
-                                                    <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{soldKeys} UNITÉS VENDUES</div>
-                                                </div>
+                                                ) : (
+                                                    <span style={{
+                                                        padding: '6px 12px',
+                                                        background: 'rgba(var(--accent-color-rgb), 0.1)',
+                                                        color: 'var(--accent-color)',
+                                                        borderRadius: '8px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '900',
+                                                        border: '1px solid rgba(var(--accent-color-rgb), 0.2)'
+                                                    }}>
+                                                        STOCK API
+                                                    </span>
+                                                )}
                                             </td>
                                             <td style={{ padding: '20px 24px' }}>
                                                 <div className="flex gap-2">
@@ -1282,8 +1359,8 @@ const Admin = () => {
             {/* Modals - Refined for Premium Feel */}
             {
                 (showAddForm || isEditing) && (
-                    <div className="modal-overlay">
-                        <div className="glass modal-content" style={{ animation: 'modalSlideUp 0.3s ease-out' }}>
+                    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowAddForm(false); setIsEditing(null); } }}>
+                        <div className="modal-content" style={{ animation: 'modalSlideUp 0.3s ease-out' }}>
                             <div className="flex justify-between items-center mb-8">
                                 <h2 style={{ fontSize: '1.6rem', fontWeight: '900' }}>
                                     {showAddForm ? "Créer un Produit" : "Modifier le Produit"}
@@ -1331,14 +1408,25 @@ const Admin = () => {
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label className="form-label">URL de l'Image</label>
-                                        <input
-                                            type="text"
-                                            value={showAddForm ? newProduct.image : isEditing.image}
-                                            className="admin-input"
-                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, image: e.target.value }) : setIsEditing({ ...isEditing, image: e.target.value })}
-                                            required
-                                        />
+                                        <label className="form-label">Image du Produit</label>
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="admin-input"
+                                                onChange={handleImageUpload}
+                                                style={{ padding: '8px', fontSize: '0.8rem' }}
+                                            />
+                                            {(showAddForm ? newProduct.image : isEditing.image) && (
+                                                <div style={{ position: 'relative', width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                                    <img
+                                                        src={showAddForm ? newProduct.image : isEditing.image}
+                                                        alt="Preview"
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label className="form-label">Catégorie</label>
@@ -1373,32 +1461,163 @@ const Admin = () => {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label className="form-label">Clés de Licence (Séparez par des virgules)</label>
-                                    <textarea
-                                        placeholder="ABCD-1234, EFGH-5678..."
-                                        className="admin-input"
-                                        style={{ height: '120px', fontFamily: 'monospace', resize: 'none' }}
-                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, keysInput: e.target.value }) : setIsEditing({ ...isEditing, keysInput: e.target.value })}
-                                        required={showAddForm}
-                                    ></textarea>
-                                    {isEditing && <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '800', opacity: 0.8 }}>* Les nouvelles clés seront ajoutées au stock existant.</p>}
+                                {(showAddForm ? newProduct.type : isEditing.type) === 'normal' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label className="form-label">Clés de Licence (Séparez par des virgules)</label>
+                                        <textarea
+                                            placeholder="ABCD-1234, EFGH-5678..."
+                                            className="admin-input"
+                                            style={{ height: '120px', fontFamily: 'monospace', resize: 'none' }}
+                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, keysInput: e.target.value }) : setIsEditing({ ...isEditing, keysInput: e.target.value })}
+                                            required={showAddForm && newProduct.type === 'normal'}
+                                        ></textarea>
+                                        {isEditing && <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '800', opacity: 0.8 }}>* Les nouvelles clés seront ajoutées au stock existant.</p>}
+                                    </div>
+                                )}
+
+                                {/* API / IPTV Configuration */}
+                                <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: '800', marginBottom: '15px', color: 'var(--accent-color)', textTransform: 'uppercase' }}>Configuration API Automatique</h4>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '15px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label className="form-label">Type de Produit</label>
+                                            <select
+                                                className="admin-input"
+                                                value={showAddForm ? newProduct.type : isEditing.type}
+                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, type: e.target.value }) : setIsEditing({ ...isEditing, type: e.target.value })}
+                                            >
+                                                <option value="normal">💎 Normal (Clés manuelles)</option>
+                                                <option value="m3u">📺 M3U (Lien Automatique)</option>
+                                                <option value="mag">📟 MAG (Mac Address)</option>
+                                            </select>
+                                        </div>
+
+                                        {(showAddForm ? newProduct.type : isEditing.type) !== 'normal' && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <label className="form-label">Fournisseur API</label>
+                                                <select
+                                                    className="admin-input"
+                                                    value={showAddForm ? newProduct.provider : isEditing.provider}
+                                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, provider: e.target.value }) : setIsEditing({ ...isEditing, provider: e.target.value })}
+                                                >
+                                                    <option value="neo">NEO 4K (neo4kpro.me)</option>
+                                                    <option value="strong8k">STRONG 8K (my8k.me)</option>
+                                                    <option value="activation">ACTIVATION PANEL (activationpanel.net)</option>
+                                                    <option value="tivipanel">TIVIPANEL (api.tivipanel.net)</option>
+                                                    <option value="promax">PROMAX (api.promax-dash.com)</option>
+                                                </select>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {(showAddForm ? newProduct.type : isEditing.type) !== 'normal' && (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <label className="form-label">ID du Bouquet (Pack ID - 'all' pour tous)</label>
+                                                {(showAddForm ? newProduct.provider : isEditing.provider) === 'promax' ? (
+                                                    <select
+                                                        className="admin-input"
+                                                        value={showAddForm ? newProduct.pack : (isEditing.pack || "1")}
+                                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, pack: e.target.value }) : setIsEditing({ ...isEditing, pack: e.target.value })}
+                                                    >
+                                                        <option value="">Sélectionner un bouquet</option>
+                                                        {providerPackages.map(b => (
+                                                            <option key={b.id} value={b.id}>{b.name}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        className="admin-input"
+                                                        placeholder="ex: 123 ou all"
+                                                        value={showAddForm ? newProduct.pack : (isEditing.pack || "")}
+                                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, pack: e.target.value }) : setIsEditing({ ...isEditing, pack: e.target.value })}
+                                                    />
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <label className="form-label">Durée (Mois)</label>
+                                                <input
+                                                    type="number"
+                                                    className="admin-input"
+                                                    placeholder="ex: 12"
+                                                    value={showAddForm ? newProduct.duration : (isEditing.duration || 12)}
+                                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, duration: parseInt(e.target.value) }) : setIsEditing({ ...isEditing, duration: parseInt(e.target.value) })}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {(showAddForm ? newProduct.type : isEditing.type) !== 'normal' && (
+                                        <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <input
+                                                    type="checkbox"
+                                                    id="showBouquetSorter"
+                                                    checked={showAddForm ? (newProduct.showBouquetSorter !== false) : (isEditing.showBouquetSorter !== false)}
+                                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, showBouquetSorter: e.target.checked }) : setIsEditing({ ...isEditing, showBouquetSorter: e.target.checked })}
+                                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                                />
+                                                <label htmlFor="showBouquetSorter" className="form-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
+                                                    Afficher le tri des bouquets (Sort Bouquets Client)
+                                                </label>
+                                            </div>
+
+                                            {providerPackages.length > 0 && (
+                                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', maxHeight: '200px', overflowY: 'auto' }}>
+                                                    <label className="form-label" style={{ marginBottom: '10px', display: 'block', color: 'var(--accent-color)' }}>Renommer les Bouquets (Optionnel)</label>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                                        {providerPackages.map(pkg => {
+                                                            const currentNames = showAddForm ? (newProduct.bouquetNames || {}) : (isEditing.bouquetNames || {});
+                                                            const customName = currentNames[pkg.id] || "";
+
+                                                            return (
+                                                                <div key={pkg.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px', padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                                                                    <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>{pkg.name} (Original)</div>
+                                                                    <input
+                                                                        className="admin-input"
+                                                                        style={{ padding: '8px', fontSize: '0.8rem' }}
+                                                                        placeholder="Nom personnalisé..."
+                                                                        value={customName}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            const updatedNames = { ...currentNames };
+                                                                            if (val.trim()) {
+                                                                                updatedNames[pkg.id] = val;
+                                                                            } else {
+                                                                                delete updatedNames[pkg.id];
+                                                                            }
+
+                                                                            if (showAddForm) {
+                                                                                setNewProduct({ ...newProduct, bouquetNames: updatedNames });
+                                                                            } else {
+                                                                                setIsEditing({ ...isEditing, bouquetNames: updatedNames });
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <button type="submit" className="btn btn-primary btn-submit" style={{
-                                    padding: '18px',
-                                    borderRadius: '16px',
-                                    fontWeight: '900',
-                                    fontSize: '1rem',
-                                    letterSpacing: '1px',
-                                    border: 'none',
-                                    background: 'linear-gradient(135deg, var(--accent-color) 0%, #ff5722 100%)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s',
-                                    marginTop: '10px'
-                                }}>
-                                    {showAddForm ? "PUBLIER LE PRODUIT" : "ENREGISTRER LES MODIFICATIONS"}
-                                </button>
+                                <div className="flex justify-end gap-3 mt-4 sticky bottom-0 bg-[#131427] pt-4 border-t border-white/5 pb-2 -mb-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-glass"
+                                        onClick={() => { setShowAddForm(false); setIsEditing(null); }}
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button type="submit" className="btn btn-primary" style={{ boxShadow: '0 4px 15px rgba(255, 153, 0, 0.3)' }}>
+                                        {showAddForm ? "Créer" : "Enregistrer"}
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div >
@@ -1408,8 +1627,8 @@ const Admin = () => {
             {/* Category Form Modal */}
             {
                 (showCategoryForm || isEditingCategory) && (
-                    <div className="modal-overlay">
-                        <div className="glass modal-content" style={{ maxWidth: '450px' }}>
+                    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowCategoryForm(false); setIsEditingCategory(null); } }}>
+                        <div className="modal-content" style={{ maxWidth: '400px', animation: 'modalSlideUp 0.3s ease-out' }}>
                             <div className="flex justify-between items-center mb-8">
                                 <h2 style={{ fontSize: '1.6rem', fontWeight: '900' }}>
                                     {showCategoryForm ? "Nouvelle Catégorie" : "Modifier Catégorie"}

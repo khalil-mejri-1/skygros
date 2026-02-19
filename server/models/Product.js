@@ -18,9 +18,12 @@ const ProductSchema = new mongoose.Schema({
     isFeatured: { type: Boolean, default: false },
     isHidden: { type: Boolean, default: false },
     // New Fields for NEO 4K Integration
+    provider: { type: String, enum: ['neo', 'strong8k', 'activation', 'tivipanel', 'promax'], default: 'neo' },
     type: { type: String, enum: ['normal', 'm3u', 'mag'], default: 'normal' },
-    pack: { type: Number }, // NEO 4K Pack ID
-    duration: { type: Number } // Duration in months
+    pack: { type: String }, // Pack ID (String to support 'all' or numeric IDs)
+    duration: { type: Number }, // Duration in months
+    showBouquetSorter: { type: Boolean, default: true },
+    bouquetNames: { type: Map, of: String, default: {} } // Map of bouquetId -> customName
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', ProductSchema);
