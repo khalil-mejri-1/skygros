@@ -444,7 +444,7 @@ const Navbar = () => {
             {/* Mobile Menu Drawer */}
             {mobileMenuOpen && (
                 <>
-                    <div style={{ position: 'fixed', top: 0, right: 0, width: '320px', maxWidth: '85vw', height: '100vh', background: '#0d0e1a', zIndex: 10000, display: 'flex', flexDirection: 'column', boxShadow: '-20px 0 50px rgba(0,0,0,0.7)', animation: 'slideInRight 0.3s ease-out', borderLeft: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto' }}>
+                    <div style={{ position: 'fixed', top: 0, right: 0, width: '320px', maxWidth: '85vw', height: '100vh', background: '#0d0e1a', zIndex: 200000, display: 'flex', flexDirection: 'column', boxShadow: '-20px 0 50px rgba(0,0,0,0.7)', animation: 'slideInRight 0.3s ease-out', borderLeft: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto' }}>
                         <div style={{ padding: '30px 20px', display: 'flex', flexDirection: 'column', gap: '25px', paddingBottom: '110px' }}>
                             <div className="flex justify-between items-center" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '15px' }}>
                                 <div className="flex items-center gap-3">
@@ -573,7 +573,7 @@ const Navbar = () => {
                             </div>
                         </div>
                     </div>
-                    <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, backdropFilter: 'blur(8px)' }}></div>
+                    <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 199999, backdropFilter: 'blur(8px)' }}></div>
                 </>
             )}
 
