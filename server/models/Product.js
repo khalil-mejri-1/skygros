@@ -23,7 +23,12 @@ const ProductSchema = new mongoose.Schema({
     pack: { type: String }, // Pack ID (String to support 'all' or numeric IDs)
     duration: { type: Number }, // Duration in months
     showBouquetSorter: { type: Boolean, default: true },
-    bouquetNames: { type: Map, of: String, default: {} } // Map of bouquetId -> customName
+    showBouquetSorter: { type: Boolean, default: true },
+    bouquetNames: { type: Map, of: String, default: {} }, // Map of bouquetId -> customName
+    durationPrices: [{
+        duration: { type: Number, required: true }, // e.g. 1, 3, 6, 12
+        price: { type: Number, required: true }
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', ProductSchema);

@@ -405,7 +405,8 @@ const Home = () => {
                 `}</style>
 
                 {/* Hero Slider Section */}
-                <div className="relative w-full h-[35vh] md:h-[45vh] overflow-hidden mt-12 mb-8 bg-[#020617]">
+                <br />
+                <div className="relative w-full h-[35vh] md:h-[45vh] overflow-hidden mb-8 bg-[#020617] ">
                     {isAdmin && (
                         <button
                             onClick={(e) => {
@@ -472,158 +473,167 @@ const Home = () => {
                 </div>
 
                 {/* Best Sellers Section */}
-                <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
-                    <div style={{ marginBottom: '30px' }}>
-                        <h1 className="section-title" style={{ marginBottom: '10px' }}>
-                            {settings?.home?.bestSellersTitle || "Meilleures Ventes"}
-                        </h1>
-                        <div className="flex justify-between items-center" style={{ gap: '15px', flexWrap: 'wrap' }}>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
-                                {loadingProducts ? "Chargement..." : `Affichage de ${bestSellers.length} produits premium`}
-                            </p>
-                            <div className="flex items-center gap-4">
-                                {isAdmin && (
-                                    <button
-                                        onClick={() => handleEditClick('bestSellers', settings?.home?.bestSellers || [])}
-                                        className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
-                                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
-                                    >
-                                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
-                                    </button>
-                                )}
+                {user && (
+                    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
+                        <div style={{ marginBottom: '30px' }}>
+                            <h1 className="section-title" style={{ marginBottom: '10px' }}>
+                                {settings?.home?.bestSellersTitle || "Meilleures Ventes"}
+                            </h1>
+                            <div className="flex justify-between items-center" style={{ gap: '15px', flexWrap: 'wrap' }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+                                    {loadingProducts ? "Chargement..." : `Affichage de ${bestSellers.length} produits premium`}
+                                </p>
+                                <div className="flex items-center gap-4">
+                                    {isAdmin && (
+                                        <button
+                                            onClick={() => handleEditClick('bestSellers', settings?.home?.bestSellers || [])}
+                                            className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
+                                            style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                                        >
+                                            <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {loadingProducts ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="h-[300px] bg-white/5 rounded-3xl animate-pulse"></div>
-                            ))}
-                        </div>
-                    ) : bestSellers.length > 0 ? (
-                        <ProductSlider products={bestSellers} id="bestsellers-auth" />
-                    ) : (
-                        <div className="py-20 text-center glass rounded-3xl border border-dashed border-white/10">
-                            <i className="fas fa-shopping-bag text-4xl text-gray-600 mb-4 block"></i>
-                            <p className="text-gray-500">Aucun produit dans cette section.</p>
-                        </div>
-                    )}
-                </div>
+                        {loadingProducts ? (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                {[1, 2, 3, 4].map(i => (
+                                    <div key={i} className="h-[300px] bg-white/5 rounded-3xl animate-pulse"></div>
+                                ))}
+                            </div>
+                        ) : bestSellers.length > 0 ? (
+                            <ProductSlider products={bestSellers} id="bestsellers-auth" />
+                        ) : (
+                            <div className="py-20 text-center glass rounded-3xl border border-dashed border-white/10">
+                                <i className="fas fa-shopping-bag text-4xl text-gray-600 mb-4 block"></i>
+                                <p className="text-gray-500">Aucun produit dans cette section.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Memberships Section */}
-                <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
-                    <div className="flex justify-between items-center mb-10">
-                        <h1 className="section-title">
-                            {settings?.home?.membershipsSection?.title || "Memberships"}
-                        </h1>
-                        {isAdmin && (
-                            <button
-                                onClick={() => handleEditClick('memberships', settings?.home?.membershipsSection || { items: [] })}
-                                className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
-                            >
-                                <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors"></i>
-                            </button>
-                        )}
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {(settings?.home?.membershipsSection?.items || []).map((item, i) => (
-                            <Link to={item.link || "#"} key={i} className="group relative overflow-hidden rounded-[32px] aspect-[4/5] md:aspect-[3/4] block shadow-2xl border border-white/5 transition-all duration-500 hover:shadow-primary/20 hover:-translate-y-2">
-                                <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
-
-                                {/* Overlay Content */}
-                                <div className="absolute bottom-8 left-8 right-8 flex items-start gap-4">
-                                    <div className="w-1.5 h-14 bg-[#3cfdb3] rounded-full shadow-[0_0_20px_rgba(60,253,179,0.6)] shrink-0 transition-transform duration-500 group-hover:scale-y-110"></div>
-                                    <h3 className="text-3xl md:text-4xl font-[900] text-white leading-[1.1] tracking-tight drop-shadow-2xl">
-                                        {item.title}
-                                    </h3>
-                                </div>
-
-                                {/* Subtle Glow on Hover */}
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none ring-1 ring-inset ring-white/20 rounded-[32px]"></div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Gift Cards Section */}
-                <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
-                    <div className="flex justify-between items-center mb-10">
-                        <h1 className="section-title">
-                            {settings?.home?.giftCardsSection?.title || "Gift Cards"}
-                        </h1>
-                        {isAdmin && (
-                            <button
-                                onClick={() => handleEditClick('giftCards', settings?.home?.giftCardsSection || { items: [] })}
-                                className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
-                            >
-                                <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors"></i>
-                            </button>
-                        )}
-                    </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                        {(settings?.home?.giftCardsSection?.items || []).map((item, i) => (
-                            <Link to={item.link || "#"} key={i}
-                                style={{ backgroundColor: item.color || '#0070d1' }}
-                                className="relative overflow-hidden p-6 rounded-2xl h-40 flex flex-col items-center justify-center text-center transition-all hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] group shadow-lg border border-white/10"
-                            >
-                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="relative z-10 transition-transform group-hover:scale-110 duration-300">
-                                    <h4 className="text-sm font-bold opacity-80 mb-1 uppercase tracking-widest">{item.title}</h4>
-                                    <h3 className="text-xl md:text-2xl font-black">{item.subtitle}</h3>
-                                </div>
-                                <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
-                                    <i className="fas fa-gift text-8xl"></i>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Deals Section (Copy of Best Sellers design) */}
-                <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
-                    <div style={{ marginBottom: '30px' }}>
-                        <ColoredTitle
-                            title={settings?.home?.dealsTitle || "Deals"}
-                            coloredWord={settings?.home?.dealsColoredWord || "Deals"}
-                            className="section-title"
-                            style={{ marginBottom: '10px' }}
-                            as="h1"
-                        />
-                        <div className="flex justify-between items-center" style={{ gap: '15px', flexWrap: 'wrap' }}>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
-                                {loadingProducts ? "Chargement..." : (settings?.home?.dealsSubtitle || "Offres exceptionnelles à durée limitée")}
-                            </p>
-                            <div className="flex items-center gap-4">
-                                {isAdmin && (
-                                    <button
-                                        onClick={() => handleEditClick('deals', settings?.home?.deals || [])}
-                                        className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
-                                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
-                                    >
-                                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
-                                    </button>
-                                )}
-                            </div>
+                {user && (
+                    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
+                        <div className="flex justify-between items-center mb-10">
+                            <h1 className="section-title">
+                                {settings?.home?.membershipsSection?.title || "Memberships"}
+                            </h1>
+                            {isAdmin && (
+                                <button
+                                    onClick={() => handleEditClick('memberships', settings?.home?.membershipsSection || { items: [] })}
+                                    className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
+                                >
+                                    <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors"></i>
+                                </button>
+                            )}
                         </div>
-                    </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+                            {(settings?.home?.membershipsSection?.items || []).map((item, i) => (
+                                <Link to={item.link || "#"} key={i} className="group relative overflow-hidden rounded-xl md:rounded-[24px] aspect-square md:aspect-[3/4] block shadow-2xl border border-white/5 transition-all duration-500 hover:shadow-primary/20 hover:-translate-y-2">
+                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
 
-                    {loadingProducts ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="h-[300px] bg-white/5 rounded-3xl animate-pulse"></div>
+                                    {/* Overlay Content */}
+                                    <div className="absolute bottom-3 left-3 right-3 md:bottom-6 md:left-6 md:right-6 flex items-start gap-2 md:gap-3">
+                                        <div className="w-0.5 md:w-1 h-6 md:h-10 bg-[#3cfdb3] rounded-full shadow-[0_0_20px_rgba(60,253,179,0.6)] shrink-0 transition-transform duration-500 group-hover:scale-y-110"></div>
+                                        <h3 className="text-sm md:text-2xl font-[900] text-white leading-[1.1] tracking-tight drop-shadow-2xl">
+                                            {item.title}
+                                        </h3>
+                                    </div>
+
+                                    {/* Subtle Glow & Shine on Hover */}
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none ring-1 ring-inset ring-white/20 rounded-xl md:rounded-[24px]"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                                </Link>
                             ))}
                         </div>
-                    ) : deals.length > 0 ? (
-                        <ProductSlider products={deals} id="deals-auth" />
-                    ) : (
-                        <div className="py-20 text-center glass rounded-3xl border border-dashed border-white/10">
-                            <i className="fas fa-tag text-4xl text-gray-600 mb-4 block"></i>
-                            <p className="text-gray-500">Aucune offre spéciale disponible pour le moment.</p>
+                    </div>
+                )}
+
+                {/* Gift Cards Section */}
+                {user && (
+                    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
+                        <div className="flex justify-between items-center mb-10">
+                            <h1 className="section-title">
+                                {settings?.home?.giftCardsSection?.title || "Gift Cards"}
+                            </h1>
+                            {isAdmin && (
+                                <button
+                                    onClick={() => handleEditClick('giftCards', settings?.home?.giftCardsSection || { items: [] })}
+                                    className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
+                                >
+                                    <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors"></i>
+                                </button>
+                            )}
                         </div>
-                    )}
-                </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                            {(settings?.home?.giftCardsSection?.items || []).map((item, i) => (
+                                <Link to={item.link || "#"} key={i}
+                                    style={{ backgroundColor: item.color || '#0070d1' }}
+                                    className="relative overflow-hidden p-6 rounded-2xl h-40 flex flex-col items-center justify-center text-center transition-all hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] group shadow-lg border border-white/10"
+                                >
+                                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="relative z-10 transition-transform group-hover:scale-110 duration-300">
+                                        <h4 className="text-sm font-bold opacity-80 mb-1 uppercase tracking-widest">{item.title}</h4>
+                                        <h3 className="text-xl md:text-2xl font-black">{item.subtitle}</h3>
+                                    </div>
+                                    <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
+                                        <i className="fas fa-gift text-8xl"></i>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Deals Section (Copy of Best Sellers design) */}
+                {user && (
+                    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
+                        <div style={{ marginBottom: '30px' }}>
+                            <ColoredTitle
+                                title={settings?.home?.dealsTitle || "Deals"}
+                                coloredWord={settings?.home?.dealsColoredWord || "Deals"}
+                                className="section-title"
+                                style={{ marginBottom: '10px' }}
+                                as="h1"
+                            />
+                            <div className="flex justify-between items-center" style={{ gap: '15px', flexWrap: 'wrap' }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+                                    {loadingProducts ? "Chargement..." : (settings?.home?.dealsSubtitle || "Offres exceptionnelles à durée limitée")}
+                                </p>
+                                <div className="flex items-center gap-4">
+                                    {isAdmin && (
+                                        <button
+                                            onClick={() => handleEditClick('deals', settings?.home?.deals || [])}
+                                            className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
+                                            style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                                        >
+                                            <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {loadingProducts ? (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                {[1, 2, 3, 4].map(i => (
+                                    <div key={i} className="h-[300px] bg-white/5 rounded-3xl animate-pulse"></div>
+                                ))}
+                            </div>
+                        ) : deals.length > 0 ? (
+                            <ProductSlider products={deals} id="deals-auth" />
+                        ) : (
+                            <div className="py-20 text-center glass rounded-3xl border border-dashed border-white/10">
+                                <i className="fas fa-tag text-4xl text-gray-600 mb-4 block"></i>
+                                <p className="text-gray-500">Aucune offre spéciale disponible pour le moment.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="max-w-7xl mx-auto px-4 py-16 text-center space-y-8 animate-in fade-in zoom-in duration-700">
                     <div className="relative inline-block">
@@ -1516,160 +1526,6 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Best Sellers Section */}
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
-                <div style={{ marginBottom: '30px' }}>
-                    <h1 className="section-title" style={{ marginBottom: '10px' }}>
-                        {settings?.home?.bestSellersTitle || "Meilleures Ventes"}
-                    </h1>
-                    <div className="flex justify-between items-center" style={{ gap: '15px', flexWrap: 'wrap' }}>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
-                            {loadingProducts ? "Chargement..." : `Affichage de ${bestSellers.length} produits premium`}
-                        </p>
-                        <div className="flex items-center gap-4">
-                            {isAdmin && (
-                                <button
-                                    onClick={() => handleEditClick('bestSellers', settings?.home?.bestSellers || [])}
-                                    className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
-                                    style={{ borderColor: 'rgba(255,153,0,0.2)' }}
-                                >
-                                    <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {loadingProducts ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="h-[300px] bg-white/5 rounded-3xl animate-pulse"></div>
-                        ))}
-                    </div>
-                ) : bestSellers.length > 0 ? (
-                    <ProductSlider products={bestSellers} id="bestsellers-visitor" />
-                ) : (
-                    <div className="py-20 text-center glass rounded-3xl border border-dashed border-white/10">
-                        <i className="fas fa-shopping-bag text-4xl text-gray-600 mb-4 block"></i>
-                        <p className="text-gray-500">Aucun produit mis en avant pour le moment.</p>
-                    </div>
-                )}
-            </div>
-
-            {/* Memberships Section */}
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
-                <div className="flex justify-between items-center mb-10">
-                    <h1 className="section-title">
-                        {settings?.home?.membershipsSection?.title || "Memberships"}
-                    </h1>
-                    {isAdmin && (
-                        <button
-                            onClick={() => handleEditClick('memberships', settings?.home?.membershipsSection || { items: [] })}
-                            className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
-                        >
-                            <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors"></i>
-                        </button>
-                    )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {(settings?.home?.membershipsSection?.items || []).map((item, i) => (
-                        <Link to={item.link || "#"} key={i} className="group relative overflow-hidden rounded-[32px] aspect-[4/5] md:aspect-[3/4] block shadow-2xl border border-white/5 transition-all duration-500 hover:shadow-primary/20 hover:-translate-y-2">
-                            <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
-
-                            {/* Overlay Content */}
-                            <div className="absolute bottom-8 left-8 right-8 flex items-start gap-4">
-                                <div className="w-1.5 h-14 bg-[#3cfdb3] rounded-full shadow-[0_0_20px_rgba(60,253,179,0.6)] shrink-0 transition-transform duration-500 group-hover:scale-y-110"></div>
-                                <h3 className="text-3xl md:text-4xl font-[900] text-white leading-[1.1] tracking-tight drop-shadow-2xl">
-                                    {item.title}
-                                </h3>
-                            </div>
-
-                            {/* Subtle Glow on Hover */}
-                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none ring-1 ring-inset ring-white/20 rounded-[32px]"></div >
-                        </Link>
-                    ))}
-                </div>
-            </div>
-
-            {/* Gift Cards Section */}
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
-                <div className="flex justify-between items-center mb-10">
-                    <h1 className="section-title">
-                        {settings?.home?.giftCardsSection?.title || "Gift Cards"}
-                    </h1>
-                    {isAdmin && (
-                        <button
-                            onClick={() => handleEditClick('giftCards', settings?.home?.giftCardsSection || { items: [] })}
-                            className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
-                        >
-                            <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors"></i>
-                        </button>
-                    )}
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                    {(settings?.home?.giftCardsSection?.items || []).map((item, i) => (
-                        <Link to={item.link || "#"} key={i}
-                            style={{ backgroundColor: item.color || '#0070d1' }}
-                            className="relative overflow-hidden p-6 rounded-2xl h-40 flex flex-col items-center justify-center text-center transition-all hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] group shadow-lg border border-white/10"
-                        >
-                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div className="relative z-10 transition-transform group-hover:scale-110 duration-300">
-                                <h4 className="text-sm font-bold opacity-80 mb-1 uppercase tracking-widest">{item.title}</h4>
-                                <h3 className="text-xl md:text-2xl font-black">{item.subtitle}</h3>
-                            </div>
-                            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
-                                <i className="fas fa-gift text-8xl"></i>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-
-            {/* Deals Section (Copy of Best Sellers design) */}
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 relative">
-                <div style={{ marginBottom: '30px' }}>
-                    <h1 className="section-title" style={{ marginBottom: '10px' }}>
-                        <ColoredTitle
-                            title={settings?.home?.dealsTitle || "Deals"}
-                            coloredWord={settings?.home?.dealsColoredWord || "Deals"}
-                            className="text-inherit"
-                            as="span"
-                        />
-                    </h1>
-                    <div className="flex justify-between items-center" style={{ gap: '15px', flexWrap: 'wrap' }}>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
-                            {loadingProducts ? "Chargement..." : (settings?.home?.dealsSubtitle || "Offres exceptionnelles à durée limitée")}
-                        </p>
-                        <div className="flex items-center gap-4">
-                            {isAdmin && (
-                                <button
-                                    onClick={() => handleEditClick('deals', settings?.home?.deals || [])}
-                                    className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group"
-                                    style={{ borderColor: 'rgba(255,153,0,0.2)' }}
-                                >
-                                    <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {loadingProducts ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="h-[300px] bg-white/5 rounded-3xl animate-pulse"></div>
-                        ))}
-                    </div>
-                ) : deals.length > 0 ? (
-                    <ProductSlider products={deals} id="deals-visitor" />
-                ) : (
-                    <div className="py-20 text-center glass rounded-3xl border border-dashed border-white/10">
-                        <i className="fas fa-tag text-4xl text-gray-600 mb-4 block"></i>
-                        <p className="text-gray-500">Aucune offre spéciale disponible pour le moment.</p>
-                    </div>
-                )}
-            </div>
 
             {/* Movies Section */}
             <section className="py-12 bg-white/5 relative overflow-hidden">

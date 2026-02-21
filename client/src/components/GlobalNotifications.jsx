@@ -16,9 +16,9 @@ const GlobalNotifications = () => {
 
         const syncData = async () => {
             try {
-                // Fetch latest user data and orders in parallel
-                const [ordersRes, userRes] = await Promise.all([
-                    axios.get(`${API_BASE_URL}/orders/user/${user._id}`),
+                // Fetch latest user data and unnotified completed orders
+                const [notifRes, userRes] = await Promise.all([
+                    axios.get(`${API_BASE_URL}/orders/notifications/${user._id}`),
                     axios.get(`${API_BASE_URL}/users/${user._id}`)
                 ]);
 
@@ -29,34 +29,27 @@ const GlobalNotifications = () => {
                     }
                 }
 
-                if (!Array.isArray(ordersRes.data)) return;
+                if (!Array.isArray(notifRes.data) || notifRes.data.length === 0) return;
 
-                const currentKeys = {};
-                const newFulfillmentFound = [];
-
-                ordersRes.data.forEach(item => {
-                    const statusInStorage = lastKnownKeysRef.current[item._id];
-
-                    if (statusInStorage === "PENDING" && item.licenseKey !== "PENDING") {
-                        newFulfillmentFound.push({
-                            id: item._id + Date.now(),
-                            title: item.productTitle,
-                            key: item.licenseKey
-                        });
-                    }
-                    currentKeys[item._id] = item.licenseKey;
-                });
-
-                lastKnownKeysRef.current = currentKeys;
-                localStorage.setItem(`known_keys_${user._id}`, JSON.stringify(currentKeys));
+                const newFulfillmentFound = notifRes.data.map(item => ({
+                    id: item._id,
+                    title: item.productTitle,
+                    key: item.licenseKey
+                }));
 
                 if (newFulfillmentFound.length > 0) {
                     newFulfillmentFound.forEach(notif => {
-                        setNotifications(prev => [...prev, notif]);
+                        setNotifications(prev => {
+                            if (prev.find(n => n.id === notif.id)) return prev;
+                            return [...prev, notif];
+                        });
                         setTimeout(() => {
                             setNotifications(prev => prev.filter(n => n.id !== notif.id));
-                        }, 10000);
+                        }, 15000);
                     });
+
+                    // Mark as read on backend
+                    await axios.put(`${API_BASE_URL}/orders/notifications/mark-read/${user._id}`);
                 }
             } catch (err) {
                 console.error("Sync data error:", err);
@@ -64,7 +57,7 @@ const GlobalNotifications = () => {
         };
 
         syncData();
-        const intervalId = setInterval(syncData, 5000);
+        const intervalId = setInterval(syncData, 10000);
         return () => clearInterval(intervalId);
     }, [user, user?.balance]);
 

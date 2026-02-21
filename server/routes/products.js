@@ -106,6 +106,40 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// DELETE SPECIFIC KEY
+router.delete('/:id/keys/:keyId', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json("Product not found");
+
+        product.keys = product.keys.filter(k => k._id.toString() !== req.params.keyId);
+        await product.save();
+
+        res.status(200).json(product);
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
+// UPDATE SPECIFIC KEY
+router.put('/:id/keys/:keyId', async (req, res) => {
+    try {
+        const { newKey } = req.body;
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json("Product not found");
+
+        const keyIndex = product.keys.findIndex(k => k._id.toString() === req.params.keyId);
+        if (keyIndex === -1) return res.status(404).json("Key not found");
+
+        product.keys[keyIndex].key = newKey;
+        await product.save();
+
+        res.status(200).json(product);
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
 // PURCHASE PRODUCT (ATOMIC)
 // PURCHASE PRODUCT (ATOMIC + NEO 4K INTEGRATION)
 router.post('/purchase', async (req, res) => {
@@ -118,13 +152,13 @@ router.post('/purchase', async (req, res) => {
             return res.status(404).json({ message: "Utilisateur ou Produit non trouvé" });
         }
 
-        if (user.balance < product.price) {
-            return res.status(400).json({ message: "Solde insuffisant" });
-        }
+
 
         let licenseKey = "PENDING";
         let subscriptionData = null;
         let orderStatus = "PENDING";
+
+        let finalPrice = product.price;
 
         // --- HANDLE M3U / MAG (NEO 4K / STRONG 8K) ---
         if (product.type === 'm3u' || product.type === 'mag') {
@@ -142,34 +176,85 @@ router.post('/purchase', async (req, res) => {
                 } else if (product.provider === 'promax') {
                     apiModule = require('../utils/promaxApi');
                 } else {
-                    apiModule = require('../utils/neoApi'); // Default to NEO
+                    apiModule = require('../utils/neoApi'); // Default
                 }
                 const { createSubscription } = apiModule;
 
-                // Get options from request body (sent from frontend)
                 const options = req.body.subscriptionDetails || {};
+
+
+
+                // Calculate Dynamic Price based on Duration
+                if (options.duration && product.durationPrices && product.durationPrices.length > 0) {
+                    const priceConfig = product.durationPrices.find(dp => dp.duration === parseInt(options.duration));
+                    if (priceConfig) {
+                        finalPrice = priceConfig.price;
+                    }
+                }
+
+                // Re-check balance with dynamic price
+                if (user.balance < finalPrice) {
+                    return res.status(400).json({ message: "Solde insuffisant" });
+                }
 
                 console.log(`Backend received ${product.provider || 'NEO'} options:`, options); // DEBUG LOG
 
-                // Use values from frontend or fallback to product defaults
-                // Map frontend/product values to API expected options
-                const subOptions = {
-                    type: product.type, // 'm3u' or 'mag'
-                    duration: options.duration || product.duration || 12,
-                    packId: options.bouquetId || product.pack,
-                    country: options.country, // Let API module handle default (Neo=TN, Strong8k=ALL)
-                    mac: options.mac // Only for MAG
-                };
+                // CHECK SUBSCRIPTION TYPE (M3U vs CODE)
+                if (options.subscriptionType === 'code') {
+                    // Attempt to find a key from stock
+                    const now = new Date();
+                    // Use findOneAndUpdate to atomically claim a key
+                    const updatedProduct = await Product.findOneAndUpdate(
+                        { _id: productId, "keys.isSold": false },
+                        {
+                            $set: {
+                                "keys.$.isSold": true,
+                                "keys.$.soldTo": userId,
+                                "keys.$.soldAt": now
+                            }
+                        },
+                        { new: true }
+                    );
 
-                // Call API
-                const subInfo = await createSubscription(subOptions, orderRef.toString());
+                    if (updatedProduct) {
+                        // Key claimed successfully
+                        const claimedKey = updatedProduct.keys.find(k => k.soldTo && k.soldTo.toString() === userId && new Date(k.soldAt).getTime() === now.getTime());
+                        if (claimedKey) {
+                            licenseKey = claimedKey.key;
+                            orderStatus = "COMPLETED";
+                            subscriptionData = { type: 'code', duration: options.duration };
+                        }
+                    } else {
+                        // NO STOCK AVAILABLE -> SET TO PENDING (WAITING)
+                        licenseKey = "EN_ATTENTE"; // Waiting for admin
+                        orderStatus = "PENDING";
+                        subscriptionData = { type: 'code_request', duration: options.duration };
+                    }
 
-                subscriptionData = subInfo;
-                orderStatus = "COMPLETED";
-                // URL contains the m3u link or success message
-                licenseKey = subInfo.url || subInfo.message || "ACTIVE";
+                } else {
+                    // M3U / API GENERATION (Default)
+
+                    // Use values from frontend or fallback to product defaults
+                    // Map frontend/product values to API expected options
+                    const subOptions = {
+                        type: product.type, // 'm3u' or 'mag'
+                        duration: options.duration || product.duration || 12,
+                        packId: options.bouquetId || product.pack,
+                        country: options.country, // Let API module handle default (Neo=TN, Strong8k=ALL)
+                        mac: options.mac // Only for MAG
+                    };
+
+                    // Call API
+                    const subInfo = await createSubscription(subOptions, orderRef.toString());
+
+                    subscriptionData = subInfo;
+                    orderStatus = "COMPLETED";
+                    // URL contains the m3u link or success message
+                    licenseKey = subInfo.url || subInfo.message || "ACTIVE";
+                }
+
             } catch (apiError) {
-                console.error(`${product.provider || 'NEO'} API Failed:`, apiError);
+                console.error(`${product.provider || 'NEO'} Order Failed:`, apiError);
                 // Depending on requirement, we might want to FAIL the order or keep it PENDING
                 licenseKey = "ERROR_API";
                 orderStatus = "PENDING";
@@ -177,6 +262,11 @@ router.post('/purchase', async (req, res) => {
         }
         // --- HANDLE NORMAL PRODUCTS (KEYS) ---
         else {
+            // For normal products, finalPrice is already product.price
+            if (user.balance < finalPrice) {
+                return res.status(400).json({ message: "Solde insuffisant" });
+            }
+
             const now = new Date();
             const updatedProduct = await Product.findOneAndUpdate(
                 { _id: productId, "keys.isSold": false },
@@ -196,6 +286,9 @@ router.post('/purchase', async (req, res) => {
                     licenseKey = claimedKey.key;
                     orderStatus = "COMPLETED";
                 }
+            } else {
+                // No keys available for normal product
+                return res.status(400).json({ message: "Aucune clé disponible pour ce produit." });
             }
         }
 
@@ -203,7 +296,7 @@ router.post('/purchase', async (req, res) => {
         // Only deduct if successful or pending (reserved)
         // If API completely failed and we decide to fail the order, we shouldn't deduct.
         // But here we set status to PENDING on API error, implying manual fix, so we deduct.
-        user.balance -= product.price;
+        user.balance -= finalPrice; // Use calculated finalPrice
         if (orderStatus === "COMPLETED") {
             user.purchaseCount += 1;
         }
@@ -215,7 +308,7 @@ router.post('/purchase', async (req, res) => {
             productId: product._id,
             productTitle: product.title,
             productImage: product.image,
-            price: product.price,
+            price: finalPrice, // Save the actual price paid
             licenseKey: licenseKey,
             status: orderStatus,
             subscription: subscriptionData
@@ -228,7 +321,6 @@ router.post('/purchase', async (req, res) => {
             newBalance: user.balance,
             purchaseCount: user.purchaseCount,
             licenseKey: licenseKey,
-            isPending: orderStatus === "PENDING",
             isPending: orderStatus === "PENDING",
             subscription: subscriptionData,
             provider: product.provider || 'neo'

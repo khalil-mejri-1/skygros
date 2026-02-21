@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 
 import API_BASE_URL from "../config/api";
 import axios from "axios";
-import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory, FaEye, FaBars, FaChartBar } from "react-icons/fa";
 import ConfirmModal from "../components/ConfirmModal";
 import AlertModal from "../components/AlertModal";
+import Toast from "../components/Toast";
 import SEO from "../components/SEO";
 
 const Admin = () => {
@@ -17,6 +18,17 @@ const Admin = () => {
     const [resetRequests, setResetRequests] = useState([]);
     const [resetOptions, setResetOptions] = useState([]);
     const [newOptionLabel, setNewOptionLabel] = useState("");
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showStatsModal, setShowStatsModal] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const isLargeDesktop = windowWidth >= 1147;
 
     // ... existing states ...
     const [isEditing, setIsEditing] = useState(null);
@@ -36,11 +48,21 @@ const Admin = () => {
     const [settings, setSettings] = useState(null);
     const [col1Input, setCol1Input] = useState("");
 
-    // Modal States
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, type: "warning" });
     const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "success" });
+    const [toast, setToast] = useState(null);
+    const [historySearch, setHistorySearch] = useState("");
+    const [historyStatusFilter, setHistoryStatusFilter] = useState("ALL");
     const [col2Input, setCol2Input] = useState("");
     const [col3Input, setCol3Input] = useState("");
+
+    const triggerToast = (message, type = 'success') => {
+        setToast({ message, type });
+    };
+
+    // Selection States
+    const [selectedUsers, setSelectedUsers] = useState([]);
+    const [selectedOrders, setSelectedOrders] = useState([]);
 
     const [newProduct, setNewProduct] = useState({
         title: "",
@@ -54,10 +76,10 @@ const Admin = () => {
         type: "normal",
         provider: "neo",
         pack: "",
-        pack: "",
         duration: 12,
         showBouquetSorter: true,
-        bouquetNames: {}
+        bouquetNames: {},
+        durationPrices: []
     });
 
     const getRankDetail = (count, ranks = []) => {
@@ -114,7 +136,7 @@ const Admin = () => {
             await axios.post(`${API_BASE_URL}/reset-codes/options`, { label: newOptionLabel, value: newOptionLabel.toLowerCase().replace(/\s+/g, '-') });
             setNewOptionLabel("");
             fetchResetData();
-            setAlertModal({ isOpen: true, title: "Succès", message: "Option ajoutée", type: "success" });
+            triggerToast("Option ajoutée avec succès.");
         } catch (err) {
             console.error(err);
         }
@@ -150,7 +172,7 @@ const Admin = () => {
             });
             setNewDemo({ serviceName: "", description: "", image: "", contentListText: "" });
             fetchDemos();
-            setAlertModal({ isOpen: true, title: "Succès !", message: "Les démos ont été ajoutées avec succès.", type: "success" });
+            triggerToast("Les démos ont été ajoutées avec succès.");
         } catch (err) {
             console.error(err);
             setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors de l'ajout des démos.", type: "error" });
@@ -169,7 +191,7 @@ const Admin = () => {
                     await axios.delete(`${API_BASE_URL}/demos/${id}`);
                     fetchDemos();
                     setConfirmModal({ ...confirmModal, isOpen: false });
-                    setAlertModal({ isOpen: true, title: "Supprimé !", message: "Le compte demo a été supprimé.", type: "success" });
+                    triggerToast("Le compte demo a été supprimé.");
                 } catch (err) {
                     console.error(err);
                     setConfirmModal({ ...confirmModal, isOpen: false });
@@ -193,7 +215,7 @@ const Admin = () => {
                     fetchOrders();
                     fetchUsers();
                     setConfirmModal({ ...confirmModal, isOpen: false });
-                    setAlertModal({ isOpen: true, title: "Remboursement effectué !", message: "Le montant a été recrédité au client.", type: "success" });
+                    triggerToast("Le montant a été recrédité au client.");
                 } catch (err) {
                     console.error("Refund error:", err);
                     setConfirmModal({ ...confirmModal, isOpen: false });
@@ -217,7 +239,7 @@ const Admin = () => {
         try {
             const res = await axios.put(`${API_BASE_URL}/settings`, settings);
             setSettings(res.data);
-            setAlertModal({ isOpen: true, title: "Succès !", message: "Les paramètres ont été mis à jour avec succès.", type: "success" });
+            triggerToast("Paramètres mis à jour.");
         } catch (err) {
             console.error(err);
             setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors de la mise à jour des paramètres.", type: "error" });
@@ -239,6 +261,16 @@ const Admin = () => {
         }
     };
 
+    const handleMarkAllSeen = async () => {
+        try {
+            await axios.put(`${API_BASE_URL}/orders/mark-all-seen`);
+            fetchOrders();
+            triggerToast("Tous les nouveaux ordres ont été marqués comme vus.");
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const fetchProducts = async () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/products`);
@@ -253,6 +285,141 @@ const Admin = () => {
             setProducts([]);
         }
     };
+
+    const handleDeleteUser = async (id) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Supprimer l'utilisateur ?",
+            message: "Cette action est irréversible. L'utilisateur et toutes ses données seront supprimés.",
+            type: "danger",
+            confirmColor: "#ff4757",
+            confirmText: "SUPPRIMER",
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`${API_BASE_URL}/users/${id}`);
+                    fetchUsers();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    triggerToast("L'utilisateur a été supprimé.");
+                } catch (err) {
+                    console.error(err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Erreur", message: "Impossible de supprimer l'utilisateur.", type: "error" });
+                }
+            }
+        });
+    };
+
+    const handleBulkDeleteUsers = async () => {
+        if (selectedUsers.length === 0) return;
+        setConfirmModal({
+            isOpen: true,
+            title: `Supprimer ${selectedUsers.length} utilisateurs ?`,
+            message: "Cette action supprimera définitivement les utilisateurs sélectionnés.",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    await axios.post(`${API_BASE_URL}/users/bulk-delete`, { userIds: selectedUsers });
+                    fetchUsers();
+                    setSelectedUsers([]);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    triggerToast(`${selectedUsers.length} utilisateurs supprimés.`);
+                } catch (err) {
+                    console.error(err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Erreur", message: "Échec de la suppression groupée.", type: "error" });
+                }
+            }
+        });
+    };
+
+    const handleDeleteOrder = async (id) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Supprimer cette commande ?",
+            message: "Cette action est irréversible. L'historique de cette vente sera perdu.",
+            type: "danger",
+            confirmText: "SUPPRIMER",
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`${API_BASE_URL}/orders/${id}`);
+                    fetchOrders();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    triggerToast("La commande a été supprimée.");
+                } catch (err) {
+                    console.error(err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Erreur", message: "Impossible de supprimer la commande.", type: "error" });
+                }
+            }
+        });
+    };
+
+    const handleBulkDeleteOrders = async () => {
+        if (selectedOrders.length === 0) return;
+        setConfirmModal({
+            isOpen: true,
+            title: `Supprimer ${selectedOrders.length} commandes ?`,
+            message: "Cette action supprimera définitivement les commandes sélectionnées.",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    await axios.post(`${API_BASE_URL}/orders/bulk-delete`, { orderIds: selectedOrders });
+                    fetchOrders();
+                    setSelectedOrders([]);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    triggerToast(`${selectedOrders.length} commandes supprimées.`);
+                } catch (err) {
+                    console.error(err);
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                    setAlertModal({ isOpen: true, title: "Erreur", message: "Échec de la suppression groupée.", type: "error" });
+                }
+            }
+        });
+    };
+
+    const handleToggleSelect = (id, type) => {
+        if (type === 'user') {
+            setSelectedUsers(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+        } else if (type === 'order') {
+            setSelectedOrders(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+        }
+    };
+
+
+    const handleDeleteKey = async (productId, keyId) => {
+        if (!window.confirm("Voulez-vous vraiment supprimer ce code ?")) return;
+        try {
+            await axios.delete(`${API_BASE_URL}/products/${productId}/keys/${keyId}`);
+            // Update local state
+            setIsEditing(prev => ({
+                ...prev,
+                keys: prev.keys.filter(k => k._id !== keyId)
+            }));
+            fetchProducts(); // Refresh main list
+        } catch (err) {
+            console.error("Error deleting key:", err);
+            setAlertModal({ isOpen: true, title: "Erreur", message: "Impossible de supprimer le code.", type: "error" });
+        }
+    };
+
+    const handleUpdateKey = async (productId, keyId, currentVal) => {
+        const newVal = window.prompt("Modifier le code:", currentVal);
+        if (newVal === null || newVal.trim() === "") return;
+
+        try {
+            await axios.put(`${API_BASE_URL}/products/${productId}/keys/${keyId}`, { newKey: newVal });
+            // Update local state
+            setIsEditing(prev => ({
+                ...prev,
+                keys: prev.keys.map(k => k._id === keyId ? { ...k, key: newVal } : k)
+            }));
+            fetchProducts();
+        } catch (err) {
+            console.error("Error updating key:", err);
+            setAlertModal({ isOpen: true, title: "Erreur", message: "Impossible de modifier le code.", type: "error" });
+        }
+    };
+
 
     const fetchProviderPackages = async (provider) => {
         if (!provider || provider === 'normal') return;
@@ -355,7 +522,7 @@ const Admin = () => {
                     await axios.delete(`${API_BASE_URL}/categories/${id}`);
                     fetchCategories();
                     setConfirmModal({ ...confirmModal, isOpen: false });
-                    setAlertModal({ isOpen: true, title: "Supprimé !", message: "La catégorie a été supprimée.", type: "success" });
+                    triggerToast("La catégorie a été supprimée.");
                 } catch (err) {
                     console.error(err);
                     setConfirmModal({ ...confirmModal, isOpen: false });
@@ -393,7 +560,7 @@ const Admin = () => {
                     await axios.delete(`${API_BASE_URL}/products/${id}`);
                     fetchProducts();
                     setConfirmModal({ ...confirmModal, isOpen: false });
-                    setAlertModal({ isOpen: true, title: "Supprimé !", message: "Le produit a été supprimé.", type: "success" });
+                    triggerToast("Le produit a été supprimé.");
                 } catch (err) {
                     console.error(err);
                     setConfirmModal({ ...confirmModal, isOpen: false });
@@ -425,6 +592,7 @@ const Admin = () => {
             });
             setShowAddForm(false);
             fetchProducts();
+            triggerToast("Produit créé avec succès.");
         } catch (err) {
             console.error(err);
         }
@@ -443,6 +611,7 @@ const Admin = () => {
             const res = await axios.put(`${API_BASE_URL}/products/${isEditing._id}`, updatedData);
             setIsEditing(null);
             fetchProducts();
+            triggerToast("Produit mis à jour.");
 
             // Check if any orders were automatically fulfilled
             if (res.data.fulfillmentLogs && res.data.fulfillmentLogs.length > 0) {
@@ -463,6 +632,7 @@ const Admin = () => {
             setShowBalanceModal(null);
             setBalanceAmount(0);
             fetchUsers();
+            triggerToast(`Solde ajouté avec succès à ${showBalanceModal.username}`);
         } catch (err) {
             console.error(err);
         }
@@ -476,6 +646,7 @@ const Admin = () => {
             setShowFulfillModal(null);
             setManualKey("");
             fetchOrders();
+            triggerToast("Commande validée et code envoyé.");
         } catch (err) {
             console.error(err);
         }
@@ -494,7 +665,7 @@ const Admin = () => {
                     await axios.post(`${API_BASE_URL}/auth/approve-user/${user._id}`);
                     fetchUsers();
                     setConfirmModal({ ...confirmModal, isOpen: false });
-                    setAlertModal({ isOpen: true, title: "Succès", message: "Utilisateur approuvé et email envoyé.", type: "success" });
+                    triggerToast("Utilisateur approuvé et email envoyé.");
                 } catch (err) {
                     console.error("Approval error:", err);
                     setConfirmModal({ ...confirmModal, isOpen: false });
@@ -517,12 +688,13 @@ const Admin = () => {
         availableKeys: products.reduce((acc, p) => acc + (p.keys?.filter(k => !k.isSold).length || 0), 0),
         outOfStock: products.filter(p => !p.keys || p.keys.filter(k => !k.isSold).length === 0).length,
         pendingOrders: orders.filter(o => o.status === 'PENDING').length,
+        unseenOrders: orders.filter(o => o.status === 'PENDING' && !o.isSeen).length,
         totalAvailableValue: products.reduce((acc, p) => acc + (p.price * (p.keys?.filter(k => !k.isSold).length || 0)), 0),
     };
 
-    const SidebarItem = ({ id, label, icon: Icon }) => (
+    const SidebarItem = ({ id, label, icon: Icon, badge }) => (
         <button
-            onClick={() => setActiveTab(id)}
+            onClick={() => { setActiveTab(id); if (!isLargeDesktop) setIsMobileMenuOpen(false); }}
             style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -542,39 +714,62 @@ const Admin = () => {
             className="sidebar-link"
         >
             <Icon size={18} style={{ color: activeTab === id ? 'var(--accent-color)' : 'inherit' }} />
-            {label}
+            <span style={{ flex: 1 }}>{label}</span>
+            {badge > 0 && (
+                <span style={{
+                    background: 'linear-gradient(135deg, #ff4757 0%, #ff6b81 100%)',
+                    color: '#fff',
+                    fontSize: '0.7rem',
+                    minWidth: '22px',
+                    height: '22px',
+                    borderRadius: '11px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0 6px',
+                    fontWeight: '900',
+                    boxShadow: '0 4px 12px rgba(255, 71, 87, 0.4)',
+                    border: '2px solid rgba(255,255,255,0.1)'
+                }}>
+                    {badge}
+                </span>
+            )}
         </button>
     );
 
-    const StatCard = ({ label, value, icon: Icon, color }) => (
-        <div className="glass" style={{
-            padding: '25px',
-            borderRadius: '20px',
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '20px',
-            border: '1px solid rgba(255,255,255,0.05)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
-        }}>
-            <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                background: `rgba(${color}, 0.12)`,
+    const StatCard = ({ label, value, icon: Icon, color }) => {
+        const isSmall = !isLargeDesktop;
+        return (
+            <div className="glass" style={{
+                padding: isSmall ? '15px' : '25px',
+                borderRadius: isSmall ? '16px' : '20px',
+                flex: 1,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                color: `rgb(${color})`
+                gap: isSmall ? '12px' : '20px',
+                border: '1px solid rgba(255,255,255,0.05)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                minWidth: isSmall ? '140px' : '200px'
             }}>
-                <Icon size={24} />
+                <div style={{
+                    width: isSmall ? '40px' : '56px',
+                    height: isSmall ? '40px' : '56px',
+                    borderRadius: isSmall ? '12px' : '16px',
+                    background: `rgba(${color}, 0.12)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: `rgb(${color})`
+                }}>
+                    <Icon size={isSmall ? 18 : 24} />
+                </div>
+                <div>
+                    <div style={{ fontSize: isSmall ? '0.65rem' : '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>{label}</div>
+                    <div style={{ fontSize: isSmall ? '1.1rem' : '1.6rem', fontWeight: '900', color: '#fff' }}>{value}</div>
+                </div>
             </div>
-            <div>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{label}</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#fff' }}>{value}</div>
-            </div>
-        </div>
-    );
+        );
+    };
 
 
     /* ... */
@@ -592,31 +787,52 @@ const Admin = () => {
     return (
         <div style={{ minHeight: '100vh', background: '#0a0b14', display: 'flex', color: '#fff' }}>
             <SEO title="Administration | Skygros Panel" noindex={true} />
+            {/* Sidebar Overlay for mobile */}
+            {!isLargeDesktop && isMobileMenuOpen && (
+                <div
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.7)',
+                        backdropFilter: 'blur(5px)',
+                        zIndex: 140
+                    }}
+                />
+            )}
+
             {/* Sidebar */}
             <div style={{
-                width: '300px',
+                width: isLargeDesktop ? '300px' : '280px',
                 background: '#0d0e1a',
                 borderRight: '1px solid rgba(255,255,255,0.05)',
-                padding: '40px 24px',
+                padding: isLargeDesktop ? '40px 24px' : '30px 20px',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'fixed',
                 height: '100vh',
-                zIndex: 100
+                zIndex: 150,
+                transition: '0.3s ease-in-out',
+                left: isLargeDesktop ? 0 : (isMobileMenuOpen ? 0 : '-300px')
             }}>
-                <div style={{ padding: '0 0 40px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
-                    <img src="/logo.png" alt="SKYGROS" style={{ height: '40px', width: 'auto' }} />
-                </div>
+                {/* Mobile Sidebar Header */}
+                {!isLargeDesktop && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--accent-color)' }}>SKYGROS ADMIN</h2>
+                        <FaTimes onClick={() => setIsMobileMenuOpen(false)} style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.3)' }} />
+                    </div>
+                )}
+
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
                     <SidebarItem id="products" label="Gestion Produits" icon={FaBoxOpen} />
                     <SidebarItem id="categories" label="Gestion Catégories" icon={FaTag} />
-                    <SidebarItem id="orders" label="Gestion Commandes" icon={FaShoppingBag} />
+                    <SidebarItem id="orders" label="Gestion Commandes" icon={FaShoppingBag} badge={stats.unseenOrders} />
                     <SidebarItem id="historique" label="Historique Ventes" icon={FaHistory} />
                     <SidebarItem id="users" label="Gestion Clients" icon={FaUsers} />
                     <SidebarItem id="ranks" label="Système de Rangs" icon={FaMedal} />
                     <SidebarItem id="demos" label="Gestion Demos" icon={FaGift} />
-                    <SidebarItem id="resetcodes" label="Gestion Reset Codes" icon={FaTimes} />
+                    <SidebarItem id="resetcodes" label="Gestion Reset Codes" icon={FaTimes} badge={resetRequests.filter(r => r.status === 'PENDING').length} />
                     <SidebarItem id="settings" label="Paramètres Généraux" icon={FaCog} />
                 </div>
 
@@ -630,31 +846,61 @@ const Admin = () => {
             </div>
 
             {/* Main Content */}
-            <div style={{ flex: 1, marginLeft: '300px', padding: '50px 60px' }}>
+            <div style={{
+                flex: 1,
+                marginLeft: isLargeDesktop ? '300px' : '0',
+                padding: isLargeDesktop ? '50px 60px' : '30px 20px 100px 20px',
+                minWidth: 0 // Prevent flex-basis overflow
+            }}>
 
                 {/* Dashboard Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-                    <div>
-                        <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '8px' }}>
-                            {activeTab === "products" ? "Inventaire des Produits" :
-                                activeTab === "categories" ? "Gestion des Catégories" :
-                                    activeTab === "orders" ? "Gestion des Commandes" :
-                                        activeTab === "historique" ? "Historique des Ventes" :
-                                            activeTab === "ranks" ? "Système de Rangs" :
-                                                activeTab === "demos" ? "Gestion des Demos" :
-                                                    activeTab === "resetcodes" ? "Demandes de Reset Code" :
-                                                        activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
-                        </h1>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>
-                            {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
-                                activeTab === "categories" ? "Organisez vos produits par types et icônes." :
-                                    activeTab === "orders" ? "Suivez et validez les achats en attente." :
-                                        activeTab === "historique" ? "Consultez toutes les transactions passées." :
-                                            activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
-                                                activeTab === "demos" ? "Gérez les comptes d'essai et démos." :
-                                                    activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
-                        </p>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: isLargeDesktop ? 'row' : 'column',
+                    justifyContent: 'space-between',
+                    alignItems: isLargeDesktop ? 'center' : 'flex-start',
+                    marginBottom: '40px',
+                    gap: isLargeDesktop ? '0' : '25px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        {!isLargeDesktop && (
+                            <button
+                                onClick={() => setIsMobileMenuOpen(true)}
+                                style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: 'none',
+                                    color: '#fff',
+                                    padding: '10px',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <FaBars size={20} />
+                            </button>
+                        )}
+                        <div>
+                            <h1 style={{ fontSize: isLargeDesktop ? '2.2rem' : '1.5rem', fontWeight: '900', marginBottom: '8px' }}>
+                                {activeTab === "products" ? "Inventaire des Produits" :
+                                    activeTab === "categories" ? "Gestion des Catégories" :
+                                        activeTab === "orders" ? "Gestion des Commandes" :
+                                            activeTab === "historique" ? "Historique des Ventes" :
+                                                activeTab === "ranks" ? "Système de Rangs" :
+                                                    activeTab === "demos" ? "Gestion des Demos" :
+                                                        activeTab === "resetcodes" ? "Demandes de Reset Code" :
+                                                            activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
+                            </h1>
+                            <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600', fontSize: isLargeDesktop ? '1rem' : '0.85rem' }}>
+                                {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
+                                    activeTab === "categories" ? "Organisez vos produits par types et icônes." :
+                                        activeTab === "orders" ? "Suivez et validez les achats en attente." :
+                                            activeTab === "historique" ? "Consultez toutes les transactions passées." :
+                                                activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
+                                                    activeTab === "demos" ? "Gérez les comptes d'essai et démos." :
+                                                        activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
+                            </p>
+                        </div>
                     </div>
+
                     {activeTab === "products" && (
                         <button
                             onClick={() => setShowAddForm(true)}
@@ -689,21 +935,69 @@ const Admin = () => {
                             <FaPlus /> AJOUTER UNE CATÉGORIE
                         </button>
                     )}
+                    {activeTab === "orders" && (
+                        <button
+                            onClick={handleMarkAllSeen}
+                            className="btn btn-primary hover-lift"
+                            style={{
+                                padding: '14px 28px',
+                                borderRadius: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                background: 'var(--accent-color)',
+                                boxShadow: '0 8px 25px rgba(255, 153, 0, 0.25)'
+                            }}
+                        >
+                            <FaEye /> MARQUER COMME VU
+                        </button>
+                    )}
                 </div>
 
                 {/* Quick Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
-                    <StatCard label="Total Produits" value={stats.totalProducts} icon={FaShoppingBag} color="255, 153, 0" />
-                    <StatCard label="Commandes en attente" value={stats.pendingOrders} icon={FaDolly} color="255, 71, 87" />
-                    <StatCard label="Stock Total" value={stats.totalKeys} icon={FaKey} color="46, 213, 115" />
-                    <StatCard label="Valeur Stock" value={`$${stats.totalAvailableValue.toFixed(2)}`} icon={FaWallet} color="10, 191, 255" />
-                    <StatCard label="Clients" value={stats.totalUsers} icon={FaUserFriends} color="162, 155, 254" />
-                </div>
+                {isLargeDesktop ? (
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: `repeat(auto-fit, minmax(200px, 1fr))`,
+                        gap: '20px',
+                        marginBottom: '40px'
+                    }}>
+                        <StatCard label="Total Produits" value={stats.totalProducts} icon={FaShoppingBag} color="255, 153, 0" />
+                        <StatCard label="Commandes en attente" value={stats.pendingOrders} icon={FaDolly} color="255, 71, 87" />
+                        <StatCard label="Stock Total" value={stats.totalKeys} icon={FaKey} color="46, 213, 115" />
+                        <StatCard label="Valeur Stock" value={`$${stats.totalAvailableValue.toFixed(2)}`} icon={FaWallet} color="10, 191, 255" />
+                        <StatCard label="Clients" value={stats.totalUsers} icon={FaUserFriends} color="162, 155, 254" />
+                    </div>
+                ) : (
+                    <div style={{ marginBottom: '30px' }}>
+                        <button
+                            onClick={() => setShowStatsModal(true)}
+                            className="glass hover-lift"
+                            style={{
+                                width: '100%',
+                                padding: '16px',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255, 153, 0, 0.2)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '12px',
+                                color: 'var(--accent-color)',
+                                fontWeight: '900',
+                                fontSize: '0.9rem',
+                                letterSpacing: '1px',
+                                background: 'rgba(255, 153, 0, 0.05)'
+                            }}
+                        >
+                            <FaChartBar size={18} /> VOIR LES STATISTIQUES DU PANEL
+                        </button>
+                    </div>
+                )}
 
                 {/* Content View */}
                 {activeTab === "products" ? (
-                    <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', WebkitOverflowScrolling: 'touch' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '900px' }}>
                             <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                 <tr>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Produit</th>
@@ -769,17 +1063,25 @@ const Admin = () => {
                                                         <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{soldKeys} UNITÉS VENDUES</div>
                                                     </div>
                                                 ) : (
-                                                    <span style={{
-                                                        padding: '6px 12px',
-                                                        background: 'rgba(var(--accent-color-rgb), 0.1)',
-                                                        color: 'var(--accent-color)',
-                                                        borderRadius: '8px',
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: '900',
-                                                        border: '1px solid rgba(var(--accent-color-rgb), 0.2)'
-                                                    }}>
-                                                        STOCK API
-                                                    </span>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '5px' }}>
+                                                        <span style={{
+                                                            padding: '4px 10px',
+                                                            background: 'rgba(var(--accent-color-rgb), 0.1)',
+                                                            color: 'var(--accent-color)',
+                                                            borderRadius: '6px',
+                                                            fontSize: '0.7rem',
+                                                            fontWeight: '900',
+                                                            border: '1px solid rgba(var(--accent-color-rgb), 0.2)'
+                                                        }}>
+                                                            STOCK API
+                                                        </span>
+                                                        {totalKeys > 0 && (
+                                                            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: availableKeys > 0 ? 'var(--success)' : 'rgba(255,255,255,0.3)' }}>
+                                                                <FaKey size={10} style={{ marginRight: '4px' }} />
+                                                                {availableKeys} Codes
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </td>
                                             <td style={{ padding: '20px 24px' }}>
@@ -795,8 +1097,8 @@ const Admin = () => {
                         </table>
                     </div>
                 ) : activeTab === "categories" ? (
-                    <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', WebkitOverflowScrolling: 'touch' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '800px' }}>
                             <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                 <tr>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Catégorie</th>
@@ -842,10 +1144,18 @@ const Admin = () => {
                         </table>
                     </div>
                 ) : activeTab === "orders" ? (
-                    <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', WebkitOverflowScrolling: 'touch' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '900px' }}>
                             <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                 <tr>
+                                    <th style={{ padding: '24px 10px 24px 24px', width: '40px' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedOrders.length === orders.filter(o => o.status === 'PENDING').length && orders.filter(o => o.status === 'PENDING').length > 0}
+                                            onChange={(e) => setSelectedOrders(e.target.checked ? orders.filter(o => o.status === 'PENDING').map(o => o._id) : [])}
+                                            style={{ cursor: 'pointer' }}
+                                        />
+                                    </th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Client</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Produit</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
@@ -854,8 +1164,28 @@ const Admin = () => {
                                 </tr>
                             </thead>
                             <tbody>
+                                {selectedOrders.length > 0 && activeTab === "orders" && (
+                                    <tr>
+                                        <td colSpan="6" style={{ padding: '10px 24px', background: 'rgba(255, 71, 87, 0.05)' }}>
+                                            <div className="flex items-center gap-3">
+                                                <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--error)' }}>{selectedOrders.length} sélectionnés</span>
+                                                <button onClick={handleBulkDeleteOrders} className="btn" style={{ background: 'var(--error)', color: '#fff', fontSize: '0.7rem', padding: '5px 12px', borderRadius: '6px' }}>
+                                                    SUPPRIMER LA SÉLECTION
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
                                 {orders.filter(o => o.status === 'PENDING').map((o) => (
-                                    <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: selectedOrders.includes(o._id) ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+                                        <td style={{ padding: '20px 24px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedOrders.includes(o._id)}
+                                                onChange={() => handleToggleSelect(o._id, 'order')}
+                                                style={{ cursor: 'pointer' }}
+                                            />
+                                        </td>
                                         <td style={{ padding: '20px 24px' }}>
                                             <div style={{ color: '#fff', fontWeight: '800' }}>{o.userId?.username || 'N/A'}</div>
                                             <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>{o.userId?.email || ''}</div>
@@ -882,6 +1212,7 @@ const Admin = () => {
                                                     <FaKey size={16} />
                                                 </button>
                                             )}
+                                            <button onClick={() => handleDeleteOrder(o._id)} className="action-btn delete" title="Supprimer"><FaTrash size={16} /></button>
                                         </td>
                                     </tr>
                                 ))}
@@ -889,52 +1220,228 @@ const Admin = () => {
                         </table>
                     </div>
                 ) : activeTab === "historique" ? (
-                    <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                            <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <tr>
-                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Client</th>
-                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Produit (Prix)</th>
-                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Statut</th>
-                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {orders.map((o) => (
-                                    <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                        <td style={{ padding: '20px 24px' }}>
-                                            <div style={{ color: '#fff', fontWeight: '800' }}>{o.userId?.username || 'N/A'}</div>
-                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>{o.userId?.email || ''}</div>
-                                        </td>
-                                        <td style={{ padding: '20px 24px' }}>
-                                            <div style={{ color: '#fff', fontWeight: '700' }}>{o.productTitle}</div>
-                                            <div style={{ color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: '800' }}>${o.price.toFixed(2)}</div>
-                                        </td>
-                                        <td style={{ padding: '20px 24px' }}>
-                                            {o.status === 'COMPLETED' ? (
-                                                <span style={{ color: 'var(--success)', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(0, 210, 133, 0.1)', borderRadius: '6px' }}>COMPLÉTÉ</span>
-                                            ) : o.status === 'REFUNDED' ? (
-                                                <span style={{ color: 'var(--danger)', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(255, 71, 87, 0.1)', borderRadius: '6px' }}>REMBOURSÉ</span>
-                                            ) : (
-                                                <span style={{ color: '#ff9900', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(255, 153, 0, 0.1)', borderRadius: '6px' }}>EN ATTENTE</span>
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '20px 24px' }}>
-                                            {o.status !== 'REFUNDED' && (
-                                                <button
-                                                    onClick={() => handleRefund(o._id)}
-                                                    className="action-btn delete"
-                                                    title="Rembourser"
-                                                    style={{ display: 'flex', alignItems: 'center', gap: '5px', width: 'auto', padding: '8px 15px', borderRadius: '10px' }}
-                                                >
-                                                    <FaWallet size={12} /> <span style={{ fontSize: '0.65rem', fontWeight: '800' }}>REMBOURSER</span>
-                                                </button>
-                                            )}
-                                        </td>
+                    <div className="flex flex-col gap-6">
+                        {/* History Filters */}
+                        <div className="glass" style={{
+                            padding: isLargeDesktop ? '20px' : '12px',
+                            borderRadius: '20px',
+                            display: 'flex',
+                            gap: isLargeDesktop ? '20px' : '10px',
+                            alignItems: 'center',
+                            border: '1px solid rgba(255,255,255,0.05)'
+                        }}>
+                            <div style={{ flex: 1, position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    className="admin-input"
+                                    placeholder={isLargeDesktop ? "Rechercher par client, produit ou code..." : "Rechercher..."}
+                                    value={historySearch}
+                                    onChange={(e) => setHistorySearch(e.target.value)}
+                                    style={{
+                                        paddingLeft: isLargeDesktop ? '45px' : '35px',
+                                        fontSize: isLargeDesktop ? '1rem' : '0.85rem'
+                                    }}
+                                />
+                                <FaShoppingBag style={{
+                                    position: 'absolute',
+                                    left: isLargeDesktop ? '18px' : '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    opacity: 0.3,
+                                    fontSize: isLargeDesktop ? '18px' : '14px'
+                                }} />
+                            </div>
+                            <div style={{ width: isLargeDesktop ? '250px' : '120px' }}>
+                                <select
+                                    className="w-full bg-[#151725] border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
+                                    style={{
+                                        padding: isLargeDesktop ? '12px 16px' : '10px 8px',
+                                        fontSize: isLargeDesktop ? '0.9rem' : '0.75rem'
+                                    }}
+                                    value={historyStatusFilter}
+                                    onChange={(e) => setHistoryStatusFilter(e.target.value)}
+                                >
+                                    <option value="ALL">{isLargeDesktop ? "Tous les statuts" : "Statuts"}</option>
+                                    <option value="COMPLETED">{isLargeDesktop ? "Complétés" : "OK"}</option>
+                                    <option value="REFUNDED">{isLargeDesktop ? "Remboursés" : "Remb."}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '1000px' }}>
+                                <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <tr>
+                                        <th style={{ padding: '24px 10px 24px 24px', width: '40px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={
+                                                    (() => {
+                                                        const filtered = orders.filter(o => {
+                                                            if (o.status === 'PENDING') return false;
+                                                            const matchesStatus = historyStatusFilter === "ALL" || o.status === historyStatusFilter;
+                                                            const searchText = historySearch.toLowerCase();
+                                                            return matchesStatus && (
+                                                                o.userId?.username?.toLowerCase().includes(searchText) ||
+                                                                o.userId?.email?.toLowerCase().includes(searchText) ||
+                                                                o.productTitle?.toLowerCase().includes(searchText) ||
+                                                                o.licenseKey?.toLowerCase().includes(searchText)
+                                                            );
+                                                        });
+                                                        return filtered.length > 0 && filtered.every(o => selectedOrders.includes(o._id));
+                                                    })()
+                                                }
+                                                onChange={(e) => {
+                                                    const filtered = orders.filter(o => {
+                                                        if (o.status === 'PENDING') return false;
+                                                        const matchesStatus = historyStatusFilter === "ALL" || o.status === historyStatusFilter;
+                                                        const searchText = historySearch.toLowerCase();
+                                                        return matchesStatus && (
+                                                            o.userId?.username?.toLowerCase().includes(searchText) ||
+                                                            o.userId?.email?.toLowerCase().includes(searchText) ||
+                                                            o.productTitle?.toLowerCase().includes(searchText) ||
+                                                            o.licenseKey?.toLowerCase().includes(searchText)
+                                                        );
+                                                    });
+                                                    if (e.target.checked) {
+                                                        const newSelected = Array.from(new Set([...selectedOrders, ...filtered.map(o => o._id)]));
+                                                        setSelectedOrders(newSelected);
+                                                    } else {
+                                                        const filteredIds = filtered.map(o => o._id);
+                                                        setSelectedOrders(selectedOrders.filter(id => !filteredIds.includes(id)));
+                                                    }
+                                                }}
+                                                style={{ cursor: 'pointer' }}
+                                            />
+                                        </th>
+                                        <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Date & Heure</th>
+                                        <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Client</th>
+                                        <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Produit (Prix)</th>
+                                        <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Code / Licence</th>
+                                        <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Statut</th>
+                                        <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {(() => {
+                                        const filteredIds = orders.filter(o => {
+                                            if (o.status === 'PENDING') return false;
+                                            const matchesStatus = historyStatusFilter === "ALL" || o.status === historyStatusFilter;
+                                            const searchText = historySearch.toLowerCase();
+                                            return matchesStatus && (
+                                                o.userId?.username?.toLowerCase().includes(searchText) ||
+                                                o.userId?.email?.toLowerCase().includes(searchText) ||
+                                                o.productTitle?.toLowerCase().includes(searchText) ||
+                                                o.licenseKey?.toLowerCase().includes(searchText)
+                                            );
+                                        }).map(o => o._id);
+                                        const selectedFilteredCount = selectedOrders.filter(id => filteredIds.includes(id)).length;
+
+                                        return selectedFilteredCount > 0 && (
+                                            <tr>
+                                                <td colSpan="7" style={{ padding: '10px 24px', background: 'rgba(255, 71, 87, 0.05)' }}>
+                                                    <div className="flex items-center gap-3">
+                                                        <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--error)' }}>
+                                                            {selectedFilteredCount} sélectionnés
+                                                        </span>
+                                                        <button onClick={handleBulkDeleteOrders} className="btn" style={{ background: 'var(--error)', color: '#fff', fontSize: '0.7rem', padding: '5px 12px', borderRadius: '6px' }}>
+                                                            SUPPRIMER LA SÉLECTION
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })()}
+                                    {orders
+                                        .filter(o => {
+                                            if (o.status === 'PENDING') return false;
+                                            const matchesStatus = historyStatusFilter === "ALL" || o.status === historyStatusFilter;
+                                            const searchText = historySearch.toLowerCase();
+                                            const matchesSearch =
+                                                o.userId?.username?.toLowerCase().includes(searchText) ||
+                                                o.userId?.email?.toLowerCase().includes(searchText) ||
+                                                o.productTitle?.toLowerCase().includes(searchText) ||
+                                                o.licenseKey?.toLowerCase().includes(searchText);
+                                            return matchesStatus && matchesSearch;
+                                        })
+                                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                        .map((o) => (
+                                            <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: selectedOrders.includes(o._id) ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+                                                <td style={{ padding: '20px 24px' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedOrders.includes(o._id)}
+                                                        onChange={() => handleToggleSelect(o._id, 'order')}
+                                                        style={{ cursor: 'pointer' }}
+                                                    />
+                                                </td>
+                                                <td style={{ padding: '20px 24px' }}>
+                                                    <div style={{ color: '#fff', fontWeight: '700', fontSize: '0.85rem' }}>{new Date(o.createdAt).toLocaleDateString()}</div>
+                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>{new Date(o.createdAt).toLocaleTimeString()}</div>
+                                                </td>
+                                                <td style={{ padding: '20px 24px' }}>
+                                                    <div style={{ color: '#fff', fontWeight: '800' }}>{o.userId?.username || 'N/A'}</div>
+                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>{o.userId?.email || ''}</div>
+                                                </td>
+                                                <td style={{ padding: '20px 24px' }}>
+                                                    <div style={{ color: '#fff', fontWeight: '700' }}>{o.productTitle}</div>
+                                                    <div style={{ color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: '800' }}>${o.price.toFixed(2)}</div>
+                                                </td>
+                                                <td style={{ padding: '20px 24px' }}>
+                                                    {o.licenseKey ? (
+                                                        <div style={{
+                                                            background: 'rgba(255,255,255,0.05)',
+                                                            color: '#fff',
+                                                            padding: '8px 12px',
+                                                            borderRadius: '8px',
+                                                            fontFamily: 'monospace',
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: '700',
+                                                            border: '1px solid rgba(255,255,255,0.1)',
+                                                            wordBreak: 'break-all'
+                                                        }}>
+                                                            {o.licenseKey}
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.8rem italic' }}>Pas de code</span>
+                                                    )}
+                                                </td>
+                                                <td style={{ padding: '20px 24px' }}>
+                                                    {o.status === 'COMPLETED' ? (
+                                                        <span style={{ color: 'var(--success)', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(0, 210, 133, 0.1)', borderRadius: '6px' }}>COMPLÉTÉ</span>
+                                                    ) : o.status === 'REFUNDED' ? (
+                                                        <span style={{ color: 'var(--danger)', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(255, 71, 87, 0.1)', borderRadius: '6px' }}>REMBOURSÉ</span>
+                                                    ) : (
+                                                        <span style={{ color: '#ff9900', fontWeight: '900', fontSize: '0.7rem', padding: '4px 8px', background: 'rgba(255, 153, 0, 0.1)', borderRadius: '6px' }}>EN ATTENTE</span>
+                                                    )}
+                                                </td>
+                                                <td style={{ padding: '20px 24px' }}>
+                                                    <div className="flex gap-2">
+                                                        {o.status !== 'REFUNDED' && (
+                                                            <button
+                                                                onClick={() => handleRefund(o._id)}
+                                                                className="action-btn delete"
+                                                                title="Rembourser"
+                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px' }}
+                                                            >
+                                                                <FaWallet size={12} />
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleDeleteOrder(o._id)}
+                                                            className="action-btn delete"
+                                                            title="Supprimer"
+                                                            style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+                                                        >
+                                                            <FaTrash size={12} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                 ) : activeTab === "ranks" ? (
@@ -955,7 +1462,15 @@ const Admin = () => {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {settings?.ranks?.map((rank, idx) => (
-                                <div key={idx} className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 50px', gap: '20px', alignItems: 'center' }}>
+                                <div key={idx} className="glass" style={{
+                                    padding: isLargeDesktop ? '20px' : '15px',
+                                    borderRadius: '16px',
+                                    background: 'rgba(255,255,255,0.02)',
+                                    display: 'grid',
+                                    gridTemplateColumns: isLargeDesktop ? '1fr 1fr 1fr 1fr 50px' : '1fr 1fr',
+                                    gap: isLargeDesktop ? '20px' : '12px',
+                                    alignItems: 'center'
+                                }}>
                                     <div className="flex flex-col gap-1">
                                         <label className="form-label" style={{ fontSize: '0.7rem' }}>Nom du Rang</label>
                                         <input
@@ -1034,7 +1549,7 @@ const Admin = () => {
                                     <div className="flex flex-col gap-1">
                                         <label className="form-label" style={{ fontSize: '0.7rem' }}>Icône</label>
                                         <select
-                                            className="admin-input"
+                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
                                             value={rank.icon}
                                             onChange={(e) => {
                                                 const newRanks = [...settings.ranks];
@@ -1093,10 +1608,10 @@ const Admin = () => {
                             </form>
                         </div>
 
-                        <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div className="glass" style={{ padding: isLargeDesktop ? '30px' : '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff' }}>Stock Disponible ({demos.length})</h3>
-                            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <div style={{ maxHeight: '400px', overflowY: 'auto', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '600px' }}>
                                     <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
                                         <tr>
                                             <th style={{ padding: '15px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>Service</th>
@@ -1157,8 +1672,8 @@ const Admin = () => {
                         </div>
 
                         {/* Requests Table */}
-                        <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '850px' }}>
                                 <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                     <tr>
                                         <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Client</th>
@@ -1286,10 +1801,18 @@ const Admin = () => {
                         )}
                     </div>
                 ) : (
-                    <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', WebkitOverflowScrolling: 'touch' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '900px' }}>
                             <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                 <tr>
+                                    <th style={{ padding: '24px 10px 24px 24px', width: '40px' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedUsers.length === users.length && users.length > 0}
+                                            onChange={(e) => setSelectedUsers(e.target.checked ? users.map(u => u._id) : [])}
+                                            style={{ cursor: 'pointer', transform: 'scale(1.2)' }}
+                                        />
+                                    </th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Utilisateur</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Solde Actuel</th>
                                     <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Rang / Achats</th>
@@ -1298,8 +1821,28 @@ const Admin = () => {
                                 </tr>
                             </thead>
                             <tbody>
+                                {selectedUsers.length > 0 && (
+                                    <tr>
+                                        <td colSpan="6" style={{ padding: '10px 24px', background: 'rgba(255, 71, 87, 0.05)' }}>
+                                            <div className="flex items-center gap-3">
+                                                <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--error)' }}>{selectedUsers.length} sélectionnés</span>
+                                                <button onClick={handleBulkDeleteUsers} className="btn" style={{ background: 'var(--error)', color: '#fff', fontSize: '0.7rem', padding: '5px 12px', borderRadius: '6px' }}>
+                                                    SUPPRIMER LA SÉLECTION
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
                                 {users.map((u) => (
-                                    <tr key={u._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <tr key={u._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: selectedUsers.includes(u._id) ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+                                        <td style={{ padding: '20px 24px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedUsers.includes(u._id)}
+                                                onChange={() => handleToggleSelect(u._id, 'user')}
+                                                style={{ cursor: 'pointer' }}
+                                            />
+                                        </td>
                                         <td style={{ padding: '20px 24px' }}>
                                             <div className="flex items-center gap-4">
                                                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: u.email === 'feridadmin@admin.com' ? 'rgba(255, 153, 0, 0.1)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: u.email === 'feridadmin@admin.com' ? 'var(--accent-color)' : '#fff', fontSize: '1.2rem', fontWeight: '900' }}>
@@ -1346,6 +1889,7 @@ const Admin = () => {
                                                         <FaCheck size={18} />
                                                     </button>
                                                 )}
+                                                <button onClick={() => handleDeleteUser(u._id)} className="action-btn delete" title="Supprimer"><FaTrash size={18} /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -1431,7 +1975,7 @@ const Admin = () => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label className="form-label">Catégorie</label>
                                         <select
-                                            className="admin-input"
+                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
                                             value={showAddForm ? newProduct.category : isEditing.category}
                                             onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, category: e.target.value, subcategory: "" }) : setIsEditing({ ...isEditing, category: e.target.value, subcategory: "" })}
                                         >
@@ -1447,7 +1991,7 @@ const Admin = () => {
                                                 <div style={{ marginTop: '8px' }}>
                                                     <label className="form-label" style={{ fontSize: '0.85rem' }}>Sous-catégorie</label>
                                                     <select
-                                                        className="admin-input"
+                                                        className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
                                                         value={showAddForm ? newProduct.subcategory : isEditing.subcategory}
                                                         onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, subcategory: e.target.value }) : setIsEditing({ ...isEditing, subcategory: e.target.value })}
                                                     >
@@ -1461,19 +2005,175 @@ const Admin = () => {
                                     </div>
                                 </div>
 
-                                {(showAddForm ? newProduct.type : isEditing.type) === 'normal' && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label className="form-label">Clés de Licence (Séparez par des virgules)</label>
-                                        <textarea
-                                            placeholder="ABCD-1234, EFGH-5678..."
-                                            className="admin-input"
-                                            style={{ height: '120px', fontFamily: 'monospace', resize: 'none' }}
-                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, keysInput: e.target.value }) : setIsEditing({ ...isEditing, keysInput: e.target.value })}
-                                            required={showAddForm && newProduct.type === 'normal'}
-                                        ></textarea>
-                                        {isEditing && <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '800', opacity: 0.8 }}>* Les nouvelles clés seront ajoutées au stock existant.</p>}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>Clés de Licence / Codes (Stock)</span>
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'rgba(255, 153, 0, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                                            {(showAddForm ? newProduct.keysInput : isEditing.keysInput) ? (showAddForm ? newProduct.keysInput : isEditing.keysInput).split(',').filter(k => k.trim()).length : 0} Codes
+                                        </span>
+                                    </label>
+
+                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        {/* Input Area */}
+                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                                            <input
+                                                type="text"
+                                                placeholder="Entrez un code..."
+                                                className="admin-input"
+                                                style={{ flex: 1 }}
+                                                value={showAddForm ? (newProduct.tempKeyInput || "") : (isEditing.tempKeyInput || "")}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    showAddForm
+                                                        ? setNewProduct({ ...newProduct, tempKeyInput: val })
+                                                        : setIsEditing({ ...isEditing, tempKeyInput: val });
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const p = showAddForm ? newProduct : isEditing;
+                                                        const val = (p.tempKeyInput || "").trim();
+                                                        if (!val) return;
+
+                                                        const currentKeys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
+                                                        if (!currentKeys.includes(val)) {
+                                                            currentKeys.push(val);
+                                                            const newKeysInput = currentKeys.join(',');
+                                                            showAddForm
+                                                                ? setNewProduct({ ...newProduct, keysInput: newKeysInput, tempKeyInput: "" })
+                                                                : setIsEditing({ ...isEditing, keysInput: newKeysInput, tempKeyInput: "" });
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary"
+                                                style={{ padding: '0 20px', borderRadius: '10px' }}
+                                                onClick={() => {
+                                                    const p = showAddForm ? newProduct : isEditing;
+                                                    const val = (p.tempKeyInput || "").trim();
+                                                    if (!val) return;
+
+                                                    const currentKeys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
+                                                    if (!currentKeys.includes(val)) {
+                                                        currentKeys.push(val);
+                                                        const newKeysInput = currentKeys.join(',');
+                                                        showAddForm
+                                                            ? setNewProduct({ ...newProduct, keysInput: newKeysInput, tempKeyInput: "" })
+                                                            : setIsEditing({ ...isEditing, keysInput: newKeysInput, tempKeyInput: "" });
+                                                    }
+                                                }}
+                                            >
+                                                <FaPlus />
+                                            </button>
+                                        </div>
+
+                                        {/* Keys List */}
+                                        <div style={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: '8px',
+                                            maxHeight: '200px',
+                                            overflowY: 'auto',
+                                            padding: '5px'
+                                        }}>
+                                            {(() => {
+                                                const p = showAddForm ? newProduct : isEditing;
+                                                const keys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
+
+                                                if (keys.length === 0) return <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', fontStyle: 'italic', width: '100%', textAlign: 'center', padding: '10px' }}>Aucun code ajouté temporairement.</div>;
+
+                                                return keys.map((k, idx) => (
+                                                    <div key={idx} style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '8px',
+                                                        background: 'rgba(255,255,255,0.05)',
+                                                        padding: '6px 12px',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid rgba(255,255,255,0.1)',
+                                                        fontSize: '0.85rem',
+                                                        fontFamily: 'monospace'
+                                                    }}>
+                                                        <span style={{ color: '#fff' }}>{k}</span>
+                                                        <FaTimes
+                                                            size={12}
+                                                            style={{ cursor: 'pointer', color: 'var(--error)', opacity: 0.7 }}
+                                                            onClick={() => {
+                                                                const newKeys = keys.filter((_, i) => i !== idx);
+                                                                const newKeysInput = newKeys.join(',');
+                                                                showAddForm
+                                                                    ? setNewProduct({ ...newProduct, keysInput: newKeysInput })
+                                                                    : setIsEditing({ ...isEditing, keysInput: newKeysInput });
+                                                            }}
+                                                            onMouseOver={(e) => e.target.style.opacity = 1}
+                                                            onMouseOut={(e) => e.target.style.opacity = 0.7}
+                                                        />
+                                                    </div>
+                                                ));
+                                            })()}
+                                        </div>
                                     </div>
-                                )}
+                                    {(isEditing || (showAddForm && newProduct.type !== 'normal')) && <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '800', opacity: 0.8, marginTop: '10px' }}>* Les nouvelles clés seront ajoutées au stock existant. Pour les produits API, elles seront utilisées si le client choisit "Code".</p>}
+
+                                    {/* Existing/Registered Code Display */}
+                                    {isEditing && isEditing.keys && isEditing.keys.length > 0 && (
+                                        <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                            <div className="flex justify-between items-center mb-3">
+                                                <label className="form-label" style={{ marginBottom: 0 }}>Stock Enregistré (Base de Données)</label>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: '900' }}>
+                                                    {isEditing.keys.filter(k => !k.isSold).length} Disponibles
+                                                </span>
+                                            </div>
+                                            <div style={{
+                                                display: 'flex',
+                                                flexWrap: 'wrap',
+                                                gap: '8px',
+                                                maxHeight: '150px',
+                                                overflowY: 'auto',
+                                                padding: '10px',
+                                                background: 'rgba(0,0,0,0.3)',
+                                                borderRadius: '12px'
+                                            }}>
+                                                {isEditing.keys.filter(k => !k.isSold).map((k, idx) => (
+                                                    <div key={idx} style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '8px',
+                                                        background: 'rgba(46, 213, 115, 0.1)',
+                                                        padding: '6px 12px',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid rgba(46, 213, 115, 0.2)',
+                                                        fontSize: '0.8rem',
+                                                        fontFamily: 'monospace',
+                                                        color: '#2ed573'
+                                                    }}>
+                                                        <FaKey size={10} />
+                                                        <span>{k.key}</span>
+                                                        <div style={{ display: 'flex', gap: '5px', marginLeft: '5px', borderLeft: '1px solid rgba(46, 213, 115, 0.3)', paddingLeft: '5px' }}>
+                                                            <FaEdit
+                                                                size={12}
+                                                                style={{ cursor: 'pointer', color: '#2ed573' }}
+                                                                title="Modifier"
+                                                                onClick={() => handleUpdateKey(isEditing._id, k._id, k.key)}
+                                                            />
+                                                            <FaTrash
+                                                                size={12}
+                                                                style={{ cursor: 'pointer', color: '#ff4757' }}
+                                                                title="Supprimer"
+                                                                onClick={() => handleDeleteKey(isEditing._id, k._id)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {isEditing.keys.filter(k => !k.isSold).length === 0 && (
+                                                    <div style={{ width: '100%', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Stock épuisé.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* API / IPTV Configuration */}
                                 <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1483,7 +2183,7 @@ const Admin = () => {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             <label className="form-label">Type de Produit</label>
                                             <select
-                                                className="admin-input"
+                                                className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
                                                 value={showAddForm ? newProduct.type : isEditing.type}
                                                 onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, type: e.target.value }) : setIsEditing({ ...isEditing, type: e.target.value })}
                                             >
@@ -1497,7 +2197,7 @@ const Admin = () => {
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 <label className="form-label">Fournisseur API</label>
                                                 <select
-                                                    className="admin-input"
+                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
                                                     value={showAddForm ? newProduct.provider : isEditing.provider}
                                                     onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, provider: e.target.value }) : setIsEditing({ ...isEditing, provider: e.target.value })}
                                                 >
@@ -1511,7 +2211,8 @@ const Admin = () => {
                                         )}
                                     </div>
 
-                                    {(showAddForm ? newProduct.type : isEditing.type) !== 'normal' && (
+                                    {(showAddForm ? newProduct.type : isEditing.type) !== 'normal' && (<>
+
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 <label className="form-label">ID du Bouquet (Pack ID - 'all' pour tous)</label>
@@ -1537,7 +2238,7 @@ const Admin = () => {
                                                 )}
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label className="form-label">Durée (Mois)</label>
+                                                <label className="form-label">Durée par défaut (Mois)</label>
                                                 <input
                                                     type="number"
                                                     className="admin-input"
@@ -1547,9 +2248,66 @@ const Admin = () => {
                                                 />
                                             </div>
                                         </div>
-                                    )}
 
-                                    {(showAddForm ? newProduct.type : isEditing.type) !== 'normal' && (
+                                        {/* Dynamic Duration Pricing */}
+                                        <div style={{ marginTop: '15px', padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                                            <label className="form-label" style={{ color: 'var(--accent-color)' }}>Prix par Durée (Prioritaire sur le prix de base)</label>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                                                {(showAddForm ? (newProduct.durationPrices || []) : (isEditing.durationPrices || [])).map((dp, idx) => (
+                                                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Mois (ex: 3)"
+                                                            className="admin-input"
+                                                            style={{ flex: 1 }}
+                                                            value={dp.duration}
+                                                            onChange={(e) => {
+                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                                updated[idx].duration = parseInt(e.target.value);
+                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                            }}
+                                                        />
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Prix ($)"
+                                                            className="admin-input"
+                                                            style={{ flex: 1 }}
+                                                            value={dp.price}
+                                                            onChange={(e) => {
+                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                                updated[idx].price = parseFloat(e.target.value);
+                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                            }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="action-btn delete"
+                                                            onClick={() => {
+                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                                updated.splice(idx, 1);
+                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                            }}
+                                                        >
+                                                            <FaTrash />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-glass"
+                                                    style={{ fontSize: '0.8rem', padding: '8px' }}
+                                                    onClick={() => {
+                                                        const newItem = { duration: 1, price: 0 };
+                                                        const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                        updated.push(newItem);
+                                                        showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                    }}
+                                                >
+                                                    + Ajouter une durée
+                                                </button>
+                                            </div>
+                                        </div>
+
                                         <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
                                             <div className="flex items-center gap-3 mb-4">
                                                 <input
@@ -1603,7 +2361,7 @@ const Admin = () => {
                                                 </div>
                                             )}
                                         </div>
-                                    )}
+                                    </>)}
                                 </div>
 
                                 <div className="flex justify-end gap-3 mt-4 sticky bottom-0 bg-[#131427] pt-4 border-t border-white/5 pb-2 -mb-2">
@@ -1904,6 +2662,48 @@ const Admin = () => {
             }
 
             {/* Modals */}
+            {/* The previous Sent Keys Modal content is now integrated into the main history table or removed as per instruction. */}
+            {/* New states for search and filter would be declared here or at the top of the component */}
+            {/* const [searchTerm, setSearchTerm] = useState(''); */}
+            {/* const [filterStatus, setFilterStatus] = useState('ALL'); */}
+            {/* const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'descending' }); */}
+            {/* const filteredOrders = useMemo(() => { ... }, [orders, searchTerm, filterStatus, sortConfig]); */}
+
+            {/* Mobile Stats Modal */}
+            {!isLargeDesktop && showStatsModal && (
+                <div className="modal-overlay" onClick={() => setShowStatsModal(false)}>
+                    <div
+                        className="modal-content"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            maxWidth: '400px',
+                            width: '90%',
+                            animation: 'modalSlideUp 0.3s ease-out',
+                            padding: '30px'
+                        }}
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 style={{ fontSize: '1.4rem', fontWeight: '900' }}>Tableau de Bord</h2>
+                            <FaTimes onClick={() => setShowStatsModal(false)} style={{ cursor: 'pointer', opacity: 0.3 }} />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <StatCard label="Total Produits" value={stats.totalProducts} icon={FaShoppingBag} color="255, 153, 0" />
+                            <StatCard label="Commandes en attente" value={stats.pendingOrders} icon={FaDolly} color="255, 71, 87" />
+                            <StatCard label="Stock Total" value={stats.totalKeys} icon={FaKey} color="46, 213, 115" />
+                            <StatCard label="Valeur Stock" value={`$${stats.totalAvailableValue.toFixed(2)}`} icon={FaWallet} color="10, 191, 255" />
+                            <StatCard label="Clients" value={stats.totalUsers} icon={FaUserFriends} color="162, 155, 254" />
+                        </div>
+                        <button
+                            onClick={() => setShowStatsModal(false)}
+                            className="btn btn-primary w-full mt-8"
+                            style={{ padding: '15px', borderRadius: '12px' }}
+                        >
+                            FERMER
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <ConfirmModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
@@ -1922,6 +2722,16 @@ const Admin = () => {
                 message={alertModal.message}
                 type={alertModal.type}
             />
+
+            {
+                toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )
+            }
         </div >
     );
 };

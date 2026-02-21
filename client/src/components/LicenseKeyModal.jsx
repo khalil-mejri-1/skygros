@@ -8,7 +8,7 @@ const LicenseKeyModal = ({ isOpen, onClose, productTitle, licenseKey }) => {
 
     if (!isOpen) return null;
 
-    const isPending = licenseKey === "PENDING";
+    const isPending = licenseKey === "PENDING" || licenseKey === "EN_ATTENTE";
 
     const handleCopy = () => {
         if (isPending) return;

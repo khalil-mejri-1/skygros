@@ -37,7 +37,8 @@ router.put('/fulfill/:orderId', async (req, res) => {
             req.params.orderId,
             {
                 licenseKey: licenseKey,
-                status: 'COMPLETED'
+                status: 'COMPLETED',
+                userNotified: false
             },
             { new: true }
         );
@@ -77,6 +78,63 @@ router.post('/refund/:orderId', async (req, res) => {
         res.status(200).json({ message: "Refund successful!", order });
     } catch (err) {
         console.error("Refund error:", err);
+        res.status(500).json(err);
+    }
+});
+
+// DELETE ORDER
+router.delete('/:id', async (req, res) => {
+    try {
+        await Order.findByIdAndDelete(req.params.id);
+        res.status(200).json("Order deleted success");
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
+// BULK DELETE ORDERS
+router.post('/bulk-delete', async (req, res) => {
+    try {
+        const { orderIds } = req.body;
+        await Order.deleteMany({ _id: { $in: orderIds } });
+        res.status(200).json("Orders deleted success");
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+// MARK ALL AS SEEN
+router.put('/mark-all-seen', async (req, res) => {
+    try {
+        await Order.updateMany({ isSeen: { $ne: true } }, { isSeen: true });
+        res.status(200).json("All orders marked as seen");
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
+// GET UNNOTIFIED ORDERS FOR USER
+router.get('/notifications/:userId', async (req, res) => {
+    try {
+        const orders = await Order.find({
+            userId: req.params.userId,
+            status: 'COMPLETED',
+            userNotified: { $ne: true }
+        }).sort({ updatedAt: -1 });
+        res.status(200).json(orders);
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
+// MARK NOTIFICATIONS AS READ
+router.put('/notifications/mark-read/:userId', async (req, res) => {
+    try {
+        await Order.updateMany(
+            { userId: req.params.userId, status: 'COMPLETED', userNotified: { $ne: true } },
+            { userNotified: true }
+        );
+        res.status(200).json("Notifications marked as read");
+    } catch (err) {
         res.status(500).json(err);
     }
 });

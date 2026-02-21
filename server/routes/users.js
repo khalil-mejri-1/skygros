@@ -168,4 +168,25 @@ router.post('/check-rank-rewards', async (req, res) => {
     }
 });
 
+// DELETE USER
+router.delete('/:id', async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        res.status(200).json("User deleted success");
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
+// BULK DELETE USERS
+router.post('/bulk-delete', async (req, res) => {
+    try {
+        const { userIds } = req.body;
+        await User.deleteMany({ _id: { $in: userIds } });
+        res.status(200).json("Users deleted success");
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
 module.exports = router;

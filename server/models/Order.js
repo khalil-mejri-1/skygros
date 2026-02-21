@@ -15,6 +15,8 @@ const OrderSchema = new mongoose.Schema({
         url: { type: String },
         status: { type: String }
     },
+    isSeen: { type: Boolean, default: false },
+    userNotified: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -206,13 +206,12 @@ const ProductCard = ({ product }) => {
                 {/* Action Buttons Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: isSmall ? '1fr 45px' : '1fr 60px', gap: '8px' }}>
                     <button
-                        onClick={(e) => { e.stopPropagation(); if (!isPurchased) handleBuy(); }}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/product/${product._id}`); }}
                         className="btn"
-                        disabled={isPurchased}
                         style={{
-                            background: isPurchased ? 'var(--success)' : 'rgba(255, 153, 0, 0.15)',
+                            background: 'rgba(255, 153, 0, 0.15)',
                             border: '1px solid rgba(255, 153, 0, 0.3)',
-                            color: isPurchased ? '#000' : 'var(--accent-color)',
+                            color: 'var(--accent-color)',
                             padding: isSmall ? '8px' : '10px',
                             fontSize: isSmall ? '0.65rem' : '0.75rem',
                             fontWeight: '900',
@@ -220,9 +219,7 @@ const ProductCard = ({ product }) => {
                             textTransform: 'uppercase'
                         }}
                     >
-                        {isLoading ? (isSmall ? "..." : "Chargement...") :
-                            (isPurchased ? <FaCheck /> :
-                                ((product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? "ACHETER" : "COMMANDER"))}
+                        {(product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? "ACHETER" : "COMMANDER"}
                     </button>
 
                     <button

@@ -32,6 +32,7 @@ const ProductDetails = () => {
     const [selectedDuration, setSelectedDuration] = useState("");
     const [selectedCountry, setSelectedCountry] = useState("TN");
     const [selectedRegion, setSelectedRegion] = useState("");
+    const [subscriptionType, setSubscriptionType] = useState('m3u'); // 'm3u' or 'code'
 
     // Fetch NEO Options if M3U
     useEffect(() => {
@@ -126,7 +127,8 @@ const ProductDetails = () => {
 
         // Validation for M3U options
         if (product.type === 'm3u') {
-            if (!selectedDuration || !selectedRegion) {
+            // If M3U type is selected, we need bouquet and duration
+            if (subscriptionType === 'm3u' && (!selectedDuration || !selectedRegion)) {
                 setAlertModal({
                     isOpen: true,
                     title: "Configuration Requise",
@@ -135,13 +137,23 @@ const ProductDetails = () => {
                 });
                 return;
             }
+            // If Code type is selected, we just need duration (price depends on it)
+            if (subscriptionType === 'code' && !selectedDuration) {
+                setAlertModal({
+                    isOpen: true,
+                    title: "Configuration Requise",
+                    message: "Veuillez sélectionner une durée.",
+                    type: "warning"
+                });
+                return;
+            }
         }
 
-        if (user.balance < product.price) {
+        if (user.balance < currentPrice) {
             setAlertModal({
                 isOpen: true,
                 title: "Solde Insuffisant",
-                message: "Votre solde est insuffisant pour cet achat.",
+                message: `Votre solde est insuffisant pour cet achat ($${currentPrice.toFixed(2)} requis).`,
                 type: "error"
             });
             return;
@@ -164,7 +176,8 @@ const ProductDetails = () => {
                 subscriptionDetails: product.type === 'm3u' ? {
                     duration: selectedDuration, // Changed from packId -> duration
                     country: selectedCountry,
-                    bouquetId: selectedRegion  // Changed from region -> bouquetId
+                    bouquetId: selectedRegion,  // Changed from region -> bouquetId
+                    subscriptionType: subscriptionType // 'm3u' or 'code'
                 } : null
             });
 
@@ -276,6 +289,17 @@ const ProductDetails = () => {
         ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
         : 0;
 
+    // Dynamic Pricing Logic
+    const getDynamicPrice = () => {
+        if (selectedDuration && product.durationPrices && product.durationPrices.length > 0) {
+            const priceConfig = product.durationPrices.find(dp => dp.duration === parseInt(selectedDuration));
+            if (priceConfig) return priceConfig.price;
+        }
+        return product.price;
+    };
+
+    const currentPrice = getDynamicPrice();
+
     return (
         <div style={{ background: 'var(--bg-primary)', padding: '40px 0', minHeight: '100vh' }}>
             <SEO
@@ -369,12 +393,13 @@ const ProductDetails = () => {
                                         </div>
                                     )}
                                     <div style={{ color: 'var(--accent-color)', fontSize: '2.5rem', fontWeight: '900' }}>
-                                        ${product.price.toFixed(2)}
+                                        ${currentPrice.toFixed(2)}
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '0.8rem', color: (product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? 'var(--success)' : '#ff4757', fontWeight: '800', marginBottom: '5px' }}>
-                                        {(product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? "✓ DISPONIBLE IMMÉDIATEMENT" : "✗ DÉSOLÉ, EN RUPTURE DE STOCK"}
+                                    <div style={{ fontSize: '0.8rem', color: (subscriptionType === 'm3u' || (product.keys?.filter(k => !k.isSold).length > 0)) ? 'var(--success)' : '#ff4757', fontWeight: '800', marginBottom: '5px' }}>
+                                        {subscriptionType === 'm3u' ? "✓ LIVRAISON INSTANTANÉE" :
+                                            (product.keys?.filter(k => !k.isSold).length > 0 ? "✓ EN STOCK - LIVRAISON RAPIDE" : "⌛ SUR COMMANDE (MAX 24H)")}
                                     </div>
 
                                 </div>
@@ -432,16 +457,67 @@ const ProductDetails = () => {
                                             onChange={(e) => setSelectedDuration(e.target.value)}
                                         >
                                             <option value="">Sélectionner une durée</option>
-                                            {product.provider === 'tivipanel' && <option value="trial">24h (Test)</option>}
-                                            <option value="1">1 Month</option>
-                                            <option value="3">3 Months</option>
-                                            <option value="6">6 Months</option>
-                                            <option value="12">12 Months</option>
+
+                                            {/* Dynamic Options from Backend */}
+                                            {product.durationPrices && product.durationPrices.length > 0 ? (
+                                                product.durationPrices.sort((a, b) => a.duration - b.duration).map(dp => (
+                                                    <option key={dp.duration} value={dp.duration}>
+                                                        {dp.duration} Mois - ${dp.price}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    {product.provider === 'tivipanel' && <option value="trial">24h (Test)</option>}
+                                                    <option value="1">1 Month</option>
+                                                    <option value="3">3 Months</option>
+                                                    <option value="6">6 Months</option>
+                                                    <option value="12">12 Months</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
 
-                                    {/* Sort Bouquets (Packages) */}
-                                    {product.showBouquetSorter !== false && (
+                                    {/* Subscription Type Selector */}
+                                    <div className="mb-4">
+                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
+                                        <div className="flex gap-4">
+                                            <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="subtype"
+                                                    value="m3u"
+                                                    checked={subscriptionType === 'm3u'}
+                                                    onChange={() => setSubscriptionType('m3u')}
+                                                    className="hidden"
+                                                />
+                                                <div className="text-center font-bold">Lien M3U</div>
+                                            </label>
+                                            <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="subtype"
+                                                    value="code"
+                                                    checked={subscriptionType === 'code'}
+                                                    onChange={() => setSubscriptionType('code')}
+                                                    className="hidden"
+                                                />
+                                                <div className="text-center font-bold">Code d'activation</div>
+                                            </label>
+                                        </div>
+                                        {subscriptionType === 'code' && (
+                                            <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
+                                                <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
+                                                <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
+                                                    {product.keys?.filter(k => !k.isSold).length > 0
+                                                        ? `${product.keys.filter(k => !k.isSold).length} codes disponibles en stock.`
+                                                        : "Stock épuisé: Livraison manuelle par l'administrateur."}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Sort Bouquets (Packages) - Only show if M3U is selected */}
+                                    {product.showBouquetSorter !== false && subscriptionType === 'm3u' && (
                                         <div className="mb-4">
                                             <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
                                             <select

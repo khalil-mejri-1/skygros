@@ -252,6 +252,17 @@ ul {
   letter-spacing: 0.5px;
 }
 
+/* Category Dropdown Items */
+.dropdown-item {
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 153, 0, 0.1) !important;
+  color: var(--accent-color) !important;
+  transform: translateX(5px);
+}
+
 @media (max-width: 660px) {
   .btn {
     padding: 8px 16px;
