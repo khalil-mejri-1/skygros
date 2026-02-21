@@ -186,11 +186,11 @@ const Navbar = () => {
     };
 
     return (
-        <div style={{ position: 'sticky', top: 0, zIndex: 1000 }}>
-            <nav className="glass" style={{ padding: isSmallMobile ? '8px 0' : '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 20 }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 99999 }}>
+            <nav className="glass" style={{ padding: isSmallMobile ? '8px 0' : '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 99999 }}>
                 <div className="container flex items-center justify-between" style={{ gap: isSmallMobile ? '12px' : '20px' }}>
                     <Link to="/" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                        <img src="/logo.png" alt="SKYGROS" style={{ height: isSmallMobile ? '28px' : '45px', width: 'auto' }} />
+                        <img src="/logo.png" alt="SKYGROS" style={{ height: isSmallMobile ? '38px' : '45px', width: 'auto' }} />
                     </Link>
 
                     <div style={{ position: 'relative', flexGrow: 1, maxWidth: '600px' }} ref={searchRef}>
@@ -198,9 +198,9 @@ const Navbar = () => {
                             className="input-search"
                             placeholder={isSmallMobile ? "Rechercher..." : "Que recherchez-vous ?"}
                             style={{
-                                paddingLeft: '40px',
-                                height: isSmallMobile ? '38px' : '48px',
-                                fontSize: isSmallMobile ? '0.8rem' : '0.95rem',
+                                paddingLeft: '44px',
+                                height: isSmallMobile ? '46px' : '48px',
+                                fontSize: isSmallMobile ? '0.9rem' : '0.95rem',
                                 borderRadius: 'var(--radius-lg)',
                                 background: 'rgba(255,255,255,0.03)'
                             }}
@@ -208,10 +208,10 @@ const Navbar = () => {
                             onChange={handleSearch}
                             onFocus={() => searchQuery.length > 0 && setShowSearchResults(true)}
                         />
-                        <FaSearch style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: isSmallMobile ? '0.75rem' : '0.9rem' }} />
+                        <FaSearch style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: isSmallMobile ? '0.9rem' : '0.9rem' }} />
 
                         {showSearchResults && searchQuery.length > 0 && (
-                            <div className="glass custom-scrollbar" style={{ position: 'absolute', top: '110%', left: 0, width: '100%', maxHeight: '350px', overflowY: 'auto', background: 'rgba(18, 18, 26, 0.99)', border: '1px solid rgba(255,153,0,0.2)', borderRadius: '16px', zIndex: 1000, padding: '8px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
+                            <div className="glass custom-scrollbar" style={{ position: 'absolute', top: '110%', left: 0, width: '100%', maxHeight: '350px', overflowY: 'auto', background: 'rgba(18, 18, 26, 0.99)', border: '1px solid rgba(255,153,0,0.2)', borderRadius: '16px', zIndex: 99999, padding: '8px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
                                 {filteredProducts.length > 0 ? (
                                     filteredProducts.map(product => (
                                         <div key={product._id} onClick={() => { navigate(`/product/${product._id}`); setShowSearchResults(false); setSearchQuery(""); }} style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', borderRadius: '12px', marginBottom: '4px' }}>
@@ -339,7 +339,7 @@ const Navbar = () => {
             </nav>
 
             {/* Sub-navbar with categories */}
-            <div ref={subNavRef} style={{ background: 'var(--bg-secondary)', padding: '6px 0', position: 'relative', zIndex: 999 }}>
+            <div ref={subNavRef} style={{ background: 'var(--bg-secondary)', padding: '6px 0', position: 'relative', zIndex: 9990 }}>
                 <div className="container" style={{ overflow: 'visible' }} onMouseLeave={() => !isMobile && setHoveredCategory(null)}>
                     <div ref={scrollContainerRef} className="flex gap-2 md:gap-4 custom-scrollbar" style={{
                         overflowX: 'auto',
@@ -349,6 +349,7 @@ const Navbar = () => {
                         paddingRight: isMobile ? '15px' : '0',
                         display: 'flex',
                         flexWrap: 'nowrap',
+                        zIndex: 100,
                         justifyContent: isMobile ? 'flex-start' : (categories.length > 5 ? 'flex-start' : 'center')
                     }}>
                         {categories.map((cat) => {
@@ -395,16 +396,18 @@ const Navbar = () => {
 
                         if (hasSub && dropdownPosition) {
                             return (
-                                <div className="glass" style={{
+                                <div className="glass custom-scrollbar" style={{
                                     position: 'absolute',
                                     top: 'calc(100% + 2px)',
                                     left: `${dropdownPosition.left}px`,
                                     transform: 'translateX(-50%)',
                                     minWidth: '200px',
+                                    maxHeight: '320px',
+                                    overflowY: 'auto',
                                     background: 'rgba(13, 14, 26, 0.98)',
                                     border: '1px solid rgba(255,153,0,0.2)',
                                     padding: '8px',
-                                    zIndex: 1000,
+                                    zIndex: 9999,
                                     animation: 'fadeIn 0.2s ease-out',
                                     boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
                                     borderRadius: '16px'
