@@ -806,12 +806,14 @@ const Admin = () => {
                 width: isLargeDesktop ? '300px' : '280px',
                 background: '#0d0e1a',
                 borderRight: '1px solid rgba(255,255,255,0.05)',
-                padding: isLargeDesktop ? '40px 24px' : '30px 20px',
+                padding: isLargeDesktop ? '40px 24px' : '20px 20px',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'fixed',
-                height: '100vh',
-                zIndex: 150,
+                top: isLargeDesktop ? 0 : '115px',
+                height: isLargeDesktop ? '100vh' : 'calc(100vh - 115px - 70px)',
+                overflowY: 'auto',
+                zIndex: 9000,
                 transition: '0.3s ease-in-out',
                 left: isLargeDesktop ? 0 : (isMobileMenuOpen ? 0 : '-300px')
             }}>
@@ -824,7 +826,7 @@ const Admin = () => {
                 )}
 
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                <div className="custom-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
                     <SidebarItem id="products" label="Gestion Produits" icon={FaBoxOpen} />
                     <SidebarItem id="categories" label="Gestion Catégories" icon={FaTag} />
                     <SidebarItem id="orders" label="Gestion Commandes" icon={FaShoppingBag} badge={stats.unseenOrders} />
@@ -836,13 +838,13 @@ const Admin = () => {
                     <SidebarItem id="settings" label="Paramètres Généraux" icon={FaCog} />
                 </div>
 
-                <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)' }}>
+                {/* <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '800' }}>STATUT DU SERVEUR</div>
                     <div className="flex items-center gap-2">
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 10px var(--success)' }}></div>
                         <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>En Ligne</span>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Main Content */}
