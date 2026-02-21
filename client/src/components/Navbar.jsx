@@ -444,131 +444,133 @@ const Navbar = () => {
             {/* Mobile Menu Drawer */}
             {mobileMenuOpen && (
                 <>
-                    <div style={{ position: 'fixed', top: 0, right: 0, width: '320px', maxWidth: '85vw', height: '100vh', background: '#0d0e1a', zIndex: 10000, padding: '30px 20px', display: 'flex', flexDirection: 'column', gap: '25px', boxShadow: '-20px 0 50px rgba(0,0,0,0.7)', animation: 'slideInRight 0.3s ease-out', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div className="flex justify-between items-center" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '15px' }}>
-                            <div className="flex items-center gap-3">
+                    <div style={{ position: 'fixed', top: 0, right: 0, width: '320px', maxWidth: '85vw', height: '100vh', background: '#0d0e1a', zIndex: 10000, display: 'flex', flexDirection: 'column', boxShadow: '-20px 0 50px rgba(0,0,0,0.7)', animation: 'slideInRight 0.3s ease-out', borderLeft: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto' }}>
+                        <div style={{ padding: '30px 20px', display: 'flex', flexDirection: 'column', gap: '25px', paddingBottom: '110px' }}>
+                            <div className="flex justify-between items-center" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '15px' }}>
+                                <div className="flex items-center gap-3">
+                                    {user ? (
+                                        (() => {
+                                            const userRank = getRankDetail(user.purchaseCount || 0, settings?.ranks);
+                                            return (
+                                                <>
+                                                    <div style={{
+                                                        width: '45px',
+                                                        height: '45px',
+                                                        borderRadius: '50%',
+                                                        background: userRank?.color ? `${userRank.color}15` : 'rgba(255, 153, 0, 0.15)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: userRank?.color || 'var(--accent-color)',
+                                                        border: `1px solid ${userRank?.color || 'var(--accent-color)'}33`
+                                                    }}>
+                                                        {renderRankIcon(userRank?.icon || 'FaMedal', 22)}
+                                                    </div>
+                                                    <div>
+                                                        <h3 style={{ color: '#fff', fontWeight: 900, fontSize: '0.9rem', margin: 0, textTransform: 'uppercase' }}>
+                                                            {userRank?.name || 'Membre'}
+                                                        </h3>
+                                                        <span style={{ fontSize: '0.8rem', color: userRank?.color || 'var(--accent-color)', fontWeight: '800' }}>{user.username}</span>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()
+                                    ) : (
+                                        <>
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,153,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
+                                                <FaUser size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', margin: 0 }}>MENU</h3>
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Visiteur</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <FaTimes onClick={() => setMobileMenuOpen(false)} style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.3)' }} size={24} />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
                                 {user ? (
-                                    (() => {
-                                        const userRank = getRankDetail(user.purchaseCount || 0, settings?.ranks);
-                                        return (
-                                            <>
-                                                <div style={{
-                                                    width: '45px',
-                                                    height: '45px',
-                                                    borderRadius: '50%',
-                                                    background: userRank?.color ? `${userRank.color}15` : 'rgba(255, 153, 0, 0.15)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: userRank?.color || 'var(--accent-color)',
-                                                    border: `1px solid ${userRank?.color || 'var(--accent-color)'}33`
-                                                }}>
-                                                    {renderRankIcon(userRank?.icon || 'FaMedal', 22)}
-                                                </div>
-                                                <div>
-                                                    <h3 style={{ color: '#fff', fontWeight: 900, fontSize: '0.9rem', margin: 0, textTransform: 'uppercase' }}>
-                                                        {userRank?.name || 'Membre'}
-                                                    </h3>
-                                                    <span style={{ fontSize: '0.8rem', color: userRank?.color || 'var(--accent-color)', fontWeight: '800' }}>{user.username}</span>
-                                                </div>
-                                            </>
-                                        );
-                                    })()
+                                    <>
+                                        <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
+                                            padding: '14px',
+                                            borderRadius: '14px',
+                                            background: window.location.pathname === '/profile' ? 'rgba(255,153,0,0.1)' : 'transparent',
+                                            border: window.location.pathname === '/profile' ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
+                                            color: window.location.pathname === '/profile' ? 'var(--accent-color)' : '#fff'
+                                        }}>
+                                            <FaUser color={window.location.pathname === '/profile' ? 'var(--accent-color)' : 'inherit'} size={18} />
+                                            <span style={{ fontWeight: '700' }}>Mon Profil</span>
+                                        </Link>
+                                        <Link to="/historique" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
+                                            padding: '14px',
+                                            borderRadius: '14px',
+                                            background: window.location.pathname === '/historique' ? 'rgba(255,153,0,0.1)' : 'transparent',
+                                            border: window.location.pathname === '/historique' ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
+                                            color: window.location.pathname === '/historique' ? 'var(--accent-color)' : '#fff'
+                                        }}>
+                                            <FaHistory size={18} style={{ color: window.location.pathname === '/historique' ? 'var(--accent-color)' : 'inherit' }} />
+                                            <span style={{ fontWeight: '600' }}>Historique</span>
+                                        </Link>
+                                        {user?.demoBalance > 0 && (
+                                            <Link to="/demos" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
+                                                padding: '14px',
+                                                borderRadius: '14px',
+                                                background: window.location.pathname === '/demos' ? 'rgba(255,153,0,0.1)' : 'transparent',
+                                                border: window.location.pathname === '/demos' ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
+                                                color: window.location.pathname === '/demos' ? 'var(--accent-color)' : '#fff'
+                                            }}>
+                                                <FaGift size={18} color={window.location.pathname === '/demos' ? 'var(--accent-color)' : 'inherit'} />
+                                                <span style={{ fontWeight: '600' }}>Demos</span>
+                                            </Link>
+                                        )}
+                                        <Link to="/2fa-setup" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
+                                            padding: '14px',
+                                            borderRadius: '14px',
+                                            background: window.location.pathname === '/2fa-setup' ? 'rgba(255,153,0,0.1)' : 'transparent',
+                                            border: window.location.pathname === '/2fa-setup' ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
+                                            color: window.location.pathname === '/2fa-setup' ? 'var(--accent-color)' : '#fff'
+                                        }}>
+                                            <FaShieldAlt size={18} style={{ color: window.location.pathname === '/2fa-setup' ? 'var(--accent-color)' : 'inherit' }} />
+                                            <span style={{ fontWeight: '600' }}>Sécurité 2FA</span>
+                                        </Link>
+
+                                        <button
+                                            onClick={() => { setMobileMenuOpen(false); setIsResetModalOpen(true); }}
+                                            className="nav-item-link flex items-center gap-4"
+                                            style={{ background: 'none', border: 'none', color: '#ff4757', textAlign: 'left', padding: '14px', cursor: 'pointer', width: '100%' }}
+                                        >
+                                            <i className="fas fa-undo-alt" style={{ fontSize: '18px' }}></i>
+                                            <span style={{ fontWeight: '600' }}>Reset Code</span>
+                                        </button>
+
+                                        {user?.isAdmin && (
+                                            <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
+                                                padding: '14px',
+                                                borderRadius: '14px',
+                                                color: '#ff4757',
+                                                background: window.location.pathname === '/admin' ? 'rgba(255,71,87,0.1)' : 'rgba(255,71,87,0.05)',
+                                                border: window.location.pathname === '/admin' ? '1px solid rgba(255,71,87,0.2)' : '1px solid transparent',
+                                                marginTop: '10px'
+                                            }}>
+                                                <FaShieldAlt size={18} />
+                                                <span style={{ fontWeight: '800' }}>Admin Panel</span>
+                                            </Link>
+                                        )}
+                                        <div style={{ margin: '15px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}></div>
+                                        <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="nav-item-link flex items-center gap-4" style={{ background: 'none', border: 'none', color: '#ff4757', textAlign: 'left', padding: '14px', cursor: 'pointer', width: '100%' }}>
+                                            <FaSignOutAlt size={18} />
+                                            <span style={{ fontWeight: '700' }}>Déconnexion</span>
+                                        </button>
+                                    </>
                                 ) : (
                                     <>
-                                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,153,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
-                                            <FaUser size={20} />
-                                        </div>
-                                        <div>
-                                            <h3 style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', margin: 0 }}>MENU</h3>
-                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Visiteur</span>
-                                        </div>
+                                        <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="btn btn-primary" style={{ padding: '16px', textAlign: 'center', marginBottom: '10px', borderRadius: '14px' }}>CONNEXION</Link>
+                                        <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="btn" style={{ padding: '16px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '14px' }}>S'INSCRIRE</Link>
                                     </>
                                 )}
                             </div>
-                            <FaTimes onClick={() => setMobileMenuOpen(false)} style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.3)' }} size={24} />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            {user ? (
-                                <>
-                                    <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
-                                        padding: '14px',
-                                        borderRadius: '14px',
-                                        background: window.location.pathname === '/profile' ? 'rgba(255,153,0,0.1)' : 'transparent',
-                                        border: window.location.pathname === '/profile' ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
-                                        color: window.location.pathname === '/profile' ? 'var(--accent-color)' : '#fff'
-                                    }}>
-                                        <FaUser color={window.location.pathname === '/profile' ? 'var(--accent-color)' : 'inherit'} size={18} />
-                                        <span style={{ fontWeight: '700' }}>Mon Profil</span>
-                                    </Link>
-                                    <Link to="/historique" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
-                                        padding: '14px',
-                                        borderRadius: '14px',
-                                        background: window.location.pathname === '/historique' ? 'rgba(255,153,0,0.1)' : 'transparent',
-                                        border: window.location.pathname === '/historique' ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
-                                        color: window.location.pathname === '/historique' ? 'var(--accent-color)' : '#fff'
-                                    }}>
-                                        <FaHistory size={18} style={{ color: window.location.pathname === '/historique' ? 'var(--accent-color)' : 'inherit' }} />
-                                        <span style={{ fontWeight: '600' }}>Historique</span>
-                                    </Link>
-                                    {user?.demoBalance > 0 && (
-                                        <Link to="/demos" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
-                                            padding: '14px',
-                                            borderRadius: '14px',
-                                            background: window.location.pathname === '/demos' ? 'rgba(255,153,0,0.1)' : 'transparent',
-                                            border: window.location.pathname === '/demos' ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
-                                            color: window.location.pathname === '/demos' ? 'var(--accent-color)' : '#fff'
-                                        }}>
-                                            <FaGift size={18} color={window.location.pathname === '/demos' ? 'var(--accent-color)' : 'inherit'} />
-                                            <span style={{ fontWeight: '600' }}>Demos</span>
-                                        </Link>
-                                    )}
-                                    <Link to="/2fa-setup" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
-                                        padding: '14px',
-                                        borderRadius: '14px',
-                                        background: window.location.pathname === '/2fa-setup' ? 'rgba(255,153,0,0.1)' : 'transparent',
-                                        border: window.location.pathname === '/2fa-setup' ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
-                                        color: window.location.pathname === '/2fa-setup' ? 'var(--accent-color)' : '#fff'
-                                    }}>
-                                        <FaShieldAlt size={18} style={{ color: window.location.pathname === '/2fa-setup' ? 'var(--accent-color)' : 'inherit' }} />
-                                        <span style={{ fontWeight: '600' }}>Sécurité 2FA</span>
-                                    </Link>
-
-                                    <button
-                                        onClick={() => { setMobileMenuOpen(false); setIsResetModalOpen(true); }}
-                                        className="nav-item-link flex items-center gap-4"
-                                        style={{ background: 'none', border: 'none', color: '#ff4757', textAlign: 'left', padding: '14px', cursor: 'pointer', width: '100%' }}
-                                    >
-                                        <i className="fas fa-undo-alt" style={{ fontSize: '18px' }}></i>
-                                        <span style={{ fontWeight: '600' }}>Reset Code</span>
-                                    </button>
-
-                                    {user?.isAdmin && (
-                                        <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
-                                            padding: '14px',
-                                            borderRadius: '14px',
-                                            color: '#ff4757',
-                                            background: window.location.pathname === '/admin' ? 'rgba(255,71,87,0.1)' : 'rgba(255,71,87,0.05)',
-                                            border: window.location.pathname === '/admin' ? '1px solid rgba(255,71,87,0.2)' : '1px solid transparent',
-                                            marginTop: '10px'
-                                        }}>
-                                            <FaShieldAlt size={18} />
-                                            <span style={{ fontWeight: '800' }}>Admin Panel</span>
-                                        </Link>
-                                    )}
-                                    <div style={{ margin: '15px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}></div>
-                                    <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="nav-item-link flex items-center gap-4" style={{ background: 'none', border: 'none', color: '#ff4757', textAlign: 'left', padding: '14px', cursor: 'pointer', width: '100%' }}>
-                                        <FaSignOutAlt size={18} />
-                                        <span style={{ fontWeight: '700' }}>Déconnexion</span>
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="btn btn-primary" style={{ padding: '16px', textAlign: 'center', marginBottom: '10px', borderRadius: '14px' }}>CONNEXION</Link>
-                                    <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="btn" style={{ padding: '16px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '14px' }}>S'INSCRIRE</Link>
-                                </>
-                            )}
                         </div>
                     </div>
                     <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, backdropFilter: 'blur(8px)' }}></div>
