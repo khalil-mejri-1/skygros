@@ -826,7 +826,7 @@ const Admin = () => {
                 )}
 
 
-                <div className="custom-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
+                <div className="custom-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto', paddingBottom: '40px' }}>
                     <SidebarItem id="products" label="Gestion Produits" icon={FaBoxOpen} />
                     <SidebarItem id="categories" label="Gestion Catégories" icon={FaTag} />
                     <SidebarItem id="orders" label="Gestion Commandes" icon={FaShoppingBag} badge={stats.unseenOrders} />
