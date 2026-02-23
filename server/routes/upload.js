@@ -4,20 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Configure multer for file storage
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = 'uploads/';
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir);
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// Configure multer for memory storage (required for Vercel persistence via Base64)
+const storage = multer.memoryStorage();
 
 const upload = multer({
     storage: storage,
@@ -41,11 +29,14 @@ router.post('/', upload.single('image'), (req, res) => {
             return res.status(400).json({ message: "Please upload a file" });
         }
 
-        const filePath = `/uploads/${req.file.filename}`;
+        // Convert the uploaded file to a Base64 Data URI
+        // This ensures the image is saved in the database results and persists on Vercel
+        const base64Image = req.file.buffer.toString('base64');
+        const dataUri = `data:${req.file.mimetype};base64,${base64Image}`;
 
         res.status(200).json({
             message: "File uploaded successfully",
-            filePath: filePath
+            filePath: dataUri // We return the full data URI
         });
     } catch (err) {
         console.error(err);
