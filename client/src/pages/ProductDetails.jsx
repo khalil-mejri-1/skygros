@@ -81,6 +81,13 @@ const ProductDetails = () => {
     }, [product]);
 
 
+    const formatImageUrl = (url) => {
+        if (!url) return "";
+        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+        const baseUrl = API_BASE_URL.replace('/api', '');
+        return `${baseUrl}${url}`;
+    };
+
     useEffect(() => {
         const handleResize = () => {
             setIsMobile(window.innerWidth <= 768);
@@ -339,7 +346,7 @@ const ProductDetails = () => {
                             boxShadow: '0 10px 40px rgba(0,0,0,0.4)', // Add depth
                             margin: '0 auto' // Center if width constrained
                         }}>
-                            <img src={product.image} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={formatImageUrl(product.image)} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             {discountPercentage > 0 && (
                                 <div style={{ position: 'absolute', top: '15px', left: '15px', background: 'var(--accent-color)', color: '#000', padding: '6px 12px', borderRadius: '6px', fontWeight: '900', fontSize: '0.75rem', zIndex: 2, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
                                     OFFRE -{discountPercentage}%

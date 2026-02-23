@@ -41,12 +41,7 @@ router.post('/', upload.single('image'), (req, res) => {
             return res.status(400).json({ message: "Please upload a file" });
         }
 
-        // Return file path relative to server root
-        // const filePath = `/uploads/${req.file.filename}`;
-        // Since frontend is on different port during dev, it might need full URL if served by express
-        // But usually, relative path stored in DB and prepended on frontend or backend
-
-        const filePath = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        const filePath = `/uploads/${req.file.filename}`;
 
         res.status(200).json({
             message: "File uploaded successfully",

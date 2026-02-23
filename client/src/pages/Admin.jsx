@@ -88,6 +88,13 @@ const Admin = () => {
         return sorted.find(r => count >= r.minPurchases) || (ranks[0] || null);
     };
 
+    const formatImageUrl = (url) => {
+        if (!url) return "";
+        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+        const baseUrl = API_BASE_URL.replace('/api', '');
+        return `${baseUrl}${url}`;
+    };
+
     useEffect(() => {
         fetchProducts();
         fetchUsers();
@@ -465,6 +472,14 @@ const Admin = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Afficher un aperçu local immédiat
+        const localUrl = URL.createObjectURL(file);
+        if (showAddForm) {
+            setNewProduct({ ...newProduct, image: localUrl });
+        } else {
+            setIsEditing({ ...isEditing, image: localUrl });
+        }
+
         const formData = new FormData();
         formData.append('image', file);
 
@@ -475,14 +490,15 @@ const Admin = () => {
                 }
             });
 
+            // Mettre à jour avec le chemin final du serveur
             if (showAddForm) {
-                setNewProduct({ ...newProduct, image: res.data.filePath });
+                setNewProduct(prev => ({ ...prev, image: res.data.filePath }));
             } else {
-                setIsEditing({ ...isEditing, image: res.data.filePath });
+                setIsEditing(prev => ({ ...prev, image: res.data.filePath }));
             }
         } catch (err) {
             console.error("Error uploading image:", err);
-            alert("Erreur lors de l'upload de l'image");
+            triggerToast("Erreur lors de l'upload de l'image", "error");
         }
     };
 
@@ -1025,7 +1041,7 @@ const Admin = () => {
                                             <td style={{ padding: '20px 24px' }}>
                                                 <div className="flex items-center gap-4">
                                                     <div style={{ position: 'relative' }}>
-                                                        <img src={p.image} style={{ width: '45px', height: '62px', objectFit: 'cover', borderRadius: '8px' }} alt="" />
+                                                        <img src={formatImageUrl(p.image)} style={{ width: '45px', height: '62px', objectFit: 'cover', borderRadius: '8px' }} alt="" />
                                                         {isOutOfStock && (
                                                             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', borderRadius: '8px', border: '1px solid var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                 <FaExclamationTriangle size={14} color="var(--error)" />
@@ -1120,7 +1136,7 @@ const Admin = () => {
                                         <td style={{ padding: '20px 24px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                                 <div style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', color: 'var(--accent-color)' }}>
-                                                    {c.icon.startsWith('http') ? <img src={c.icon} style={{ width: '24px', height: '24px' }} /> : c.icon}
+                                                    {c.icon.startsWith('http') ? <img src={formatImageUrl(c.icon)} style={{ width: '24px', height: '24px' }} /> : c.icon}
                                                 </div>
                                                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem', fontWeight: '700' }}>
                                                     {c.subcategories?.length > 0 ? (
@@ -1194,7 +1210,7 @@ const Admin = () => {
                                         </td>
                                         <td style={{ padding: '20px 24px' }}>
                                             <div className="flex items-center gap-3">
-                                                <img src={o.productImage} style={{ width: '30px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="" />
+                                                <img src={formatImageUrl(o.productImage)} style={{ width: '30px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="" />
                                                 <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{o.productTitle}</div>
                                             </div>
                                         </td>
@@ -1699,7 +1715,7 @@ const Admin = () => {
                                             </td>
                                             <td style={{ padding: '20px' }}>
                                                 <div className="flex items-center gap-2">
-                                                    {req.productImage && <img src={req.productImage} style={{ width: '24px', height: '24px', borderRadius: '4px' }} />}
+                                                    {req.productImage && <img src={formatImageUrl(req.productImage)} style={{ width: '24px', height: '24px', borderRadius: '4px' }} />}
                                                     <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{req.productTitle || 'N/A'}</span>
                                                 </div>
                                                 {req.password && (
@@ -1966,7 +1982,7 @@ const Admin = () => {
                                             {(showAddForm ? newProduct.image : isEditing.image) && (
                                                 <div style={{ position: 'relative', width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
                                                     <img
-                                                        src={showAddForm ? newProduct.image : isEditing.image}
+                                                        src={formatImageUrl(showAddForm ? newProduct.image : isEditing.image)}
                                                         alt="Preview"
                                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                     />

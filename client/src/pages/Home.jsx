@@ -42,6 +42,13 @@ const Home = () => {
 
     const isAdmin = user?.isAdmin || user?.email === "feridadmin@admin.com";
 
+    const formatImageUrl = (url) => {
+        if (!url) return "";
+        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+        const baseUrl = API_BASE_URL.replace('/api', '');
+        return `${baseUrl}${url}`;
+    };
+
     useEffect(() => {
         const handleResize = () => {
             setScreenSize({
@@ -442,7 +449,7 @@ const Home = () => {
                             <SwiperSlide key={idx} className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl group cursor-pointer">
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent z-10 transition-opacity duration-700 group-hover:opacity-80"></div>
                                 <img
-                                    src={slide.image}
+                                    src={formatImageUrl(slide.image)}
                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[4000ms] group-hover:scale-110"
                                     alt={slide.title}
                                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=2000' }}
@@ -533,7 +540,7 @@ const Home = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
                             {(settings?.home?.membershipsSection?.items || []).map((item, i) => (
                                 <Link to={item.link || "#"} key={i} className="group relative overflow-hidden rounded-xl md:rounded-[24px] aspect-square md:aspect-[3/4] block shadow-2xl border border-white/5 transition-all duration-500 hover:shadow-primary/20 hover:-translate-y-2">
-                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                    <img src={formatImageUrl(item.image)} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
 
                                     {/* Overlay Content */}

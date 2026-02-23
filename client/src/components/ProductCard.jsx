@@ -20,6 +20,13 @@ const ProductCard = ({ product }) => {
     const [isSmall, setIsSmall] = useState(window.innerWidth <= 660);
     const navigate = useNavigate();
 
+    const formatImageUrl = (url) => {
+        if (!url) return "";
+        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+        const baseUrl = API_BASE_URL.replace('/api', '');
+        return `${baseUrl}${url}`;
+    };
+
     useEffect(() => {
         const handleResize = () => setIsSmall(window.innerWidth <= 660);
         window.addEventListener('resize', handleResize);
@@ -130,7 +137,7 @@ const ProductCard = ({ product }) => {
                 background: '#000'
             }}>
                 <img
-                    src={product.image}
+                    src={formatImageUrl(product.image)}
                     alt={product.title}
                     style={{
                         width: '100%',

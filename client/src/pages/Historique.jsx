@@ -12,6 +12,13 @@ const Historique = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth <= 480);
 
+    const formatImageUrl = (url) => {
+        if (!url) return "";
+        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+        const baseUrl = API_BASE_URL.replace('/api', '');
+        return `${baseUrl}${url}`;
+    };
+
     useEffect(() => {
         const handleResize = () => {
             setIsMobile(window.innerWidth <= 768);
@@ -274,7 +281,7 @@ const Historique = () => {
                                             marginTop: itemIdx > 0 ? (isSmallMobile ? '15px' : '20px') : '0'
                                         }}>
                                             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                                <img src={item.productImage || item.image} alt={item.productTitle || item.title} style={{
+                                                <img src={formatImageUrl(item.productImage || item.image)} alt={item.productTitle || item.title} style={{
                                                     width: isSmallMobile ? '60px' : '80px',
                                                     height: isSmallMobile ? '80px' : '110px',
                                                     objectFit: 'cover',

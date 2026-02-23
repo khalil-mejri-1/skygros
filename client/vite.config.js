@@ -12,6 +12,10 @@ export default defineConfig({
         target: 'https://skygros.vercel.app',
         changeOrigin: true,
       },
+      '/uploads': {
+        target: 'https://skygros.vercel.app',
+        changeOrigin: true,
+      },
     },
   },
 })
