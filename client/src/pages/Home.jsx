@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 
 import SEO from '../components/SEO';
-import API_BASE_URL from '../config/api';
+import API_BASE_URL, { formatImageUrl } from '../config/api';
 import ProductCard from '../components/ProductCard';
 
 // Swiper Imports
@@ -41,13 +41,6 @@ const Home = () => {
     });
 
     const isAdmin = user?.isAdmin || user?.email === "feridadmin@admin.com";
-
-    const formatImageUrl = (url) => {
-        if (!url) return "";
-        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-        const baseUrl = API_BASE_URL.replace('/api', '');
-        return `${baseUrl}${url}`;
-    };
 
     useEffect(() => {
         const handleResize = () => {

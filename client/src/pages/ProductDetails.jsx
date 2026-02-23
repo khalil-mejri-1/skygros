@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 
-import API_BASE_URL from "../config/api";
+import API_BASE_URL, { formatImageUrl } from "../config/api";
 import { useParams, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
@@ -80,13 +80,6 @@ const ProductDetails = () => {
         }
     }, [product]);
 
-
-    const formatImageUrl = (url) => {
-        if (!url) return "";
-        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-        const baseUrl = API_BASE_URL.replace('/api', '');
-        return `${baseUrl}${url}`;
-    };
 
     useEffect(() => {
         const handleResize = () => {

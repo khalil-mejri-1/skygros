@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect } from "react";
 
-import API_BASE_URL from "../config/api";
+import API_BASE_URL, { formatImageUrl } from "../config/api";
 import { AuthContext } from "../context/AuthContext";
 import { FaHistory, FaCalendarAlt, FaTicketAlt, FaGamepad, FaLink, FaClock, FaBox } from "react-icons/fa";
 import axios from "axios";
@@ -11,13 +11,6 @@ const Historique = () => {
     const [loading, setLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth <= 480);
-
-    const formatImageUrl = (url) => {
-        if (!url) return "";
-        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-        const baseUrl = API_BASE_URL.replace('/api', '');
-        return `${baseUrl}${url}`;
-    };
 
     useEffect(() => {
         const handleResize = () => {

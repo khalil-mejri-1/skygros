@@ -1,14 +1,19 @@
 // API Configuration
-// استخدم أحد الخيارات التالية حسب البيئة:
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-// للتطوير المحلي (Development):
-// const API_BASE_URL = 'http://localhost:5000/api';
+// للتطوير المحلي نستخدم الـ Proxy المبرمج في vite.config.js
+// للإنتاج نستخدم الرابط المباشر للسيرفر لضمان عمل الصور والطلبات
+export const API_BASE_URL = isLocal
+    ? '/api'
+    : 'http://localhost:5000/api';
 
-// للإنتاج (Production):
-// const API_BASE_URL = 'https://skygros-nifd.vercel.app/api';
+export const formatImageUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
 
-// للاستخدام مع Proxy (الإعداد الحالي):
-const API_BASE_URL = '/api';
+    // Remove /api from the end for the base assets URL
+    const baseUrl = API_BASE_URL.replace(/\/api$/, '');
+    return `${baseUrl}${url}`;
+};
 
-// تصدير API_BASE_URL كـ default export
 export default API_BASE_URL;

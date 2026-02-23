@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import API_BASE_URL from "../config/api";
+import API_BASE_URL, { formatImageUrl } from '../config/api';
 import axios from "axios";
 import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory, FaEye, FaBars, FaChartBar } from "react-icons/fa";
 import ConfirmModal from "../components/ConfirmModal";
@@ -86,13 +86,6 @@ const Admin = () => {
         if (!ranks || ranks.length === 0) return null;
         const sorted = [...ranks].sort((a, b) => b.minPurchases - a.minPurchases);
         return sorted.find(r => count >= r.minPurchases) || (ranks[0] || null);
-    };
-
-    const formatImageUrl = (url) => {
-        if (!url) return "";
-        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-        const baseUrl = API_BASE_URL.replace('/api', '');
-        return `${baseUrl}${url}`;
     };
 
     useEffect(() => {

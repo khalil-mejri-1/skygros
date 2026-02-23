@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { formatImageUrl } from "../config/api";
 
 const HeroSlider = ({ slides = [] }) => {
     // If no slides, we can either return null or show a placeholder. 
@@ -117,7 +118,7 @@ const HeroSlider = ({ slides = [] }) => {
 
                     return (
                         <div key={slide.id} style={styles} onClick={clickHandler}>
-                            <img src={slide.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={formatImageUrl(slide.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
 
                             {/* Overlay Gradient */}
                             <div style={{

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import API_BASE_URL from '../config/api';
+import API_BASE_URL, { formatImageUrl } from '../config/api';
 import { AuthContext } from '../context/AuthContext';
 import { FaTimes, FaUndo, FaSearch, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
@@ -247,7 +247,7 @@ const ResetCodeModal = ({ isOpen, onClose }) => {
                             >
                                 {selectedProduct ? (
                                     <div className="flex items-center gap-3">
-                                        <img src={selectedProduct.image} alt="" className="w-8 h-8 rounded-lg object-cover shadow-sm" />
+                                        <img src={formatImageUrl(selectedProduct.image)} alt="" className="w-8 h-8 rounded-lg object-cover shadow-sm" />
                                         <span className="font-semibold">{selectedProduct.title}</span>
                                     </div>
                                 ) : (
@@ -279,7 +279,7 @@ const ResetCodeModal = ({ isOpen, onClose }) => {
                                                     setShowProductDropdown(false);
                                                 }}
                                             >
-                                                <img src={p.image} alt="" className="w-10 h-10 rounded-lg object-cover bg-black/50" />
+                                                <img src={formatImageUrl(p.image)} alt="" className="w-10 h-10 rounded-lg object-cover bg-black/50" />
                                                 <span className="text-sm font-bold text-gray-200">{p.title}</span>
                                             </div>
                                         ))}

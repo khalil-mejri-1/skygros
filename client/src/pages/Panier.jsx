@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect } from "react";
 
-import API_BASE_URL from "../config/api";
+import API_BASE_URL, { formatImageUrl } from "../config/api";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
@@ -133,7 +133,7 @@ const Panier = () => {
                             }}>
                                 {/* Product Image */}
                                 <div style={{ width: isUltraSmall ? '80px' : '80px', height: isUltraSmall ? '110px' : '110px', flexShrink: 0 }}>
-                                    <img src={item.image} alt={item.title} style={{
+                                    <img src={formatImageUrl(item.image)} alt={item.title} style={{
                                         width: '100%',
                                         height: '100%',
                                         objectFit: 'cover',
@@ -365,7 +365,7 @@ const Panier = () => {
                                         border: '1px solid rgba(255,255,255,0.05)',
                                         alignItems: 'center'
                                     }}>
-                                        <img src={item.productImage} alt="" style={{ width: '40px', height: '55px', objectFit: 'cover', borderRadius: '8px' }} />
+                                        <img src={formatImageUrl(item.productImage)} alt="" style={{ width: '40px', height: '55px', objectFit: 'cover', borderRadius: '8px' }} />
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <h4 style={{ color: '#fff', fontSize: isUltraSmall ? '0.85rem' : '0.95rem', fontWeight: '800', marginBottom: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.productTitle}</h4>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>

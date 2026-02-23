@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect, useRef } from 'react';
-import API_BASE_URL from "../config/api";
+import API_BASE_URL, { formatImageUrl } from "../config/api";
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
@@ -180,7 +180,7 @@ const Navbar = () => {
     const renderIcon = (icon) => {
         if (!icon) return null;
         if (icon.startsWith('http') || icon.startsWith('/')) {
-            return <img src={icon} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />;
+            return <img src={formatImageUrl(icon)} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />;
         }
         return <span style={{ fontSize: '1.1rem' }}>{icon}</span>;
     };
@@ -215,7 +215,7 @@ const Navbar = () => {
                                 {filteredProducts.length > 0 ? (
                                     filteredProducts.map(product => (
                                         <div key={product._id} onClick={() => { navigate(`/product/${product._id}`); setShowSearchResults(false); setSearchQuery(""); }} style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', borderRadius: '12px', marginBottom: '4px' }}>
-                                            <img src={product.image} alt={product.title} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '8px' }} />
+                                            <img src={formatImageUrl(product.image)} alt={product.title} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '8px' }} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ color: '#fff', fontSize: '0.9rem', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.title}</div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect } from "react";
 
-import API_BASE_URL from "../config/api";
+import API_BASE_URL, { formatImageUrl } from "../config/api";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
@@ -19,13 +19,6 @@ const ProductCard = ({ product }) => {
     const [lastPurchasedKey, setLastPurchasedKey] = useState("");
     const [isSmall, setIsSmall] = useState(window.innerWidth <= 660);
     const navigate = useNavigate();
-
-    const formatImageUrl = (url) => {
-        if (!url) return "";
-        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-        const baseUrl = API_BASE_URL.replace('/api', '');
-        return `${baseUrl}${url}`;
-    };
 
     useEffect(() => {
         const handleResize = () => setIsSmall(window.innerWidth <= 660);
