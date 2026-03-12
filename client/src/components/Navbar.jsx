@@ -6,6 +6,8 @@ import { CartContext } from '../context/CartContext';
 import { FaShoppingCart, FaUser, FaSearch, FaWallet, FaHistory, FaShieldAlt, FaChevronDown, FaSignOutAlt, FaBars, FaTimes, FaGift, FaHome, FaMedal, FaTrophy, FaStar } from 'react-icons/fa';
 import axios from 'axios';
 import ResetCodeModal from './ResetCodeModal';
+import RechargeModal from './RechargeModal';
+import { FaPlusCircle } from 'react-icons/fa';
 
 const Navbar = () => {
     const { user, dispatch } = useContext(AuthContext);
@@ -24,11 +26,13 @@ const Navbar = () => {
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [showSearchResults, setShowSearchResults] = useState(false);
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+    const [showRechargeModal, setShowRechargeModal] = useState(false);
     const [settings, setSettings] = useState(null);
     const subNavRef = useRef(null);
     const searchRef = useRef(null);
     const userMenuRef = useRef(null);
     const scrollContainerRef = useRef(null);
+    const closeDropdownTimer = useRef(null);
     const [dropdownPosition, setDropdownPosition] = useState(null);
 
     useEffect(() => {
@@ -340,7 +344,7 @@ const Navbar = () => {
 
             {/* Sub-navbar with categories */}
             <div ref={subNavRef} style={{ background: 'var(--bg-secondary)', padding: '6px 0', position: 'relative', zIndex: 9990 }}>
-                <div className="container" style={{ overflow: 'visible' }} onMouseLeave={() => !isMobile && setHoveredCategory(null)}>
+                <div className="container" style={{ overflow: 'visible' }}>
                     <div ref={scrollContainerRef} className="flex gap-2 md:gap-4 custom-scrollbar" style={{
                         overflowX: 'auto',
                         whiteSpace: 'nowrap',
@@ -358,7 +362,19 @@ const Navbar = () => {
 
                             return (
                                 <div key={cat._id} id={`cat-item-${cat._id}`} style={{ position: 'relative', flexShrink: 0 }}
-                                    onMouseEnter={() => !isMobile && setHoveredCategory(cat._id)}
+                                    onMouseEnter={() => {
+                                        if (!isMobile) {
+                                            // Cancel any pending close
+                                            if (closeDropdownTimer.current) clearTimeout(closeDropdownTimer.current);
+                                            setHoveredCategory(cat._id);
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        if (!isMobile) {
+                                            // Delayed close so mouse can travel to the dropdown
+                                            closeDropdownTimer.current = setTimeout(() => setHoveredCategory(null), 150);
+                                        }
+                                    }}
                                     onClick={(e) => {
                                         if (isMobile && hasSub) {
                                             e.preventDefault();
@@ -396,22 +412,32 @@ const Navbar = () => {
 
                         if (hasSub && dropdownPosition) {
                             return (
-                                <div className="glass custom-scrollbar" style={{
-                                    position: 'absolute',
-                                    top: 'calc(100% + 2px)',
-                                    left: `${dropdownPosition.left}px`,
-                                    transform: 'translateX(-50%)',
-                                    minWidth: '200px',
-                                    maxHeight: '320px',
-                                    overflowY: 'auto',
-                                    background: 'rgba(13, 14, 26, 0.98)',
-                                    border: '1px solid rgba(255,153,0,0.2)',
-                                    padding: '8px',
-                                    zIndex: 9999,
-                                    animation: 'fadeIn 0.2s ease-out',
-                                    boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
-                                    borderRadius: '16px'
-                                }}>
+                                <div
+                                    className="glass custom-scrollbar"
+                                    onMouseEnter={() => {
+                                        // Cancel pending close when mouse enters the dropdown
+                                        if (closeDropdownTimer.current) clearTimeout(closeDropdownTimer.current);
+                                    }}
+                                    onMouseLeave={() => {
+                                        // Close when mouse leaves the dropdown
+                                        closeDropdownTimer.current = setTimeout(() => setHoveredCategory(null), 100);
+                                    }}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 'calc(100% + 0px)',
+                                        left: `${dropdownPosition.left}px`,
+                                        transform: 'translateX(-50%)',
+                                        minWidth: '200px',
+                                        maxHeight: '320px',
+                                        overflowY: 'auto',
+                                        background: 'rgba(13, 14, 26, 0.98)',
+                                        border: '1px solid rgba(255,153,0,0.2)',
+                                        padding: '8px',
+                                        zIndex: 9999,
+                                        animation: 'fadeIn 0.2s ease-out',
+                                        boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
+                                        borderRadius: '16px'
+                                    }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                         {activeCat.subcategories.map((sub, idx) => (
                                             <Link
@@ -491,6 +517,15 @@ const Navbar = () => {
                             </div>
 
                             <div className="flex flex-col gap-2">
+                                {user && (
+                                    <button
+                                        onClick={() => { setMobileMenuOpen(false); setShowRechargeModal(true); }}
+                                        className="btn btn-primary"
+                                        style={{ padding: '15px', borderRadius: '15px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}
+                                    >
+                                        <FaPlusCircle /> RECHARGER LE SOLDE
+                                    </button>
+                                )}
                                 {user ? (
                                     <>
                                         <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
@@ -594,6 +629,7 @@ const Navbar = () => {
             )}
 
             <ResetCodeModal isOpen={isResetModalOpen} onClose={() => setIsResetModalOpen(false)} />
+            <RechargeModal isOpen={showRechargeModal} onClose={() => setShowRechargeModal(false)} settings={settings} user={user} />
 
             {/* Mobile Bottom Navigation Bar (Fixed for Small Mobile) */}
             {isSmallMobile && (

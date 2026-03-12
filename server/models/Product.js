@@ -25,9 +25,13 @@ const ProductSchema = new mongoose.Schema({
     showBouquetSorter: { type: Boolean, default: true },
     showBouquetSorter: { type: Boolean, default: true },
     bouquetNames: { type: Map, of: String, default: {} }, // Map of bouquetId -> customName
+    deliveryType: { type: String, enum: ['codes', 'link'], default: 'codes' },
+    deliveryLink: { type: String },
+    hasMultiDuration: { type: Boolean, default: false },
     durationPrices: [{
-        duration: { type: Number, required: true }, // e.g. 1, 3, 6, 12
-        price: { type: Number, required: true }
+        duration: { type: String, required: true }, // e.g. "1 mois", "5 mois", "1 an"
+        price: { type: Number, required: true },
+        oldPrice: { type: Number }
     }]
 }, { timestamps: true });
 

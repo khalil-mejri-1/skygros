@@ -154,11 +154,25 @@ router.post('/purchase', async (req, res) => {
 
 
 
+        const options = req.body.subscriptionDetails || {};
+        let finalPrice = product.price;
+
+        // Calculate Dynamic Price based on Duration
+        if (options.duration && product.durationPrices && product.durationPrices.length > 0) {
+            const priceConfig = product.durationPrices.find(dp => dp.duration.toString() === options.duration.toString());
+            if (priceConfig) {
+                finalPrice = priceConfig.price;
+            }
+        }
+
+        // Check balance with final price
+        if (user.balance < finalPrice) {
+            return res.status(400).json({ message: "Solde insuffisant" });
+        }
+
         let licenseKey = "PENDING";
         let subscriptionData = null;
         let orderStatus = "PENDING";
-
-        let finalPrice = product.price;
 
         // --- HANDLE M3U / MAG (NEO 4K / STRONG 8K) ---
         if (product.type === 'm3u' || product.type === 'mag') {
@@ -179,23 +193,6 @@ router.post('/purchase', async (req, res) => {
                     apiModule = require('../utils/neoApi'); // Default
                 }
                 const { createSubscription } = apiModule;
-
-                const options = req.body.subscriptionDetails || {};
-
-
-
-                // Calculate Dynamic Price based on Duration
-                if (options.duration && product.durationPrices && product.durationPrices.length > 0) {
-                    const priceConfig = product.durationPrices.find(dp => dp.duration === parseInt(options.duration));
-                    if (priceConfig) {
-                        finalPrice = priceConfig.price;
-                    }
-                }
-
-                // Re-check balance with dynamic price
-                if (user.balance < finalPrice) {
-                    return res.status(400).json({ message: "Solde insuffisant" });
-                }
 
                 console.log(`Backend received ${product.provider || 'NEO'} options:`, options); // DEBUG LOG
 
@@ -235,12 +232,11 @@ router.post('/purchase', async (req, res) => {
                     // M3U / API GENERATION (Default)
 
                     // Use values from frontend or fallback to product defaults
-                    // Map frontend/product values to API expected options
                     const subOptions = {
                         type: product.type, // 'm3u' or 'mag'
                         duration: options.duration || product.duration || 12,
                         packId: options.bouquetId || product.pack,
-                        country: options.country, // Let API module handle default (Neo=TN, Strong8k=ALL)
+                        country: options.country,
                         mac: options.mac // Only for MAG
                     };
 
@@ -249,46 +245,46 @@ router.post('/purchase', async (req, res) => {
 
                     subscriptionData = subInfo;
                     orderStatus = "COMPLETED";
-                    // URL contains the m3u link or success message
                     licenseKey = subInfo.url || subInfo.message || "ACTIVE";
                 }
 
             } catch (apiError) {
                 console.error(`${product.provider || 'NEO'} Order Failed:`, apiError);
-                // Depending on requirement, we might want to FAIL the order or keep it PENDING
                 licenseKey = "ERROR_API";
                 orderStatus = "PENDING";
             }
         }
-        // --- HANDLE NORMAL PRODUCTS (KEYS) ---
+        // --- HANDLE NORMAL PRODUCTS (KEYS OR LINK) ---
         else {
-            // For normal products, finalPrice is already product.price
-            if (user.balance < finalPrice) {
-                return res.status(400).json({ message: "Solde insuffisant" });
-            }
-
-            const now = new Date();
-            const updatedProduct = await Product.findOneAndUpdate(
-                { _id: productId, "keys.isSold": false },
-                {
-                    $set: {
-                        "keys.$.isSold": true,
-                        "keys.$.soldTo": userId,
-                        "keys.$.soldAt": now
-                    }
-                },
-                { new: true }
-            );
-
-            if (updatedProduct) {
-                const claimedKey = updatedProduct.keys.find(k => k.soldTo && k.soldTo.toString() === userId && new Date(k.soldAt).getTime() === now.getTime());
-                if (claimedKey) {
-                    licenseKey = claimedKey.key;
-                    orderStatus = "COMPLETED";
-                }
+            if (product.deliveryType === 'link') {
+                licenseKey = product.deliveryLink || "Lien de téléchargement non configuré";
+                orderStatus = "COMPLETED";
+                subscriptionData = { type: 'link' };
             } else {
-                // No keys available for normal product
-                return res.status(400).json({ message: "Aucune clé disponible pour ce produit." });
+                const now = new Date();
+                const updatedProduct = await Product.findOneAndUpdate(
+                    { _id: productId, "keys.isSold": false },
+                    {
+                        $set: {
+                            "keys.$.isSold": true,
+                            "keys.$.soldTo": userId,
+                            "keys.$.soldAt": now
+                        }
+                    },
+                    { new: true }
+                );
+
+                if (updatedProduct) {
+                    const claimedKey = updatedProduct.keys.find(k => k.soldTo && k.soldTo.toString() === userId && new Date(k.soldAt).getTime() === now.getTime());
+                    if (claimedKey) {
+                        licenseKey = claimedKey.key;
+                        orderStatus = "COMPLETED";
+                    }
+                } else {
+                    // NO STOCK AVAILABLE -> SET TO PENDING (WAITING)
+                    licenseKey = "EN_ATTENTE"; 
+                    orderStatus = "PENDING";
+                }
             }
         }
 

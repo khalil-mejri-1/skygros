@@ -34,7 +34,7 @@ const TwoFAEnforcer = () => {
             backdropFilter: 'blur(20px)',
             padding: '20px'
         }}>
-            <div className="glass" style={{
+            <div className="glass enforcer-card" style={{
                 width: '100%',
                 maxWidth: '500px',
                 padding: '50px',
@@ -98,14 +98,16 @@ const TwoFAEnforcer = () => {
 
                 <button
                     onClick={() => navigate("/2fa-setup")}
-                    className="btn btn-primary"
+                    className="btn btn-primary enforcer-btn"
                     style={{
                         width: '100%',
                         padding: '18px',
                         borderRadius: '16px',
                         fontWeight: '900',
                         fontSize: '1rem',
-                        letterSpacing: '0.5px'
+                        letterSpacing: '0.5px',
+                        whiteSpace: 'normal',
+                        lineHeight: '1.2'
                     }}
                 >
                     ACTIVER MON 2FA MAINTENANT
@@ -131,6 +133,15 @@ const TwoFAEnforcer = () => {
                     @keyframes pulseGlow {
                         from { box-shadow: 0 0 20px rgba(0,0,0,0.5), 0 0 0 rgba(255, 153, 0, 0); }
                         to { box-shadow: 0 0 40px rgba(0,0,0,0.7), 0 0 20px rgba(255, 153, 0, 0.1); }
+                    }
+                    @media (max-width: 480px) {
+                        .enforcer-card {
+                            padding: 30px 20px !important;
+                        }
+                        .enforcer-btn {
+                            font-size: 0.85rem !important;
+                            padding: 15px 10px !important;
+                        }
                     }
                 `}</style>
             </div>

@@ -4,6 +4,14 @@ const GeneralSettingsSchema = new mongoose.Schema({
     smtpEmail: { type: String, default: "" },
     smtpPassword: { type: String, default: "" },
     whatsappNumber: { type: String, default: "" }, // Admin WhatsApp Number for notifications
+    autoLogoutDuration: { type: Number, default: 24 }, // in hours
+    rechargeMethods: [
+        {
+            name: { type: String },
+            logo: { type: String },
+            details: { type: String } // e.g. Phone number or WhatsApp
+        }
+    ],
     footer: {
         aboutText: { type: String, default: "satpromax est en train de devenir un leader mondial dans le domaine du divertissement numérique..." },
         contactNumber: { type: String, default: "+216 22 484 915" },
@@ -512,10 +520,17 @@ const GeneralSettingsSchema = new mongoose.Schema({
                 ]
             }
         },
-        sports: [{ // For backward compatibility
+        stats: [{ // For backward compatibility
             name: { type: String },
             image: { type: String }
-        }]
+        }],
+        paymentMethods: [{
+            name: { type: String },
+            logo: { type: String },
+            whatsapp: { type: String },
+            isActive: { type: Boolean, default: true }
+        }],
+        sessionTimeout: { type: Number, default: 1440 } // In minutes (default 24h)
     }
 }, { timestamps: true });
 

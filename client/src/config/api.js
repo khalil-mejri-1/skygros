@@ -4,8 +4,8 @@ const isLocal = window.location.hostname === 'localhost' || window.location.host
 // للتطوير المحلي نستخدم الـ Proxy المبرمج في vite.config.js
 // للإنتاج نستخدم الرابط المباشر للسيرفر لضمان عمل الصور والطلبات
 export const API_BASE_URL = !isLocal
-    ? '/api'
-    : 'https://skygros.vercel.app/api';
+    ? 'https://skygros.vercel.app/api'
+    : 'http://localhost:5000/api';
 
 export const formatImageUrl = (url) => {
     if (!url) return "";

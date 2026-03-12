@@ -1,5 +1,6 @@
 import { createContext, useEffect, useReducer } from "react";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 // Initial State
 // Using sessionStorage instead of localStorage so user logs out when closing tab/browser
@@ -52,26 +53,33 @@ export const AuthContextProvider = ({ children }) => {
         }
     }, [state.user]);
 
-    // Session Timeout Logic (15 minutes)
+    // Session Timeout Logic (Dynamic from Settings)
     useEffect(() => {
-        const checkTimeout = () => {
+        const checkTimeout = async () => {
             const loginTime = sessionStorage.getItem("loginTime");
             if (state.user && loginTime) {
-                const currentTime = Date.now();
-                const fifteenMinutes = 15 * 60 * 1000;
-
-                if (currentTime - parseInt(loginTime) > fifteenMinutes) {
-                    dispatch({ type: "LOGOUT" });
-                    window.location.href = "/login"; // Redirect to login
+                try {
+                    const res = await axios.get(`${API_BASE_URL}/settings`);
+                    const durationInHours = res.data?.autoLogoutDuration || 24;
+                    const maxAge = durationInHours * 60 * 60 * 1000;
+                    
+                    if (Date.now() - parseInt(loginTime) > maxAge) {
+                        dispatch({ type: "LOGOUT" });
+                        window.location.href = "/login";
+                    }
+                } catch (err) {
+                    // Fallback to standard 24h if settings fetch fails
+                    if (Date.now() - parseInt(loginTime) > 24 * 60 * 60 * 1000) {
+                        dispatch({ type: "LOGOUT" });
+                        window.location.href = "/login";
+                    }
                 }
             }
         };
 
-        // Check on mount
         checkTimeout();
-
-        // Check every minute
-        const interval = setInterval(checkTimeout, 60000);
+        // Check every 5 minutes
+        const interval = setInterval(checkTimeout, 300000);
 
         return () => clearInterval(interval);
     }, [state.user, dispatch]);

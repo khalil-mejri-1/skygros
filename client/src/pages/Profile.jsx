@@ -2,6 +2,7 @@ import { useContext, useState, useEffect, useMemo } from "react";
 import { AuthContext } from "../context/AuthContext";
 import API_BASE_URL from "../config/api";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import {
     BarChart,
     Bar,
@@ -12,7 +13,7 @@ import {
     ResponsiveContainer,
     Cell
 } from 'recharts';
-import { FaUser, FaEnvelope, FaWallet, FaCalendarAlt, FaChartBar, FaFilter, FaClock, FaMedal, FaTrophy, FaStar, FaGift } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaWallet, FaCalendarAlt, FaChartBar, FaFilter, FaClock, FaMedal, FaTrophy, FaStar, FaGift, FaHistory } from 'react-icons/fa';
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -400,6 +401,10 @@ const Profile = () => {
                                         {rankIcon(currentRank.icon)}
                                     </div>
                                 </div>
+
+                                <Link to="/historique" className="btn btn-primary" style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '15px', borderRadius: '15px', fontWeight: '800' }}>
+                                    <FaHistory /> HISTORIQUE DES ACHATS
+                                </Link>
                             </div>
                         ) : (
                             <div style={{ color: 'var(--error)', fontSize: '0.8rem', textAlign: 'center' }}>Erreur de configuration.</div>

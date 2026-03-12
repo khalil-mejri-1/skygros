@@ -38,6 +38,7 @@ const activationRoute = require('./routes/activation');
 const tivipanelRoute = require('./routes/tivipanel');
 const promaxRoute = require('./routes/promax');
 const uploadRoute = require('./routes/upload');
+const rechargeRequestRoute = require('./routes/rechargeRequests');
 const path = require('path');
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -55,9 +56,10 @@ app.use('/api/activation', activationRoute);
 app.use('/api/tivipanel', tivipanelRoute);
 app.use('/api/promax', promaxRoute);
 app.use('/api/upload', uploadRoute);
+app.use('/api/recharge-requests', rechargeRequestRoute);
 
 app.get('/', (req, res) => {
-    res.send('update-9 2/15/2026');
+    res.send('update-9 3/12/2026');
 });
 const PORT = process.env.PORT || 5000;
 

@@ -125,24 +125,23 @@ const ProductDetails = () => {
             return;
         }
 
-        // Validation for M3U options
-        if (product.type === 'm3u') {
-            // If M3U type is selected, we need bouquet and duration
-            if (subscriptionType === 'm3u' && (!selectedDuration || !selectedRegion)) {
+        // Validation for selection options
+        if (product.type === 'm3u' || product.hasMultiDuration) {
+            if (!selectedDuration) {
                 setAlertModal({
                     isOpen: true,
                     title: "Configuration Requise",
-                    message: "Veuillez sélectionner une durée et un bouquet avant d'acheter.",
+                    message: "Veuillez sélectionner une durée avant d'acheter.",
                     type: "warning"
                 });
                 return;
             }
-            // If Code type is selected, we just need duration (price depends on it)
-            if (subscriptionType === 'code' && !selectedDuration) {
+
+            if (product.type === 'm3u' && subscriptionType === 'm3u' && !selectedRegion) {
                 setAlertModal({
                     isOpen: true,
                     title: "Configuration Requise",
-                    message: "Veuillez sélectionner une durée.",
+                    message: "Veuillez sélectionner un bouquet avant d'acheter.",
                     type: "warning"
                 });
                 return;
@@ -173,11 +172,11 @@ const ProductDetails = () => {
             const res = await axios.post(`${API_BASE_URL}/products/purchase`, {
                 userId: user._id,
                 productId: product._id,
-                subscriptionDetails: product.type === 'm3u' ? {
-                    duration: selectedDuration, // Changed from packId -> duration
+                subscriptionDetails: (product.type === 'm3u' || product.hasMultiDuration) ? {
+                    duration: selectedDuration,
                     country: selectedCountry,
-                    bouquetId: selectedRegion,  // Changed from region -> bouquetId
-                    subscriptionType: subscriptionType // 'm3u' or 'code'
+                    bouquetId: selectedRegion,
+                    subscriptionType: product.type === 'm3u' ? subscriptionType : 'manual'
                 } : null
             });
 
@@ -285,20 +284,30 @@ const ProductDetails = () => {
         );
     }
 
-    const discountPercentage = product.oldPrice > 0
-        ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-        : 0;
 
     // Dynamic Pricing Logic
-    const getDynamicPrice = () => {
+    const getDynamicPriceData = () => {
         if (selectedDuration && product.durationPrices && product.durationPrices.length > 0) {
-            const priceConfig = product.durationPrices.find(dp => dp.duration === parseInt(selectedDuration));
-            if (priceConfig) return priceConfig.price;
+            // Compare as string to match schema
+            const priceConfig = product.durationPrices.find(dp => dp.duration === selectedDuration);
+            if (priceConfig) {
+                return {
+                    price: priceConfig.price,
+                    oldPrice: priceConfig.oldPrice
+                };
+            }
         }
-        return product.price;
+        return {
+            price: product.price,
+            oldPrice: product.oldPrice
+        };
     };
 
-    const currentPrice = getDynamicPrice();
+    const { price: currentPrice, oldPrice: currentOldPrice } = getDynamicPriceData();
+
+    const discountPercentage = currentOldPrice > 0
+        ? Math.round(((currentOldPrice - currentPrice) / currentOldPrice) * 100)
+        : 0;
 
     return (
         <div style={{ background: 'var(--bg-primary)', padding: '40px 0', minHeight: '100vh' }}>
@@ -387,9 +396,9 @@ const ProductDetails = () => {
                         <div className="glass" style={{ padding: isMobile ? '20px' : '30px', borderRadius: 'var(--radius-lg)', marginBottom: '30px', border: '1px solid rgba(255, 153, 0, 0.2)' }}>
                             <div className="flex justify-between items-end mb-6">
                                 <div>
-                                    {product.oldPrice > 0 && (
+                                    {currentOldPrice > 0 && (
                                         <div style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: '1rem', marginBottom: '2px' }}>
-                                            ${product.oldPrice.toFixed(2)}
+                                            ${currentOldPrice.toFixed(2)}
                                         </div>
                                     )}
                                     <div style={{ color: 'var(--accent-color)', fontSize: '2.5rem', fontWeight: '900' }}>
@@ -444,13 +453,13 @@ const ProductDetails = () => {
                         </div>
 
                         <div style={{ marginBottom: '40px' }}>
-                            {product.type === 'm3u' && (
+                            {(product.type === 'm3u' || product.hasMultiDuration) && (
                                 <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
-                                    <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'abonnement</h3>
+                                    <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
 
                                     {/* Subscription Duration */}
                                     <div className="mb-4">
-                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Duration (Subscription)</label>
+                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Durée (Option)</label>
                                         <select
                                             className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
                                             value={selectedDuration}
@@ -460,9 +469,9 @@ const ProductDetails = () => {
 
                                             {/* Dynamic Options from Backend */}
                                             {product.durationPrices && product.durationPrices.length > 0 ? (
-                                                product.durationPrices.sort((a, b) => a.duration - b.duration).map(dp => (
-                                                    <option key={dp.duration} value={dp.duration}>
-                                                        {dp.duration} Mois - ${dp.price}
+                                                product.durationPrices.map((dp, i) => (
+                                                    <option key={i} value={dp.duration}>
+                                                        {dp.duration}
                                                     </option>
                                                 ))
                                             ) : (
@@ -477,77 +486,81 @@ const ProductDetails = () => {
                                         </select>
                                     </div>
 
-                                    {/* Subscription Type Selector */}
-                                    <div className="mb-4">
-                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
-                                        <div className="flex gap-4">
-                                            <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="subtype"
-                                                    value="m3u"
-                                                    checked={subscriptionType === 'm3u'}
-                                                    onChange={() => setSubscriptionType('m3u')}
-                                                    className="hidden"
-                                                />
-                                                <div className="text-center font-bold">Lien M3U</div>
-                                            </label>
-                                            <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="subtype"
-                                                    value="code"
-                                                    checked={subscriptionType === 'code'}
-                                                    onChange={() => setSubscriptionType('code')}
-                                                    className="hidden"
-                                                />
-                                                <div className="text-center font-bold">Code d'activation</div>
-                                            </label>
-                                        </div>
-                                        {subscriptionType === 'code' && (
-                                            <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
-                                                <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
-                                                <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
-                                                    {product.keys?.filter(k => !k.isSold).length > 0
-                                                        ? `${product.keys.filter(k => !k.isSold).length} codes disponibles en stock.`
-                                                        : "Stock épuisé: Livraison manuelle par l'administrateur."}
-                                                </span>
+                                    {product.type === 'm3u' && (
+                                        <>
+                                            {/* Subscription Type Selector */}
+                                            <div className="mb-4">
+                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
+                                                <div className="flex gap-4">
+                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                        <input
+                                                            type="radio"
+                                                            name="subtype"
+                                                            value="m3u"
+                                                            checked={subscriptionType === 'm3u'}
+                                                            onChange={() => setSubscriptionType('m3u')}
+                                                            className="hidden"
+                                                        />
+                                                        <div className="text-center font-bold">Lien M3U</div>
+                                                    </label>
+                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                        <input
+                                                            type="radio"
+                                                            name="subtype"
+                                                            value="code"
+                                                            checked={subscriptionType === 'code'}
+                                                            onChange={() => setSubscriptionType('code')}
+                                                            className="hidden"
+                                                        />
+                                                        <div className="text-center font-bold">Code d'activation</div>
+                                                    </label>
+                                                </div>
+                                                {subscriptionType === 'code' && (
+                                                    <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
+                                                        <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
+                                                        <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
+                                                            {product.keys?.filter(k => !k.isSold).length > 0
+                                                                ? `${product.keys.filter(k => !k.isSold).length} codes disponibles en stock.`
+                                                                : "Stock épuisé: Livraison manuelle par l'administrateur."}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
 
-                                    {/* Sort Bouquets (Packages) - Only show if M3U is selected */}
-                                    {product.showBouquetSorter !== false && subscriptionType === 'm3u' && (
-                                        <div className="mb-4">
-                                            <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
-                                            <select
-                                                className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                value={selectedRegion}
-                                                onChange={(e) => setSelectedRegion(e.target.value)}
-                                            >
-                                                <option value="">Sélectionner un bouquet</option>
-                                                {packages.map(pkg => (
-                                                    <option key={pkg.id} value={pkg.id}>
-                                                        {(product.bouquetNames && product.bouquetNames[pkg.id]) ? product.bouquetNames[pkg.id] : pkg.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                            {/* Sort Bouquets (Packages) */}
+                                            {product.showBouquetSorter !== false && subscriptionType === 'm3u' && (
+                                                <div className="mb-4">
+                                                    <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
+                                                    <select
+                                                        className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                        value={selectedRegion}
+                                                        onChange={(e) => setSelectedRegion(e.target.value)}
+                                                    >
+                                                        <option value="">Sélectionner un bouquet</option>
+                                                        {packages.map(pkg => (
+                                                            <option key={pkg.id} value={pkg.id}>
+                                                                {(product.bouquetNames && product.bouquetNames[pkg.id]) ? product.bouquetNames[pkg.id] : pkg.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            {/* Country */}
+                                            <div className="mb-2">
+                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
+                                                <select
+                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                    value={selectedCountry}
+                                                    onChange={(e) => setSelectedCountry(e.target.value)}
+                                                >
+                                                    {countries.map(c => (
+                                                        <option key={c.code} value={c.code}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </>
                                     )}
-
-                                    {/* Country */}
-                                    <div className="mb-2">
-                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
-                                        <select
-                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                            value={selectedCountry}
-                                            onChange={(e) => setSelectedCountry(e.target.value)}
-                                        >
-                                            {countries.map(c => (
-                                                <option key={c.code} value={c.code}>{c.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
                                 </div>
                             )}
 

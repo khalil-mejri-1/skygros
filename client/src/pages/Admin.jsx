@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 import API_BASE_URL, { formatImageUrl } from '../config/api';
 import axios from "axios";
-import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory, FaEye, FaBars, FaChartBar } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory, FaEye, FaBars, FaChartBar, FaMoneyBillWave } from "react-icons/fa";
 import ConfirmModal from "../components/ConfirmModal";
 import AlertModal from "../components/AlertModal";
 import Toast from "../components/Toast";
@@ -14,6 +14,7 @@ const Admin = () => {
     const [users, setUsers] = useState([]);
     const [orders, setOrders] = useState([]);
     const [demos, setDemos] = useState([]); // demos state
+    const [rechargeRequests, setRechargeRequests] = useState([]); // New state for recharge requests
     const [newDemo, setNewDemo] = useState({ serviceName: "", description: "", image: "", contentListText: "" }); // new demo state
     const [resetRequests, setResetRequests] = useState([]);
     const [resetOptions, setResetOptions] = useState([]);
@@ -79,7 +80,10 @@ const Admin = () => {
         duration: 12,
         showBouquetSorter: true,
         bouquetNames: {},
-        durationPrices: []
+        durationPrices: [],
+        deliveryType: "codes",
+        deliveryLink: "",
+        hasMultiDuration: false
     });
 
     const getRankDetail = (count, ranks = []) => {
@@ -96,7 +100,17 @@ const Admin = () => {
         fetchSettings();
         fetchDemos(); // Fetch demos
         fetchResetData();
+        fetchRechargeRequests(); // New fetch
     }, []);
+
+    const fetchRechargeRequests = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/recharge-requests`);
+            setRechargeRequests(res.data);
+        } catch (err) {
+            console.error("Error fetching recharge requests:", err);
+        }
+    };
 
     useEffect(() => {
         const isAnyModalOpen = showBalanceModal || showLogModal || showFulfillModal || showAddForm || isEditingCategory || showCategoryForm;
@@ -839,6 +853,7 @@ const Admin = () => {
                     <SidebarItem id="products" label="Gestion Produits" icon={FaBoxOpen} />
                     <SidebarItem id="categories" label="Gestion Catégories" icon={FaTag} />
                     <SidebarItem id="orders" label="Gestion Commandes" icon={FaShoppingBag} badge={stats.unseenOrders} />
+                    <SidebarItem id="recharge" label="Gestion de recharge" icon={FaMoneyBillWave} badge={rechargeRequests.filter(r => r.status === 'pending').length} />
                     <SidebarItem id="historique" label="Historique Ventes" icon={FaHistory} />
                     <SidebarItem id="users" label="Gestion Clients" icon={FaUsers} />
                     <SidebarItem id="ranks" label="Système de Rangs" icon={FaMedal} />
@@ -892,8 +907,9 @@ const Admin = () => {
                         <div>
                             <h1 style={{ fontSize: isLargeDesktop ? '2.2rem' : '1.5rem', fontWeight: '900', marginBottom: '8px' }}>
                                 {activeTab === "products" ? "Inventaire des Produits" :
-                                    activeTab === "categories" ? "Gestion des Catégories" :
-                                        activeTab === "orders" ? "Gestion des Commandes" :
+                                activeTab === "categories" ? "Gestion des Catégories" :
+                                    activeTab === "orders" ? "Gestion des Commandes" :
+                                        activeTab === "recharge" ? "Gestion de Recharge" :
                                             activeTab === "historique" ? "Historique des Ventes" :
                                                 activeTab === "ranks" ? "Système de Rangs" :
                                                     activeTab === "demos" ? "Gestion des Demos" :
@@ -904,10 +920,11 @@ const Admin = () => {
                                 {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
                                     activeTab === "categories" ? "Organisez vos produits par types et icônes." :
                                         activeTab === "orders" ? "Suivez et validez les achats en attente." :
-                                            activeTab === "historique" ? "Consultez toutes les transactions passées." :
-                                                activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
-                                                    activeTab === "demos" ? "Gérez les comptes d'essai et démos." :
-                                                        activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
+                                            activeTab === "recharge" ? "Traitez les demandes de recharge de solde client." :
+                                                activeTab === "historique" ? "Consultez toutes les transactions passées." :
+                                                    activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
+                                                        activeTab === "demos" ? "Gérez les comptes d'essai et démos." :
+                                                            activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
                             </p>
                         </div>
                     </div>
@@ -1758,6 +1775,166 @@ const Admin = () => {
                             </table>
                         </div>
                     </div>
+                ) : activeTab === "recharge" ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {/* Stats Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: '16px' }}>
+                            {[
+                                { label: 'En attente', value: rechargeRequests.filter(r => r.status === 'pending').length, color: 'var(--accent-color)' },
+                                { label: 'Approuvées', value: rechargeRequests.filter(r => r.status === 'approved').length, color: 'var(--success)' },
+                                { label: 'Rejetées', value: rechargeRequests.filter(r => r.status === 'rejected').length, color: 'var(--error)' },
+                                { label: 'Total ($)', value: `$${rechargeRequests.filter(r => r.status === 'approved').reduce((a, b) => a + b.amount, 0).toFixed(2)}`, color: '#a29bfe' },
+                            ].map((s, i) => (
+                                <div key={i} className="glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.8rem', fontWeight: '900', color: s.color }}>{s.value}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginTop: '5px', textTransform: 'uppercase' }}>{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                                <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <tr>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Client</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Montant</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Méthode</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>WhatsApp</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Date</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Statut</th>
+                                        <th style={{ padding: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rechargeRequests.map(req => (
+                                        <tr key={req._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: req.status === 'pending' ? 'rgba(255,153,0,0.02)' : 'transparent' }}>
+                                            <td style={{ padding: '18px 20px' }}>
+                                                <div style={{ fontWeight: '800', color: '#fff', fontSize: '0.9rem' }}>{req.user?.username || 'Inconnu'}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>{req.user?.email}</div>
+                                                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', marginTop: '2px' }}>Solde: ${Number(req.user?.balance || 0).toFixed(2)}</div>
+                                            </td>
+                                            <td style={{ padding: '18px 20px' }}>
+                                                <div style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--success)' }}>${req.amount}</div>
+                                            </td>
+                                            <td style={{ padding: '18px 20px' }}>
+                                                <span style={{ background: 'rgba(255,255,255,0.06)', padding: '5px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700', color: '#fff' }}>
+                                                    {req.paymentMethod?.name || '—'}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '18px 20px' }}>
+                                                <a href={`https://wa.me/${(req.paymentMethod?.whatsapp || '').replace(/\s+/g, '')}`} target="_blank" rel="noreferrer"
+                                                    style={{ color: '#25D366', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}>
+                                                    <FaMoneyBillWave size={12} />{req.paymentMethod?.whatsapp || '—'}
+                                                </a>
+                                            </td>
+                                            <td style={{ padding: '18px 20px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
+                                                {new Date(req.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                            </td>
+                                            <td style={{ padding: '18px 20px' }}>
+                                                {req.status === 'pending' ? (
+                                                    <span style={{ background: 'rgba(255,153,0,0.15)', color: 'var(--accent-color)', padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '900' }}>EN ATTENTE</span>
+                                                ) : req.status === 'approved' ? (
+                                                    <span style={{ background: 'rgba(46,213,115,0.15)', color: 'var(--success)', padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '900' }}>APPROUVÉE</span>
+                                                ) : (
+                                                    <span style={{ background: 'rgba(255,71,87,0.15)', color: 'var(--error)', padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '900' }}>REJETÉE</span>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '18px 20px' }}>
+                                                <div className="flex gap-2">
+                                                    {req.status === 'pending' && (
+                                                        <>
+                                                            <button
+                                                                title="Approuver et créditer le solde"
+                                                                className="action-btn success"
+                                                                onClick={() => setConfirmModal({
+                                                                    isOpen: true,
+                                                                    title: "Approuver la recharge ?",
+                                                                    message: `Créditer ${req.amount}$ sur le compte de ${req.user?.username} ?`,
+                                                                    type: "success",
+                                                                    confirmColor: "var(--success)",
+                                                                    confirmText: "APPROUVER",
+                                                                    onConfirm: async () => {
+                                                                        try {
+                                                                            await axios.put(`${API_BASE_URL}/recharge-requests/${req._id}/approve`);
+                                                                            fetchRechargeRequests();
+                                                                            fetchUsers();
+                                                                            setConfirmModal(c => ({ ...c, isOpen: false }));
+                                                                            triggerToast(`${req.amount}$ crédités sur le compte de ${req.user?.username} !`);
+                                                                        } catch (err) {
+                                                                            setConfirmModal(c => ({ ...c, isOpen: false }));
+                                                                            setAlertModal({ isOpen: true, title: "Erreur", message: err.response?.data?.message || "Erreur lors de l'approbation.", type: "error" });
+                                                                        }
+                                                                    }
+                                                                })}
+                                                            >
+                                                                <FaCheck size={14} />
+                                                            </button>
+                                                            <button
+                                                                title="Rejeter"
+                                                                className="action-btn delete"
+                                                                onClick={() => setConfirmModal({
+                                                                    isOpen: true,
+                                                                    title: "Rejeter la demande ?",
+                                                                    message: `Rejeter la demande de recharge de ${req.user?.username} ?`,
+                                                                    type: "danger",
+                                                                    confirmColor: "var(--error)",
+                                                                    confirmText: "REJETER",
+                                                                    onConfirm: async () => {
+                                                                        try {
+                                                                            await axios.put(`${API_BASE_URL}/recharge-requests/${req._id}/reject`);
+                                                                            fetchRechargeRequests();
+                                                                            setConfirmModal(c => ({ ...c, isOpen: false }));
+                                                                            triggerToast("Demande rejetée.", "error");
+                                                                        } catch (err) {
+                                                                            setConfirmModal(c => ({ ...c, isOpen: false }));
+                                                                            setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors du rejet.", type: "error" });
+                                                                        }
+                                                                    }
+                                                                })}
+                                                            >
+                                                                <FaTimes size={14} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <button
+                                                        title="Supprimer"
+                                                        className="action-btn delete"
+                                                        onClick={() => setConfirmModal({
+                                                            isOpen: true,
+                                                            title: "Supprimer ?",
+                                                            message: "Supprimer définitivement cette demande ?",
+                                                            type: "danger",
+                                                            confirmColor: "var(--error)",
+                                                            onConfirm: async () => {
+                                                                try {
+                                                                    await axios.delete(`${API_BASE_URL}/recharge-requests/${req._id}`);
+                                                                    fetchRechargeRequests();
+                                                                    setConfirmModal(c => ({ ...c, isOpen: false }));
+                                                                    triggerToast("Demande supprimée.");
+                                                                } catch (err) {
+                                                                    setConfirmModal(c => ({ ...c, isOpen: false }));
+                                                                }
+                                                            }
+                                                        })}
+                                                    >
+                                                        <FaTrash size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {rechargeRequests.length === 0 && (
+                                        <tr>
+                                            <td colSpan="7" style={{ padding: '50px', textAlign: 'center', color: 'rgba(255,255,255,0.2)' }}>
+                                                <FaMoneyBillWave size={40} style={{ marginBottom: '10px', opacity: 0.3 }} />
+                                                <p>Aucune demande de recharge pour le moment.</p>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 ) : activeTab === "settings" ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                         {settings && (
@@ -1804,6 +1981,66 @@ const Admin = () => {
                                     </div>
                                 </div>
 
+                                {/* Sécurité & Système */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
+                                    <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Sécurité & Système</h3>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="form-label">Durée de session (Heures avant déconnexion automatique)</label>
+                                        <input
+                                            className="admin-input"
+                                            type="number"
+                                            value={settings.autoLogoutDuration || 24}
+                                            onChange={(e) => setSettings({ ...settings, autoLogoutDuration: e.target.value })}
+                                            placeholder="ex: 10"
+                                        />
+                                        <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '5px' }}>Définit après combien d'heures d'inactivité l'utilisateur sera déconnecté (Basé sur le dernier accès).</p>
+                                    </div>
+                                </div>
+
+                                {/* Méthodes de Recharge */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
+                                    <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Méthodes de Recharge</h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        {(settings.rechargeMethods || []).map((method, idx) => (
+                                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: isLargeDesktop ? '1fr 1fr 1fr auto' : '1fr', gap: '15px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="form-label">Nom de la méthode</label>
+                                                    <input className="admin-input" placeholder="Ex: Sobflous, D17..." value={method.name} onChange={(e) => {
+                                                        const newMethods = [...settings.rechargeMethods];
+                                                        newMethods[idx].name = e.target.value;
+                                                        setSettings({ ...settings, rechargeMethods: newMethods });
+                                                    }} />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="form-label">Détails (WhatsApp/Mobile)</label>
+                                                    <input className="admin-input" placeholder="Ex: +216 22..." value={method.details} onChange={(e) => {
+                                                        const newMethods = [...settings.rechargeMethods];
+                                                        newMethods[idx].details = e.target.value;
+                                                        setSettings({ ...settings, rechargeMethods: newMethods });
+                                                    }} />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="form-label">URL du Logo</label>
+                                                    <input className="admin-input" placeholder="Lien vers l'image" value={method.logo} onChange={(e) => {
+                                                        const newMethods = [...settings.rechargeMethods];
+                                                        newMethods[idx].logo = e.target.value;
+                                                        setSettings({ ...settings, rechargeMethods: newMethods });
+                                                    }} />
+                                                </div>
+                                                <button type="button" onClick={() => {
+                                                    const newMethods = settings.rechargeMethods.filter((_, i) => i !== idx);
+                                                    setSettings({ ...settings, rechargeMethods: newMethods });
+                                                }} className="action-btn delete" style={{ marginTop: isLargeDesktop ? '0' : '10px' }}><FaTrash size={16} /></button>
+                                            </div>
+                                        ))}
+                                        <button type="button" onClick={() => {
+                                            const newMethods = [...(settings.rechargeMethods || []), { name: "", details: "", logo: "" }];
+                                            setSettings({ ...settings, rechargeMethods: newMethods });
+                                        }} className="btn btn-glass" style={{ alignSelf: 'flex-start', padding: '12px 20px', borderRadius: '12px' }}>
+                                            <FaPlus size={12} style={{ marginRight: '8px' }} /> Ajouter une méthode de recharge
+                                        </button>
+                                    </div>
+                                </div>
 
                                 <button type="submit" className="btn btn-primary" style={{ padding: '15px 40px', borderRadius: '15px', fontWeight: '900', boxShadow: '0 10px 30px rgba(255, 153, 0, 0.2)' }}>
                                     ENREGISTRER TOUS LES PARAMÈTRES
@@ -2016,13 +2253,52 @@ const Admin = () => {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>Clés de Licence / Codes (Stock)</span>
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'rgba(255, 153, 0, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
-                                            {(showAddForm ? newProduct.keysInput : isEditing.keysInput) ? (showAddForm ? newProduct.keysInput : isEditing.keysInput).split(',').filter(k => k.trim()).length : 0} Codes
-                                        </span>
+                                        <span>Type de Livraison</span>
                                     </label>
+                                    <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="radio"
+                                                id="deliveryCodes"
+                                                name="deliveryType"
+                                                checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes"}
+                                                onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "codes" }) : setIsEditing({ ...isEditing, deliveryType: "codes" })}
+                                            />
+                                            <label htmlFor="deliveryCodes" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Codes uniques</label>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="radio"
+                                                id="deliveryLink"
+                                                name="deliveryType"
+                                                checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link"}
+                                                onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "link" }) : setIsEditing({ ...isEditing, deliveryType: "link" })}
+                                            />
+                                            <label htmlFor="deliveryLink" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Lien de téléchargement</label>
+                                        </div>
+                                    </div>
+
+                                    {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link" && (
+                                        <div style={{ marginBottom: '15px' }}>
+                                            <label className="form-label">Lien du produit</label>
+                                            <input
+                                                type="text"
+                                                className="admin-input"
+                                                placeholder="https://example.com/download"
+                                                value={showAddForm ? (newProduct.deliveryLink || "") : (isEditing.deliveryLink || "")}
+                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, deliveryLink: e.target.value }) : setIsEditing({ ...isEditing, deliveryLink: e.target.value })}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes" && (<>
+                                        <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span>Clés de Licence / Codes (Stock)</span>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'rgba(255, 153, 0, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                                                {(showAddForm ? newProduct.keysInput : isEditing.keysInput) ? (showAddForm ? newProduct.keysInput : isEditing.keysInput).split(',').filter(k => k.trim()).length : 0} Codes
+                                            </span>
+                                        </label>
 
                                     <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                         {/* Input Area */}
@@ -2184,7 +2460,95 @@ const Admin = () => {
                                             </div>
                                         </div>
                                     )}
-                                </div>
+                                    </>)}
+
+                                    {/* Multi-duration Pricing for both normal and API products */}
+                                    <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <input
+                                                type="checkbox"
+                                                id="hasMultiDuration"
+                                                checked={showAddForm ? newProduct.hasMultiDuration : isEditing.hasMultiDuration}
+                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, hasMultiDuration: e.target.checked }) : setIsEditing({ ...isEditing, hasMultiDuration: e.target.checked })}
+                                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                            />
+                                            <label htmlFor="hasMultiDuration" className="form-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
+                                                Activer les prix par durée (Mois/Année)
+                                            </label>
+                                        </div>
+
+                                        {(showAddForm ? newProduct.hasMultiDuration : isEditing.hasMultiDuration) && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                {(showAddForm ? (newProduct.durationPrices || []) : (isEditing.durationPrices || [])).map((dp, idx) => (
+                                                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Durée (ex: 1 mois, 1 an)"
+                                                            className="admin-input"
+                                                            style={{ flex: 1 }}
+                                                            value={dp.duration}
+                                                            onChange={(e) => {
+                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                                updated[idx].duration = e.target.value;
+                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                            }}
+                                                        />
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Prix ($)"
+                                                            className="admin-input"
+                                                            style={{ flex: 0.8 }}
+                                                            value={dp.price}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                                updated[idx].price = val;
+                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                            }}
+                                                        />
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Prix Ancien ($)"
+                                                            className="admin-input"
+                                                            style={{ flex: 0.8 }}
+                                                            value={dp.oldPrice || ""}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                                updated[idx].oldPrice = val;
+                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                            }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="action-btn delete"
+                                                            style={{ width: '36px', height: '36px' }}
+                                                            onClick={() => {
+                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                                updated.splice(idx, 1);
+                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                            }}
+                                                        >
+                                                            <FaTrash size={14} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-glass"
+                                                    style={{ fontSize: '0.8rem', padding: '10px' }}
+                                                    onClick={() => {
+                                                        const newItem = { duration: "", price: 0 };
+                                                        const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                        updated.push(newItem);
+                                                        showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                    }}
+                                                >
+                                                    + Ajouter une option de durée
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
 
                                 {/* API / IPTV Configuration */}
                                 <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -2260,64 +2624,10 @@ const Admin = () => {
                                             </div>
                                         </div>
 
-                                        {/* Dynamic Duration Pricing */}
-                                        <div style={{ marginTop: '15px', padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
-                                            <label className="form-label" style={{ color: 'var(--accent-color)' }}>Prix par Durée (Prioritaire sur le prix de base)</label>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                                                {(showAddForm ? (newProduct.durationPrices || []) : (isEditing.durationPrices || [])).map((dp, idx) => (
-                                                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Mois (ex: 3)"
-                                                            className="admin-input"
-                                                            style={{ flex: 1 }}
-                                                            value={dp.duration}
-                                                            onChange={(e) => {
-                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                                updated[idx].duration = parseInt(e.target.value);
-                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                            }}
-                                                        />
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Prix ($)"
-                                                            className="admin-input"
-                                                            style={{ flex: 1 }}
-                                                            value={dp.price}
-                                                            onChange={(e) => {
-                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                                updated[idx].price = parseFloat(e.target.value);
-                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                            }}
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            className="action-btn delete"
-                                                            onClick={() => {
-                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                                updated.splice(idx, 1);
-                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                            }}
-                                                        >
-                                                            <FaTrash />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-glass"
-                                                    style={{ fontSize: '0.8rem', padding: '8px' }}
-                                                    onClick={() => {
-                                                        const newItem = { duration: 1, price: 0 };
-                                                        const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                        updated.push(newItem);
-                                                        showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                    }}
-                                                >
-                                                    + Ajouter une durée
-                                                </button>
-                                            </div>
-                                        </div>
+                                        {/* Dynamic Duration Pricing moved to general product level or kept here for API specifically? 
+                                            Actually the user said "dans Créer un Produit, ajoute une case à cocher pour la durée".
+                                            I already added it above. I'll remove this API-specific one to avoid confusion.
+                                        */}
 
                                         <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
                                             <div className="flex items-center gap-3 mb-4">
