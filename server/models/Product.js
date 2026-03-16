@@ -22,6 +22,16 @@ const ProductSchema = new mongoose.Schema({
     type: { type: String, enum: ['normal', 'm3u', 'mag'], default: 'normal' },
     pack: { type: String }, // Pack ID (String to support 'all' or numeric IDs)
     duration: { type: Number }, // Duration in months
+    rating: { type: Number, default: 4.8 },
+    reviewsCount: { type: Number, default: 21883 },
+    guarantees: { 
+        type: [String], 
+        default: [
+            "Satisfait ou remboursé 30 jours",
+            "Livraison suivie et sécurisée",
+            "Support client réactif 7j/7"
+        ] 
+    },
     showBouquetSorter: { type: Boolean, default: true },
     showBouquetSorter: { type: Boolean, default: true },
     bouquetNames: { type: Map, of: String, default: {} }, // Map of bouquetId -> customName

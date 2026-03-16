@@ -83,7 +83,14 @@ const Admin = () => {
         durationPrices: [],
         deliveryType: "codes",
         deliveryLink: "",
-        hasMultiDuration: false
+        hasMultiDuration: false,
+        rating: 4.8,
+        reviewsCount: 21883,
+        guarantees: [
+            "Satisfait ou remboursé 30 jours",
+            "Livraison suivie et sécurisée",
+            "Support client réactif 7j/7"
+        ]
     });
 
     const getRankDetail = (count, ranks = []) => {
@@ -611,7 +618,20 @@ const Admin = () => {
                 type: "normal",
                 provider: "neo",
                 pack: "",
-                duration: 12
+                duration: 12,
+                showBouquetSorter: true,
+                bouquetNames: {},
+                durationPrices: [],
+                deliveryType: "codes",
+                deliveryLink: "",
+                hasMultiDuration: false,
+                rating: 4.8,
+                reviewsCount: 21883,
+                guarantees: [
+                    "Satisfait ou remboursé 30 jours",
+                    "Livraison suivie et sécurisée",
+                    "Support client réactif 7j/7"
+                ]
             });
             setShowAddForm(false);
             fetchProducts();
@@ -2250,6 +2270,56 @@ const Admin = () => {
                                                     </select>
                                                 </div>
                                             )}
+                                    </div>
+                                </div>
+
+                                {/* Review and Guarantees configuration */}
+                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '15px', color: 'var(--accent-color)' }}>Avis & Garanties</h4>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '15px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label className="form-label">Note des Avis (ex: 4.8)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                className="admin-input"
+                                                value={showAddForm ? newProduct.rating : isEditing.rating}
+                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, rating: parseFloat(e.target.value) }) : setIsEditing({ ...isEditing, rating: parseFloat(e.target.value) })}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label className="form-label">Nombre d'Avis</label>
+                                            <input
+                                                type="number"
+                                                className="admin-input"
+                                                value={showAddForm ? newProduct.reviewsCount : isEditing.reviewsCount}
+                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, reviewsCount: parseInt(e.target.value) }) : setIsEditing({ ...isEditing, reviewsCount: parseInt(e.target.value) })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <label className="form-label">Badges de Garantie (3)</label>
+                                        {[0, 1, 2].map((i) => (
+                                            <input
+                                                key={i}
+                                                type="text"
+                                                className="admin-input"
+                                                placeholder={`Garantie ${i + 1}`}
+                                                value={showAddForm ? (newProduct.guarantees?.[i] || "") : (isEditing.guarantees?.[i] || "")}
+                                                onChange={(e) => {
+                                                    const newValue = e.target.value;
+                                                    if (showAddForm) {
+                                                        const newGuarantees = [...(newProduct.guarantees || ["", "", ""])];
+                                                        newGuarantees[i] = newValue;
+                                                        setNewProduct({ ...newProduct, guarantees: newGuarantees });
+                                                    } else {
+                                                        const newGuarantees = [...(isEditing.guarantees || ["", "", ""])];
+                                                        newGuarantees[i] = newValue;
+                                                        setIsEditing({ ...isEditing, guarantees: newGuarantees });
+                                                    }
+                                                }}
+                                            />
+                                        ))}
                                     </div>
                                 </div>
 

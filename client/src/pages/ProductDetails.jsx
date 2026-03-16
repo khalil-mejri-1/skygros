@@ -4,7 +4,7 @@ import API_BASE_URL, { formatImageUrl } from "../config/api";
 import { useParams, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
-import { FaShoppingCart, FaCheck, FaShieldAlt, FaBolt, FaGlobe, FaChevronLeft, FaStar, FaPlus } from "react-icons/fa";
+import { FaShoppingCart, FaCheck, FaShieldAlt, FaBolt, FaGlobe, FaChevronLeft, FaStar, FaPlus, FaRegStar, FaUser, FaRegCheckCircle } from "react-icons/fa";
 import ProductCard from "../components/ProductCard";
 import LicenseKeyModal from "../components/LicenseKeyModal";
 import AlertModal from "../components/AlertModal";
@@ -560,6 +560,57 @@ const ProductDetails = () => {
                                                 </select>
                                             </div>
                                         </>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Reviews and Guarantees Block */}
+                            {(product.rating || product.reviewsCount || (product.guarantees && product.guarantees.length > 0)) && (
+                                <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
+                                    {product.rating && (
+                                        <div className="mb-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <FaRegStar className="text-primary" />
+                                                <span className="text-gray-400 text-sm font-bold bg-primary/20 text-primary px-2 py-0.5 rounded">Note des Avis</span>
+                                            </div>
+                                            <div className="text-xl font-bold text-white">{product.rating}</div>
+                                        </div>
+                                    )}
+                                    {product.rating && product.reviewsCount && <div className="border-b border-white/10 my-4"></div>}
+                                    
+                                    {product.reviewsCount && (
+                                        <div className="mb-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <FaUser className="text-gray-400" />
+                                                <span className="text-gray-400 text-sm font-bold">Nombre d'Avis</span>
+                                            </div>
+                                            <div className="text-xl font-bold text-white">{product.reviewsCount}</div>
+                                        </div>
+                                    )}
+                                    {(product.rating || product.reviewsCount) && product.guarantees && product.guarantees.length > 0 && <div className="border-b border-white/10 my-4"></div>}
+
+                                    {product.guarantees && product.guarantees.length > 0 && product.guarantees.some(g => g.trim() !== '') && (
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <FaShieldAlt className="text-gray-400" />
+                                                <span className="text-gray-400 text-sm font-bold">Badges de Garantie ({product.guarantees.filter(g => g.trim() !== '').length})</span>
+                                            </div>
+                                            <div className="flex flex-col gap-4">
+                                                {product.guarantees.map((garantie, index) => {
+                                                    if (!garantie || garantie.trim() === '') return null;
+                                                    return (
+                                                        <div key={index}>
+                                                            <div className="text-gray-400 text-xs font-bold mb-1">Garantie {index + 1}</div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-white bg-black/30 border border-white/5 px-4 py-2 rounded-lg w-full text-sm block">
+                                                                    {garantie}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             )}
