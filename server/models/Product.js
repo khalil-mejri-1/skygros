@@ -18,8 +18,8 @@ const ProductSchema = new mongoose.Schema({
     isFeatured: { type: Boolean, default: false },
     isHidden: { type: Boolean, default: false },
     // New Fields for NEO 4K Integration
-    provider: { type: String, enum: ['neo', 'strong8k', 'activation', 'tivipanel', 'promax'], default: 'neo' },
-    type: { type: String, enum: ['normal', 'm3u', 'mag'], default: 'normal' },
+    provider: { type: String, enum: ['neo', 'strong8k', 'activation', 'tivipanel', 'promax', 'mango'], default: 'neo' },
+    type: { type: String, enum: ['normal', 'm3u', 'mag', 'mango'], default: 'normal' },
     pack: { type: String }, // Pack ID (String to support 'all' or numeric IDs)
     duration: { type: Number }, // Duration in months
     rating: { type: Number, default: 4.8 },

@@ -33,6 +33,7 @@ const ProductDetails = () => {
     const [selectedCountry, setSelectedCountry] = useState("TN");
     const [selectedRegion, setSelectedRegion] = useState("");
     const [subscriptionType, setSubscriptionType] = useState('m3u'); // 'm3u' or 'code'
+    const [mangoIdentifier, setMangoIdentifier] = useState("");
 
     // Fetch NEO Options if M3U
     useEffect(() => {
@@ -146,6 +147,16 @@ const ProductDetails = () => {
                 });
                 return;
             }
+
+            if (product.type === 'mango' && !mangoIdentifier) {
+                setAlertModal({
+                    isOpen: true,
+                    title: "Configuration Requise",
+                    message: "Veuillez entrer le Serial Number ou Box ID avant d'acheter.",
+                    type: "warning"
+                });
+                return;
+            }
         }
 
         if (user.balance < currentPrice) {
@@ -172,11 +183,12 @@ const ProductDetails = () => {
             const res = await axios.post(`${API_BASE_URL}/products/purchase`, {
                 userId: user._id,
                 productId: product._id,
-                subscriptionDetails: (product.type === 'm3u' || product.hasMultiDuration) ? {
+                subscriptionDetails: (product.type === 'm3u' || product.type === 'mango' || product.hasMultiDuration) ? {
                     duration: selectedDuration,
                     country: selectedCountry,
                     bouquetId: selectedRegion,
-                    subscriptionType: product.type === 'm3u' ? subscriptionType : 'manual'
+                    subscriptionType: (product.type === 'm3u' || product.type === 'mango') ? subscriptionType : 'manual',
+                    identifier: mangoIdentifier
                 } : null
             });
 
@@ -453,9 +465,23 @@ const ProductDetails = () => {
                         </div>
 
                         <div style={{ marginBottom: '40px' }}>
-                            {(product.type === 'm3u' || product.hasMultiDuration) && (
+                            {(product.type === 'm3u' || product.type === 'mango' || product.hasMultiDuration) && (
                                 <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
                                     <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
+
+                                    {/* Mango Identifier Input */}
+                                    {product.type === 'mango' && (
+                                        <div className="mb-4">
+                                            <label className="block text-gray-400 text-sm mb-2 font-bold">Serial Number / Box ID / Account</label>
+                                            <input
+                                                type="text"
+                                                className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                placeholder="Entrez votre numéro de série ou ID..."
+                                                value={mangoIdentifier}
+                                                onChange={(e) => setMangoIdentifier(e.target.value)}
+                                            />
+                                        </div>
+                                    )}
 
                                     {/* Subscription Duration */}
                                     <div className="mb-4">

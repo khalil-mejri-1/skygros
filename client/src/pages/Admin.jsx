@@ -2635,6 +2635,7 @@ const Admin = () => {
                                                 <option value="normal">💎 Normal (Clés manuelles)</option>
                                                 <option value="m3u">📺 M3U (Lien Automatique)</option>
                                                 <option value="mag">📟 MAG (Mac Address)</option>
+                                                <option value="mango">🥭 MANGO (Box, Mars, Netfly)</option>
                                             </select>
                                         </div>
 
@@ -2651,6 +2652,7 @@ const Admin = () => {
                                                     <option value="activation">ACTIVATION PANEL (activationpanel.net)</option>
                                                     <option value="tivipanel">TIVIPANEL (api.tivipanel.net)</option>
                                                     <option value="promax">PROMAX (api.promax-dash.com)</option>
+                                                    <option value="mango">MANGO (coinmango.org)</option>
                                                 </select>
                                             </div>
                                         )}

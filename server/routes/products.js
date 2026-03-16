@@ -189,6 +189,8 @@ router.post('/purchase', async (req, res) => {
                     apiModule = require('../utils/tivipanelApi');
                 } else if (product.provider === 'promax') {
                     apiModule = require('../utils/promaxApi');
+                } else if (product.provider === 'mango') {
+                    apiModule = require('../utils/mangoApi');
                 } else {
                     apiModule = require('../utils/neoApi'); // Default
                 }
@@ -237,7 +239,8 @@ router.post('/purchase', async (req, res) => {
                         duration: options.duration || product.duration || 12,
                         packId: options.bouquetId || product.pack,
                         country: options.country,
-                        mac: options.mac // Only for MAG
+                        mac: options.mac, // Only for MAG
+                        identifier: options.identifier // For Mango
                     };
 
                     // Call API

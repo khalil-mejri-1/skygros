@@ -37,6 +37,7 @@ const strong8kRoute = require('./routes/strong8k');
 const activationRoute = require('./routes/activation');
 const tivipanelRoute = require('./routes/tivipanel');
 const promaxRoute = require('./routes/promax');
+const mangoRoute = require('./routes/mango');
 const uploadRoute = require('./routes/upload');
 const rechargeRequestRoute = require('./routes/rechargeRequests');
 const path = require('path');
@@ -55,6 +56,7 @@ app.use('/api/strong8k', strong8kRoute);
 app.use('/api/activation', activationRoute);
 app.use('/api/tivipanel', tivipanelRoute);
 app.use('/api/promax', promaxRoute);
+app.use('/api/mango', mangoRoute);
 app.use('/api/upload', uploadRoute);
 app.use('/api/recharge-requests', rechargeRequestRoute);
 
