@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 
@@ -326,7 +326,10 @@ const Home = () => {
         { name: "Greece", flag: "🇬🇷" }
     ];
 
-    if (user) {
+    const [searchParams] = useSearchParams();
+    const isPreviewLanding = searchParams.get('preview') === 'landing';
+
+    if (user && !isPreviewLanding) {
         return (
             <div className="min-h-screen bg-[#020617] text-white font-[Inter]">
                 <SEO title="Espace Client - SKYGROS" noindex={true} />
@@ -1460,6 +1463,22 @@ const Home = () => {
                 </div>
             )}
 
+            {isAdmin && (
+                <div className="fixed top-[135px] inset-x-0 z-[100] flex justify-center pointer-events-none animate-fade-in-down">
+                    <div className="pointer-events-auto flex items-center gap-1.5 bg-[#0a0b14]/90 backdrop-blur-2xl p-1.5 rounded-full border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-90 sm:scale-100 button_home">
+                        <Link to="/" className="group flex items-center gap-2 px-6 py-2.5 rounded-full hover:bg-white/5 text-white/70 hover:text-white transition-all text-[11px] font-black uppercase tracking-tighter">
+                            <i className="fas fa-external-link-alt text-primary/70 group-hover:text-primary transition-colors"></i>
+                            <span>Espace Client</span>
+                        </Link>
+                        <div className="w-[1px] h-4 bg-white/10"></div>
+                        <Link to="/admin" className="group flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary hover:bg-indigo-600 text-white transition-all text-[11px] font-black uppercase tracking-tighter shadow-lg shadow-primary/20">
+                            <i className="fas fa-user-shield group-hover:rotate-12 transition-transform"></i>
+                            <span>Panel Admin</span>
+                        </Link>
+                    </div>
+                </div>
+            )}
+
             {/* Hero Section */}
             <section className="relative min-h-screen flex items-center justify-center hero-gradient pt-20 overflow-hidden">
                 <div className="absolute inset-0 grid-pattern opacity-50"></div>
@@ -1467,10 +1486,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('hero', settings?.home?.hero || {})}
-                        className="absolute top-24 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-32 right-8 z-50 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-xl border border-white/20 transition-all group shadow-2xl flex items-center gap-2 font-bold scale-90 hover:scale-100"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>MODIFIER LE HERO</span>
                     </button>
                 )}
 
@@ -1498,13 +1517,15 @@ const Home = () => {
                         {settings?.home?.hero?.subtitle || "Boostez votre business avec notre infrastructure IPTV professionnelle. Panel de gestion complet, API REST, livraison instantanée et marges compétitives jusqu'à 300%."}
                     </p>
 
-                    <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <Link to={settings?.home?.hero?.primaryBtnLink || "/register"} className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-primary to-secondary rounded-full font-semibold text-white text-lg hover:shadow-lg hover:shadow-primary/25 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
-                            <span>{settings?.home?.hero?.primaryBtnText || "Commencer Gratuitement"}</span>
-                            <i className="fas fa-arrow-right"></i>
+                    <div className="mt-10 flex flex-col sm:flex-row gap-5 justify-center items-center">
+                        <Link to={settings?.home?.hero?.primaryBtnLink || "/register"} className="group relative w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-2xl font-black text-lg transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_-10px_rgba(99,102,241,0.5)] flex items-center justify-center gap-3 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary to-indigo-600"></div>
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-[radial-gradient(circle_at_center,_white_0%,transparent_70%)] transition-opacity"></div>
+                            <span className="relative z-10">{settings?.home?.hero?.primaryBtnText || "Commencer Gratuitement"}</span>
+                            <i className="fas fa-arrow-right relative z-10 group-hover:translate-x-1 transition-transform"></i>
                         </Link>
-                        <Link to={settings?.home?.hero?.secondaryBtnLink || "/demos"} className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/20 rounded-full font-semibold text-white text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2">
-                            <i className="fas fa-play-circle"></i>
+                        <Link to={settings?.home?.hero?.secondaryBtnLink || "/demos"} className="group w-full sm:w-auto px-10 py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-white text-lg hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-3 backdrop-blur-md">
+                            <i className="fas fa-play-circle text-primary group-hover:scale-110 transition-transform"></i>
                             <span>{settings?.home?.hero?.secondaryBtnText || "Voir la Démo"}</span>
                         </Link>
                     </div>
@@ -1532,10 +1553,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('movies', settings?.home?.movies || {})}
-                        className="absolute top-8 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT MOVIES</span>
                     </button>
                 )}
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -1590,17 +1611,17 @@ const Home = () => {
                     <div className="absolute top-8 right-8 z-50 flex flex-col gap-2">
                         <button
                             onClick={() => handleEditClick('channels', settings?.home?.channels || {})}
-                            className="bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                            style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                            className="bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                         >
-                            <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                            <i className="fas fa-edit"></i>
+                            <span>CHANNELS</span>
                         </button>
                         <button
                             onClick={() => handleEditClick('sports', settings?.home?.sportsSection || {})}
-                            className="bg-white/5 hover:bg-red-500/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                            style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}
+                            className="bg-red-500/20 hover:bg-red-500 text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                         >
-                            <i className="fas fa-cog text-gray-400 group-hover:text-red-500 transition-colors"></i>
+                            <i className="fas fa-edit"></i>
+                            <span>SPORTS</span>
                         </button>
                     </div>
                 )}
@@ -1680,10 +1701,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('devices', settings?.home?.devicesSection || {})}
-                        className="absolute top-8 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>DEVICES</span>
                     </button>
                 )}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -1803,10 +1824,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('pricing', settings?.home?.pricingSection || {})}
-                        className="absolute top-8 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT PRICING</span>
                     </button>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent"></div>
@@ -1924,10 +1945,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('panel', settings?.home?.panelSection || {})}
-                        className="absolute top-8 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT PANEL</span>
                     </button>
                 )}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2106,10 +2127,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('testimonials', settings?.home?.testimonialsSection || {})}
-                        className="absolute top-8 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>TESTIMONIALS</span>
                     </button>
                 )}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative group">
@@ -2158,10 +2179,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('faq', settings?.home?.faqSection || {})}
-                        className="absolute top-8 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT FAQ</span>
                     </button>
                 )}
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative group">
@@ -2208,10 +2229,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('cta', settings?.home?.ctaSection || {})}
-                        className="absolute top-8 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT CTA</span>
                     </button>
                 )}
 
@@ -2252,10 +2273,10 @@ const Home = () => {
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('footer', settings?.home?.footerSection || {})}
-                        className="absolute top-8 right-8 z-50 bg-white/5 hover:bg-primary/20 p-3 rounded-2xl border border-white/10 transition-all group shadow-lg backdrop-blur-sm"
-                        style={{ borderColor: 'rgba(255,153,0,0.2)' }}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
                     >
-                        <i className="fas fa-cog text-gray-400 group-hover:text-primary transition-colors" style={{ color: 'var(--accent-color)' }}></i>
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT FOOTER</span>
                     </button>
                 )}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

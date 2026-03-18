@@ -870,6 +870,33 @@ const Admin = () => {
 
 
                 <div className="custom-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto', paddingBottom: '40px' }}>
+                    <button
+                        onClick={() => window.location.href = '/?preview=landing'}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '14px 20px',
+                            borderRadius: '14px',
+                            background: 'rgba(255,255,255,0.05)',
+                            color: 'var(--accent-color)',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            fontWeight: '700',
+                            fontSize: '0.9rem',
+                            width: '100%',
+                            textAlign: 'left',
+                            marginBottom: '10px',
+                            border: '1px solid rgba(255, 153, 0, 0.3)'
+                        }}
+                        className="sidebar-link"
+                    >
+                        <FaHome size={18} />
+                        <span style={{ flex: 1 }}>Voir Page d'Accueil</span>
+                    </button>
+
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '10px 0' }}></div>
+
                     <SidebarItem id="products" label="Gestion Produits" icon={FaBoxOpen} />
                     <SidebarItem id="categories" label="Gestion Catégories" icon={FaTag} />
                     <SidebarItem id="orders" label="Gestion Commandes" icon={FaShoppingBag} badge={stats.unseenOrders} />

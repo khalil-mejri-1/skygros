@@ -40,9 +40,16 @@ router.post('/register', async (req, res) => {
     }
 });
 
+router.use((req, res, next) => {
+    console.log(`Entering Auth Router: ${req.method} ${req.url}`);
+    next();
+});
 
 router.post('/login', async (req, res) => {
     try {
+        if (!req.body) {
+            return res.status(400).json({ message: "Invalid request: body missing." });
+        }
         const { username, password, captchaToken } = req.body;
 
         // Verify Captcha
@@ -126,7 +133,7 @@ router.post('/login', async (req, res) => {
 
     } catch (err) {
         console.error("Login Error:", err);
-        res.status(500).json(err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -227,6 +234,11 @@ router.post('/2fa/verify', async (req, res) => {
         console.error("2FA Verify Error:", err);
         res.status(500).json(err);
     }
+});
+
+router.use((req, res) => {
+    console.log(`Exiting Auth Router (No match): ${req.method} ${req.url}`);
+    res.status(404).json({ message: `Auth route not found: ${req.url}` });
 });
 
 module.exports = router;

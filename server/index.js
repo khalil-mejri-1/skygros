@@ -43,7 +43,10 @@ const rechargeRequestRoute = require('./routes/rechargeRequests');
 const path = require('path');
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/api/auth', authRoute);
+app.use('/api/auth', (req, res, next) => {
+    console.log(`Auth request: ${req.method} ${req.url}`);
+    next();
+}, authRoute);
 app.use('/api/products', productRoute);
 app.use('/api/users', userRoute);
 app.use('/api/orders', orderRoute);
@@ -61,7 +64,7 @@ app.use('/api/upload', uploadRoute);
 app.use('/api/recharge-requests', rechargeRequestRoute);
 
 app.get('/', (req, res) => {
-    res.send('update-10 3/18/2026');
+    res.send('update-11 3/18/2026');
 });
 const PORT = process.env.PORT || 5000;
 

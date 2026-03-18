@@ -342,130 +342,132 @@ const Navbar = () => {
                 </div>
             </nav>
 
-            {/* Sub-navbar with categories */}
-            <div ref={subNavRef} style={{ background: 'var(--bg-secondary)', padding: '6px 0', position: 'relative', zIndex: 9990 }}>
-                <div className="container" style={{ overflow: 'visible' }}>
-                    <div ref={scrollContainerRef} className="flex gap-2 md:gap-4 custom-scrollbar" style={{
-                        overflowX: 'auto',
-                        whiteSpace: 'nowrap',
-                        paddingBottom: '8px',
-                        paddingLeft: isMobile ? '15px' : '0',
-                        paddingRight: isMobile ? '15px' : '0',
-                        display: 'flex',
-                        flexWrap: 'nowrap',
-                        zIndex: 100,
-                        justifyContent: isMobile ? 'flex-start' : (categories.length > 5 ? 'flex-start' : 'center')
-                    }}>
-                        {categories.map((cat) => {
-                            const hasSub = cat.subcategories?.length > 0;
-                            const isActive = isMobile ? activeMobileCategory === cat._id : hoveredCategory === cat._id;
+            {/* Sub-navbar with categories - Only visible if logged in */}
+            {user && (
+                <div ref={subNavRef} style={{ background: 'var(--bg-secondary)', padding: '6px 0', position: 'relative', zIndex: 9990 }}>
+                    <div className="container" style={{ overflow: 'visible' }}>
+                        <div ref={scrollContainerRef} className="flex gap-2 md:gap-4 custom-scrollbar" style={{
+                            overflowX: 'auto',
+                            whiteSpace: 'nowrap',
+                            paddingBottom: '8px',
+                            paddingLeft: isMobile ? '15px' : '0',
+                            paddingRight: isMobile ? '15px' : '0',
+                            display: 'flex',
+                            flexWrap: 'nowrap',
+                            zIndex: 100,
+                            justifyContent: isMobile ? 'flex-start' : (categories.length > 5 ? 'flex-start' : 'center')
+                        }}>
+                            {categories.map((cat) => {
+                                const hasSub = cat.subcategories?.length > 0;
+                                const isActive = isMobile ? activeMobileCategory === cat._id : hoveredCategory === cat._id;
 
-                            return (
-                                <div key={cat._id} id={`cat-item-${cat._id}`} style={{ position: 'relative', flexShrink: 0 }}
-                                    onMouseEnter={() => {
-                                        if (!isMobile) {
-                                            // Cancel any pending close
-                                            if (closeDropdownTimer.current) clearTimeout(closeDropdownTimer.current);
-                                            setHoveredCategory(cat._id);
-                                        }
-                                    }}
-                                    onMouseLeave={() => {
-                                        if (!isMobile) {
-                                            // Delayed close so mouse can travel to the dropdown
-                                            closeDropdownTimer.current = setTimeout(() => setHoveredCategory(null), 150);
-                                        }
-                                    }}
-                                    onClick={(e) => {
-                                        if (isMobile && hasSub) {
-                                            e.preventDefault();
-                                            setActiveMobileCategory(activeMobileCategory === cat._id ? null : cat._id);
-                                        }
-                                    }}>
-                                    <Link
-                                        to={hasSub ? "#" : `/products/${cat.name}`}
-                                        className="nav-item-link flex items-center gap-2"
-                                        style={{
-                                            color: isActive ? 'var(--accent-color)' : 'rgba(255,255,255,0.6)',
-                                            padding: '8px 14px',
-                                            borderRadius: '12px',
-                                            background: isActive ? 'rgba(255,153,0,0.05)' : 'transparent',
-                                            border: isActive ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
-                                            transition: '0.3s',
-                                            fontSize: isSmallMobile ? '0.7rem' : '0.8rem',
-                                            display: 'flex'
+                                return (
+                                    <div key={cat._id} id={`cat-item-${cat._id}`} style={{ position: 'relative', flexShrink: 0 }}
+                                        onMouseEnter={() => {
+                                            if (!isMobile) {
+                                                // Cancel any pending close
+                                                if (closeDropdownTimer.current) clearTimeout(closeDropdownTimer.current);
+                                                setHoveredCategory(cat._id);
+                                            }
                                         }}
-                                    >
-                                        {renderIcon(cat.icon)}
-                                        <span style={{ fontWeight: 800, letterSpacing: '0.5px' }}>{cat.name.toUpperCase()}</span>
-                                        {hasSub && <FaChevronDown size={10} style={{ transform: isActive ? 'rotate(180deg)' : 'none', transition: '0.3s' }} />}
-                                    </Link>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Subcategories Dropdown RENDERED OUTSIDE the scroll container */}
-                    {(() => {
-                        const activeId = isMobile ? activeMobileCategory : hoveredCategory;
-                        const activeCat = categories.find(c => c._id === activeId);
-                        const hasSub = activeCat?.subcategories?.length > 0;
-
-                        if (hasSub && dropdownPosition) {
-                            return (
-                                <div
-                                    className="glass custom-scrollbar"
-                                    onMouseEnter={() => {
-                                        // Cancel pending close when mouse enters the dropdown
-                                        if (closeDropdownTimer.current) clearTimeout(closeDropdownTimer.current);
-                                    }}
-                                    onMouseLeave={() => {
-                                        // Close when mouse leaves the dropdown
-                                        closeDropdownTimer.current = setTimeout(() => setHoveredCategory(null), 100);
-                                    }}
-                                    style={{
-                                        position: 'absolute',
-                                        top: 'calc(100% + 0px)',
-                                        left: `${dropdownPosition.left}px`,
-                                        transform: 'translateX(-50%)',
-                                        minWidth: '200px',
-                                        maxHeight: '320px',
-                                        overflowY: 'auto',
-                                        background: 'rgba(13, 14, 26, 0.98)',
-                                        border: '1px solid rgba(255,153,0,0.2)',
-                                        padding: '8px',
-                                        zIndex: 9999,
-                                        animation: 'fadeIn 0.2s ease-out',
-                                        boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
-                                        borderRadius: '16px'
-                                    }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                        {activeCat.subcategories.map((sub, idx) => (
-                                            <Link
-                                                key={idx}
-                                                to={`/products/${activeCat.name}?subcategory=${sub}`}
-                                                onClick={() => { setHoveredCategory(null); setActiveMobileCategory(null); }}
-                                                className="dropdown-item"
-                                                style={{
-                                                    padding: '10px 14px',
-                                                    color: '#fff',
-                                                    textDecoration: 'none',
-                                                    borderRadius: '10px',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    transition: '0.2s'
-                                                }}
-                                            >
-                                                <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>{sub}</span>
-                                            </Link>
-                                        ))}
+                                        onMouseLeave={() => {
+                                            if (!isMobile) {
+                                                // Delayed close so mouse can travel to the dropdown
+                                                closeDropdownTimer.current = setTimeout(() => setHoveredCategory(null), 150);
+                                            }
+                                        }}
+                                        onClick={(e) => {
+                                            if (isMobile && hasSub) {
+                                                e.preventDefault();
+                                                setActiveMobileCategory(activeMobileCategory === cat._id ? null : cat._id);
+                                            }
+                                        }}>
+                                        <Link
+                                            to={hasSub ? "#" : `/products/${cat.name}`}
+                                            className="nav-item-link flex items-center gap-2"
+                                            style={{
+                                                color: isActive ? 'var(--accent-color)' : 'rgba(255,255,255,0.6)',
+                                                padding: '8px 14px',
+                                                borderRadius: '12px',
+                                                background: isActive ? 'rgba(255,153,0,0.05)' : 'transparent',
+                                                border: isActive ? '1px solid rgba(255,153,0,0.2)' : '1px solid transparent',
+                                                transition: '0.3s',
+                                                fontSize: isSmallMobile ? '0.7rem' : '0.8rem',
+                                                display: 'flex'
+                                            }}
+                                        >
+                                            {renderIcon(cat.icon)}
+                                            <span style={{ fontWeight: 800, letterSpacing: '0.5px' }}>{cat.name.toUpperCase()}</span>
+                                            {hasSub && <FaChevronDown size={10} style={{ transform: isActive ? 'rotate(180deg)' : 'none', transition: '0.3s' }} />}
+                                        </Link>
                                     </div>
-                                </div>
-                            );
-                        }
-                        return null;
-                    })()}
+                                );
+                            })}
+                        </div>
+
+                        {/* Subcategories Dropdown RENDERED OUTSIDE the scroll container */}
+                        {(() => {
+                            const activeId = isMobile ? activeMobileCategory : hoveredCategory;
+                            const activeCat = categories.find(c => c._id === activeId);
+                            const hasSub = activeCat?.subcategories?.length > 0;
+
+                            if (hasSub && dropdownPosition) {
+                                return (
+                                    <div
+                                        className="glass custom-scrollbar"
+                                        onMouseEnter={() => {
+                                            // Cancel pending close when mouse enters the dropdown
+                                            if (closeDropdownTimer.current) clearTimeout(closeDropdownTimer.current);
+                                        }}
+                                        onMouseLeave={() => {
+                                            // Close when mouse leaves the dropdown
+                                            closeDropdownTimer.current = setTimeout(() => setHoveredCategory(null), 100);
+                                        }}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 'calc(100% + 0px)',
+                                            left: `${dropdownPosition.left}px`,
+                                            transform: 'translateX(-50%)',
+                                            minWidth: '200px',
+                                            maxHeight: '320px',
+                                            overflowY: 'auto',
+                                            background: 'rgba(13, 14, 26, 0.98)',
+                                            border: '1px solid rgba(255,153,0,0.2)',
+                                            padding: '8px',
+                                            zIndex: 9999,
+                                            animation: 'fadeIn 0.2s ease-out',
+                                            boxShadow: '0 15px 35px rgba(0,0,0,0.5)',
+                                            borderRadius: '16px'
+                                        }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                            {activeCat.subcategories.map((sub, idx) => (
+                                                <Link
+                                                    key={idx}
+                                                    to={`/products/${activeCat.name}?subcategory=${sub}`}
+                                                    onClick={() => { setHoveredCategory(null); setActiveMobileCategory(null); }}
+                                                    className="dropdown-item"
+                                                    style={{
+                                                        padding: '10px 14px',
+                                                        color: '#fff',
+                                                        textDecoration: 'none',
+                                                        borderRadius: '10px',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        transition: '0.2s'
+                                                    }}
+                                                >
+                                                    <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>{sub}</span>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Mobile Menu Drawer */}
             {mobileMenuOpen && (

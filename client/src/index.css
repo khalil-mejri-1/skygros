@@ -484,3 +484,9 @@ ul {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
+
+.button_home {
+  border: red solid 0px;
+  margin-left: 320px;
+}
