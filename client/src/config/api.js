@@ -1,26 +1,14 @@
-// // API Configuration
-// const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// const API_BASE_URL = 'https://skygros.vercel.app/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
-// // للتطوير المحلي نستخدم الـ Proxy المبرمج في vite.config.js
-// // للإنتاج نستخدم الرابط المباشر للسيرفر لضمان عمل الصور والطلبات
-// export const API_BASE_URL = !isLocal
-//     ? 'https://skygros.vercel.app/api'
-//     : 'http://localhost:5000/api';
+export const formatImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
 
-// export const formatImageUrl = (url) => {
-//     if (!url) return "";
-//     if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+    // Base URL is usually https://domain.com/api
+    // We want https://domain.com + url
+    const serverBase = API_BASE_URL.replace('/api', '');
+    return `${serverBase}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
-//     // Remove /api from the end for the base assets URL
-//     const baseUrl = API_BASE_URL.replace(/\/api$/, '');
-//     return `${baseUrl}${url}`;
-// };
-
-// export default API_BASE_URL;
-
-
-
-const BASE_URL = 'https://skygros.vercel.app/api';
-// const BASE_URL = 'http://localhost:5000/api';
-
-export default BASE_URL;
+export default API_BASE_URL;

@@ -8,7 +8,8 @@ router.post('/', async (req, res) => {
         const savedCategory = await newCategory.save();
         res.status(200).json(savedCategory);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("POST CATEGORY ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -18,7 +19,8 @@ router.get('/', async (req, res) => {
         const categories = await Category.find();
         res.status(200).json(categories);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET CATEGORIES ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -32,7 +34,8 @@ router.put('/:id', async (req, res) => {
         );
         res.status(200).json(updatedCategory);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("PUT CATEGORY ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -42,7 +45,8 @@ router.delete('/:id', async (req, res) => {
         await Category.findByIdAndDelete(req.params.id);
         res.status(200).json("Category has been deleted...");
     } catch (err) {
-        res.status(500).json(err);
+        console.error("DELETE CATEGORY ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 

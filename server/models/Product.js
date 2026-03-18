@@ -33,7 +33,6 @@ const ProductSchema = new mongoose.Schema({
         ] 
     },
     showBouquetSorter: { type: Boolean, default: true },
-    showBouquetSorter: { type: Boolean, default: true },
     bouquetNames: { type: Map, of: String, default: {} }, // Map of bouquetId -> customName
     deliveryType: { type: String, enum: ['codes', 'link'], default: 'codes' },
     deliveryLink: { type: String },

@@ -19,7 +19,8 @@ router.get('/', async (req, res) => {
         }
         res.status(200).json(settings);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET SETTINGS ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -35,7 +36,8 @@ router.put('/', async (req, res) => {
         }
         res.status(200).json(settings);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("PUT SETTINGS ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 

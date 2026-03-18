@@ -10,7 +10,8 @@ router.get('/', async (req, res) => {
         const products = await Product.find();
         res.status(200).json(products);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET PRODUCTS ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -21,7 +22,8 @@ router.post('/', async (req, res) => {
         const savedProduct = await newProduct.save();
         res.status(200).json(savedProduct);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET PRODUCTS ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -91,8 +93,8 @@ router.put('/:id', async (req, res) => {
             fulfillmentLogs: fulfillmentLogs
         });
     } catch (err) {
-        console.error("Fulfillment error:", err);
-        res.status(500).json(err);
+        console.error("PUT PRODUCT ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -102,7 +104,8 @@ router.delete('/:id', async (req, res) => {
         await Product.findByIdAndDelete(req.params.id);
         res.status(200).json("Product has been deleted...");
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET PRODUCTS ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -117,7 +120,8 @@ router.delete('/:id/keys/:keyId', async (req, res) => {
 
         res.status(200).json(product);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET PRODUCTS ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -136,7 +140,8 @@ router.put('/:id/keys/:keyId', async (req, res) => {
 
         res.status(200).json(product);
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET PRODUCTS ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
@@ -422,7 +427,8 @@ router.post('/purchase-cart', async (req, res) => {
         }
 
     } catch (err) {
-        res.status(500).json(err);
+        console.error("GET PRODUCTS ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err });
     }
 });
 
