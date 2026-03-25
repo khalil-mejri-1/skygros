@@ -83,7 +83,7 @@ const Products = () => {
 
     const filteredProducts = products.filter(p => {
         const matchesCategory = selectedCategory === "all" || p.category.toLowerCase() === selectedCategory.toLowerCase();
-        const matchesSubcategory = !selectedSubcategory || p.subcategory?.toLowerCase() === selectedSubcategory.toLowerCase();
+        const matchesSubcategory = !selectedSubcategory || (p.subcategory || "").split(',').map(s => s.trim().toLowerCase()).includes(selectedSubcategory.toLowerCase());
         const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSubcategory && matchesSearch;
     }).sort((a, b) => {

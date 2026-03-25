@@ -219,7 +219,7 @@ const ProductCard = ({ product }) => {
                             textTransform: 'uppercase'
                         }}
                     >
-                        {(product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? "ACHETER" : "COMMANDER"}
+                        détails
                     </button>
 
                     <button

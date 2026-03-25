@@ -187,7 +187,7 @@ const ProductDetails = () => {
                     duration: selectedDuration,
                     country: selectedCountry,
                     bouquetId: selectedRegion,
-                    subscriptionType: (product.type === 'm3u' || product.type === 'mango') ? subscriptionType : 'manual',
+                    subscriptionType: (product.type === 'm3u' || product.type === 'mango' || ((product.subcategory || "").split(',').includes("Abonnement code") && (product.subcategory || "").split(',').includes("Abonnement M3u"))) ? subscriptionType : 'manual',
                     identifier: mangoIdentifier
                 } : null
             });
@@ -429,9 +429,6 @@ const ProductDetails = () => {
                             <div className="flex gap-4">
                                 <button
                                     onClick={handleBuy}
-                                    // ...
-                                    className="btn flex-1"
-                                    disabled={isPurchased}
                                     style={{
                                         background: isPurchased ? 'var(--success)' : 'var(--accent-color)',
                                         color: '#000',
@@ -439,12 +436,14 @@ const ProductDetails = () => {
                                         fontSize: isMobile ? '1rem' : '1.1rem',
                                         fontWeight: '900',
                                         borderRadius: 'var(--radius-md)',
-                                        boxShadow: '0 10px 20px rgba(255, 153, 0, 0.2)'
+                                        boxShadow: '0 10px 20px rgba(255, 153, 0, 0.2)',
+                                        flex: 1
                                     }}
+                                    disabled={isPurchased}
                                 >
                                     {isLoading ? "Chargement..." :
                                         (isPurchased ? <FaCheck /> :
-                                            ((product.type !== 'normal' || product.keys?.filter(k => !k.isSold).length > 0) ? "ACHETER MAINTENANT" : "COMMANDER"))}
+                                            (subscriptionType === 'code' ? "COMMANDER" : "ACHETER MAINTENANT"))}
                                 </button>
                                 <button
                                     onClick={handleAddToCart}
@@ -465,7 +464,12 @@ const ProductDetails = () => {
                         </div>
 
                         <div style={{ marginBottom: '40px' }}>
-                            {(product.type === 'm3u' || product.type === 'mango' || product.hasMultiDuration) && (
+                            {(() => {
+                                const subs = (product.subcategory || "").split(',').map(s => s.trim());
+                                const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                const hasVisibilityOptions = product.showBouquetSorter || product.showCountrySelector !== false;
+                                return (product.type === 'm3u' || product.type === 'mango' || product.hasMultiDuration || isHybrid || hasVisibilityOptions);
+                            })() && (
                                 <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
                                     <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
 
@@ -511,47 +515,53 @@ const ProductDetails = () => {
                                             )}
                                         </select>
                                     </div>
-
-                                    {product.type === 'm3u' && (
+                                    {(() => {
+                                        const subs = (product.subcategory || "").split(',').map(s => s.trim());
+                                        const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                        return (product.type === 'm3u' || isHybrid);
+                                    })() && (
                                         <>
-                                            {/* Subscription Type Selector */}
-                                            <div className="mb-4">
-                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
-                                                <div className="flex gap-4">
-                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
-                                                        <input
-                                                            type="radio"
-                                                            name="subtype"
-                                                            value="m3u"
-                                                            checked={subscriptionType === 'm3u'}
-                                                            onChange={() => setSubscriptionType('m3u')}
-                                                            className="hidden"
-                                                        />
-                                                        <div className="text-center font-bold">Lien M3U</div>
-                                                    </label>
-                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
-                                                        <input
-                                                            type="radio"
-                                                            name="subtype"
-                                                            value="code"
-                                                            checked={subscriptionType === 'code'}
-                                                            onChange={() => setSubscriptionType('code')}
-                                                            className="hidden"
-                                                        />
-                                                        <div className="text-center font-bold">Code d'activation</div>
-                                                    </label>
-                                                </div>
-                                                {subscriptionType === 'code' && (
-                                                    <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
-                                                        <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
-                                                        <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
-                                                            {product.keys?.filter(k => !k.isSold).length > 0
-                                                                ? `${product.keys.filter(k => !k.isSold).length} codes disponibles en stock.`
-                                                                : "Stock épuisé: Livraison manuelle par l'administrateur."}
-                                                        </span>
+                                            {/* Subscription Type Selector - Specific to multi-choice subcategories */}
+                                            {(() => {
+                                                const subs = (product.subcategory || "").split(',').map(s => s.trim());
+                                                return subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                            })() && (
+                                                <div className="mb-4">
+                                                    <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
+                                                    <div className="flex gap-4">
+                                                        <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                            <input
+                                                                type="radio"
+                                                                name="subtype"
+                                                                value="code"
+                                                                checked={subscriptionType === 'code'}
+                                                                onChange={() => setSubscriptionType('code')}
+                                                                className="hidden"
+                                                            />
+                                                            <div className="text-center font-bold">Lien M3U</div>
+                                                        </label>
+                                                        <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                            <input
+                                                                type="radio"
+                                                                name="subtype"
+                                                                value="m3u"
+                                                                checked={subscriptionType === 'm3u'}
+                                                                onChange={() => setSubscriptionType('m3u')}
+                                                                className="hidden"
+                                                            />
+                                                            <div className="text-center font-bold">Code d'activation</div>
+                                                        </label>
                                                     </div>
-                                                )}
-                                            </div>
+                                                    {subscriptionType === 'code' && (
+                                                        <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
+                                                            <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
+                                                            <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
+                                                                {product.keys?.filter(k => !k.isSold).length > 0 ? `${product.keys?.filter(k => !k.isSold).length} Codes Disponibles en stock` : "Commande en attente (Livraison manuelle par l'admin)"}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
 
                                             {/* Sort Bouquets (Packages) */}
                                             {product.showBouquetSorter !== false && subscriptionType === 'm3u' && (
@@ -573,7 +583,8 @@ const ProductDetails = () => {
                                             )}
 
                                             {/* Country */}
-                                            <div className="mb-2">
+                                            {product.showCountrySelector !== false && (
+                                                <div className="mb-2">
                                                 <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
                                                 <select
                                                     className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
@@ -585,6 +596,7 @@ const ProductDetails = () => {
                                                     ))}
                                                 </select>
                                             </div>
+                                            )}
                                         </>
                                     )}
                                 </div>

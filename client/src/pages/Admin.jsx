@@ -79,6 +79,7 @@ const Admin = () => {
         pack: "",
         duration: 12,
         showBouquetSorter: true,
+        showCountrySelector: true,
         bouquetNames: {},
         durationPrices: [],
         deliveryType: "codes",
@@ -620,6 +621,7 @@ const Admin = () => {
                 pack: "",
                 duration: 12,
                 showBouquetSorter: true,
+                showCountrySelector: true,
                 bouquetNames: {},
                 durationPrices: [],
                 deliveryType: "codes",
@@ -2272,7 +2274,15 @@ const Admin = () => {
                                         <select
                                             className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
                                             value={showAddForm ? newProduct.category : isEditing.category}
-                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, category: e.target.value, subcategory: "" }) : setIsEditing({ ...isEditing, category: e.target.value, subcategory: "" })}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const isM3uAPI = val === "Abonnement M3u API";
+                                                if (showAddForm) {
+                                                    setNewProduct({ ...newProduct, category: val, subcategory: "", type: isM3uAPI ? "m3u" : newProduct.type });
+                                                } else {
+                                                    setIsEditing({ ...isEditing, category: val, subcategory: "", type: isM3uAPI ? "m3u" : isEditing.type });
+                                                }
+                                            }}
                                         >
                                             <option value="">Sélectionner une catégorie</option>
                                             {categories.map((c) => (
@@ -2280,21 +2290,56 @@ const Admin = () => {
                                             ))}
                                         </select>
 
-                                        {/* Subcategory Select - Rendered inside the same column */}
+                                        {/* Subcategory Multi-select Pills */}
                                         {(showAddForm ? newProduct.category : isEditing.category) &&
                                             categories.find(c => c.name === (showAddForm ? newProduct.category : isEditing.category))?.subcategories?.length > 0 && (
                                                 <div style={{ marginTop: '8px' }}>
-                                                    <label className="form-label" style={{ fontSize: '0.85rem' }}>Sous-catégorie</label>
-                                                    <select
-                                                        className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                        value={showAddForm ? newProduct.subcategory : isEditing.subcategory}
-                                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, subcategory: e.target.value }) : setIsEditing({ ...isEditing, subcategory: e.target.value })}
-                                                    >
-                                                        <option value="">Sélectionner une sous-catégorie</option>
-                                                        {categories.find(c => c.name === (showAddForm ? newProduct.category : isEditing.category)).subcategories.map((sub, idx) => (
-                                                            <option key={idx} value={sub}>{sub}</option>
-                                                        ))}
-                                                    </select>
+                                                    <label className="form-label" style={{ fontSize: '0.85rem', marginBottom: '10px', display: 'block' }}>Sous-catégories (Choisir une ou plusieurs)</label>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                        {categories.find(c => c.name === (showAddForm ? newProduct.category : isEditing.category)).subcategories.map((sub, idx) => {
+                                                            const currentSub = (showAddForm ? newProduct.subcategory : isEditing.subcategory) || "";
+                                                            const selectedArr = currentSub.split(',').map(s => s.trim()).filter(s => s);
+                                                            const isSelected = selectedArr.includes(sub);
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    onClick={() => {
+                                                                        let subs = [...selectedArr];
+                                                                        if (isSelected) {
+                                                                            subs = subs.filter(s => s !== sub);
+                                                                        } else {
+                                                                            subs.push(sub);
+                                                                        }
+                                                                        const val = subs.join(',');
+                                                                        const isM3uAPI = subs.includes("Abonnement M3u API") || (showAddForm ? newProduct.category : isEditing.category) === "Abonnement M3u API";
+                                                                        if (showAddForm) {
+                                                                            setNewProduct({ ...newProduct, subcategory: val, type: isM3uAPI ? "m3u" : newProduct.type });
+                                                                        } else {
+                                                                            setIsEditing({ ...isEditing, subcategory: val, type: isM3uAPI ? "m3u" : isEditing.type });
+                                                                        }
+                                                                    }}
+                                                                    style={{
+                                                                        padding: '6px 14px',
+                                                                        borderRadius: '20px',
+                                                                        fontSize: '0.8rem',
+                                                                        fontWeight: '700',
+                                                                        cursor: 'pointer',
+                                                                        transition: 'all 0.2s ease',
+                                                                        background: isSelected ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
+                                                                        color: isSelected ? '#000' : 'rgba(255,255,255,0.6)',
+                                                                        border: '1px solid',
+                                                                        borderColor: isSelected ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '5px'
+                                                                    }}
+                                                                >
+                                                                    {sub}
+                                                                    {isSelected && <FaCheck size={10} />}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             )}
                                     </div>
@@ -2350,214 +2395,218 @@ const Admin = () => {
                                     </div>
                                 </div>
 
-                                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>Type de Livraison</span>
-                                    </label>
-                                    <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="radio"
-                                                id="deliveryCodes"
-                                                name="deliveryType"
-                                                checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes"}
-                                                onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "codes" }) : setIsEditing({ ...isEditing, deliveryType: "codes" })}
-                                            />
-                                            <label htmlFor="deliveryCodes" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Codes uniques</label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="radio"
-                                                id="deliveryLink"
-                                                name="deliveryType"
-                                                checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link"}
-                                                onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "link" }) : setIsEditing({ ...isEditing, deliveryType: "link" })}
-                                            />
-                                            <label htmlFor="deliveryLink" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Lien de téléchargement</label>
-                                        </div>
-                                    </div>
+                                    {((showAddForm ? newProduct.category : isEditing.category) !== 'Abonnement M3u API' && (showAddForm ? newProduct.subcategory : isEditing.subcategory) !== 'Abonnement M3u API') && (
+                                        <>
+                                            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>Type de Livraison</span>
+                                            </label>
+                                            <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="radio"
+                                                        id="deliveryCodes"
+                                                        name="deliveryType"
+                                                        checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes"}
+                                                        onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "codes" }) : setIsEditing({ ...isEditing, deliveryType: "codes" })}
+                                                    />
+                                                    <label htmlFor="deliveryCodes" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Codes uniques</label>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="radio"
+                                                        id="deliveryLink"
+                                                        name="deliveryType"
+                                                        checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link"}
+                                                        onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "link" }) : setIsEditing({ ...isEditing, deliveryType: "link" })}
+                                                    />
+                                                    <label htmlFor="deliveryLink" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Lien de téléchargement</label>
+                                                </div>
+                                            </div>
 
-                                    {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link" && (
-                                        <div style={{ marginBottom: '15px' }}>
-                                            <label className="form-label">Lien du produit</label>
-                                            <input
-                                                type="text"
-                                                className="admin-input"
-                                                placeholder="https://example.com/download"
-                                                value={showAddForm ? (newProduct.deliveryLink || "") : (isEditing.deliveryLink || "")}
-                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, deliveryLink: e.target.value }) : setIsEditing({ ...isEditing, deliveryLink: e.target.value })}
-                                            />
-                                        </div>
-                                    )}
+                                            {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link" && (
+                                                <div style={{ marginBottom: '15px' }}>
+                                                    <label className="form-label">Lien du produit</label>
+                                                    <input
+                                                        type="text"
+                                                        className="admin-input"
+                                                        placeholder="https://example.com/download"
+                                                        value={showAddForm ? (newProduct.deliveryLink || "") : (isEditing.deliveryLink || "")}
+                                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, deliveryLink: e.target.value }) : setIsEditing({ ...isEditing, deliveryLink: e.target.value })}
+                                                    />
+                                                </div>
+                                            )}
 
-                                    {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes" && (<>
-                                        <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span>Clés de Licence / Codes (Stock)</span>
-                                            <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'rgba(255, 153, 0, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
-                                                {(showAddForm ? newProduct.keysInput : isEditing.keysInput) ? (showAddForm ? newProduct.keysInput : isEditing.keysInput).split(',').filter(k => k.trim()).length : 0} Codes
-                                            </span>
-                                        </label>
+                                            {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes" && (<>
+                                                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span>Clés de Licence / Codes (Stock)</span>
+                                                    <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'rgba(255, 153, 0, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                                                        {(showAddForm ? newProduct.keysInput : isEditing.keysInput) ? (showAddForm ? newProduct.keysInput : isEditing.keysInput).split(',').filter(k => k.trim()).length : 0} Codes
+                                                    </span>
+                                                </label>
 
-                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                        {/* Input Area */}
-                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                                            <input
-                                                type="text"
-                                                placeholder="Entrez un code..."
-                                                className="admin-input"
-                                                style={{ flex: 1 }}
-                                                value={showAddForm ? (newProduct.tempKeyInput || "") : (isEditing.tempKeyInput || "")}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    showAddForm
-                                                        ? setNewProduct({ ...newProduct, tempKeyInput: val })
-                                                        : setIsEditing({ ...isEditing, tempKeyInput: val });
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        const p = showAddForm ? newProduct : isEditing;
-                                                        const val = (p.tempKeyInput || "").trim();
-                                                        if (!val) return;
-
-                                                        const currentKeys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
-                                                        if (!currentKeys.includes(val)) {
-                                                            currentKeys.push(val);
-                                                            const newKeysInput = currentKeys.join(',');
+                                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                {/* Input Area */}
+                                                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Entrez un code..."
+                                                        className="admin-input"
+                                                        style={{ flex: 1 }}
+                                                        value={showAddForm ? (newProduct.tempKeyInput || "") : (isEditing.tempKeyInput || "")}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
                                                             showAddForm
-                                                                ? setNewProduct({ ...newProduct, keysInput: newKeysInput, tempKeyInput: "" })
-                                                                : setIsEditing({ ...isEditing, keysInput: newKeysInput, tempKeyInput: "" });
-                                                        }
-                                                    }
-                                                }}
-                                            />
-                                            <button
-                                                type="button"
-                                                className="btn btn-primary"
-                                                style={{ padding: '0 20px', borderRadius: '10px' }}
-                                                onClick={() => {
-                                                    const p = showAddForm ? newProduct : isEditing;
-                                                    const val = (p.tempKeyInput || "").trim();
-                                                    if (!val) return;
+                                                                ? setNewProduct({ ...newProduct, tempKeyInput: val })
+                                                                : setIsEditing({ ...isEditing, tempKeyInput: val });
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                const p = showAddForm ? newProduct : isEditing;
+                                                                const val = (p.tempKeyInput || "").trim();
+                                                                if (!val) return;
 
-                                                    const currentKeys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
-                                                    if (!currentKeys.includes(val)) {
-                                                        currentKeys.push(val);
-                                                        const newKeysInput = currentKeys.join(',');
-                                                        showAddForm
-                                                            ? setNewProduct({ ...newProduct, keysInput: newKeysInput, tempKeyInput: "" })
-                                                            : setIsEditing({ ...isEditing, keysInput: newKeysInput, tempKeyInput: "" });
-                                                    }
-                                                }}
-                                            >
-                                                <FaPlus />
-                                            </button>
-                                        </div>
+                                                                const currentKeys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
+                                                                if (!currentKeys.includes(val)) {
+                                                                    currentKeys.push(val);
+                                                                    const newKeysInput = currentKeys.join(',');
+                                                                    showAddForm
+                                                                        ? setNewProduct({ ...newProduct, keysInput: newKeysInput, tempKeyInput: "" })
+                                                                        : setIsEditing({ ...isEditing, keysInput: newKeysInput, tempKeyInput: "" });
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-primary"
+                                                        style={{ padding: '0 20px', borderRadius: '10px' }}
+                                                        onClick={() => {
+                                                            const p = showAddForm ? newProduct : isEditing;
+                                                            const val = (p.tempKeyInput || "").trim();
+                                                            if (!val) return;
 
-                                        {/* Keys List */}
-                                        <div style={{
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: '8px',
-                                            maxHeight: '200px',
-                                            overflowY: 'auto',
-                                            padding: '5px'
-                                        }}>
-                                            {(() => {
-                                                const p = showAddForm ? newProduct : isEditing;
-                                                const keys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
-
-                                                if (keys.length === 0) return <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', fontStyle: 'italic', width: '100%', textAlign: 'center', padding: '10px' }}>Aucun code ajouté temporairement.</div>;
-
-                                                return keys.map((k, idx) => (
-                                                    <div key={idx} style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '8px',
-                                                        background: 'rgba(255,255,255,0.05)',
-                                                        padding: '6px 12px',
-                                                        borderRadius: '8px',
-                                                        border: '1px solid rgba(255,255,255,0.1)',
-                                                        fontSize: '0.85rem',
-                                                        fontFamily: 'monospace'
-                                                    }}>
-                                                        <span style={{ color: '#fff' }}>{k}</span>
-                                                        <FaTimes
-                                                            size={12}
-                                                            style={{ cursor: 'pointer', color: 'var(--error)', opacity: 0.7 }}
-                                                            onClick={() => {
-                                                                const newKeys = keys.filter((_, i) => i !== idx);
-                                                                const newKeysInput = newKeys.join(',');
+                                                            const currentKeys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
+                                                            if (!currentKeys.includes(val)) {
+                                                                currentKeys.push(val);
+                                                                const newKeysInput = currentKeys.join(',');
                                                                 showAddForm
-                                                                    ? setNewProduct({ ...newProduct, keysInput: newKeysInput })
-                                                                    : setIsEditing({ ...isEditing, keysInput: newKeysInput });
-                                                            }}
-                                                            onMouseOver={(e) => e.target.style.opacity = 1}
-                                                            onMouseOut={(e) => e.target.style.opacity = 0.7}
-                                                        />
-                                                    </div>
-                                                ));
-                                            })()}
-                                        </div>
-                                    </div>
-                                    {(isEditing || (showAddForm && newProduct.type !== 'normal')) && <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '800', opacity: 0.8, marginTop: '10px' }}>* Les nouvelles clés seront ajoutées au stock existant. Pour les produits API, elles seront utilisées si le client choisit "Code".</p>}
+                                                                    ? setNewProduct({ ...newProduct, keysInput: newKeysInput, tempKeyInput: "" })
+                                                                    : setIsEditing({ ...isEditing, keysInput: newKeysInput, tempKeyInput: "" });
+                                                            }
+                                                        }}
+                                                    >
+                                                        <FaPlus />
+                                                    </button>
+                                                </div>
 
-                                    {/* Existing/Registered Code Display */}
-                                    {isEditing && isEditing.keys && isEditing.keys.length > 0 && (
-                                        <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                                            <div className="flex justify-between items-center mb-3">
-                                                <label className="form-label" style={{ marginBottom: 0 }}>Stock Enregistré (Base de Données)</label>
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: '900' }}>
-                                                    {isEditing.keys.filter(k => !k.isSold).length} Disponibles
-                                                </span>
+                                                {/* Keys List */}
+                                                <div style={{
+                                                    display: 'flex',
+                                                    flexWrap: 'wrap',
+                                                    gap: '8px',
+                                                    maxHeight: '200px',
+                                                    overflowY: 'auto',
+                                                    padding: '5px'
+                                                }}>
+                                                    {(() => {
+                                                        const p = showAddForm ? newProduct : isEditing;
+                                                        const keys = p.keysInput ? p.keysInput.split(',').map(k => k.trim()).filter(k => k) : [];
+
+                                                        if (keys.length === 0) return <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', fontStyle: 'italic', width: '100%', textAlign: 'center', padding: '10px' }}>Aucun code ajouté temporairement.</div>;
+
+                                                        return keys.map((k, idx) => (
+                                                            <div key={idx} style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                background: 'rgba(255,255,255,0.05)',
+                                                                padding: '6px 12px',
+                                                                borderRadius: '8px',
+                                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                                fontSize: '0.85rem',
+                                                                fontFamily: 'monospace'
+                                                            }}>
+                                                                <span style={{ color: '#fff' }}>{k}</span>
+                                                                <FaTimes
+                                                                    size={12}
+                                                                    style={{ cursor: 'pointer', color: 'var(--error)', opacity: 0.7 }}
+                                                                    onClick={() => {
+                                                                        const newKeys = keys.filter((_, i) => i !== idx);
+                                                                        const newKeysInput = newKeys.join(',');
+                                                                        showAddForm
+                                                                            ? setNewProduct({ ...newProduct, keysInput: newKeysInput })
+                                                                            : setIsEditing({ ...isEditing, keysInput: newKeysInput });
+                                                                    }}
+                                                                    onMouseOver={(e) => e.target.style.opacity = 1}
+                                                                    onMouseOut={(e) => e.target.style.opacity = 0.7}
+                                                                />
+                                                            </div>
+                                                        ));
+                                                    })()}
+                                                </div>
                                             </div>
-                                            <div style={{
-                                                display: 'flex',
-                                                flexWrap: 'wrap',
-                                                gap: '8px',
-                                                maxHeight: '150px',
-                                                overflowY: 'auto',
-                                                padding: '10px',
-                                                background: 'rgba(0,0,0,0.3)',
-                                                borderRadius: '12px'
-                                            }}>
-                                                {isEditing.keys.filter(k => !k.isSold).map((k, idx) => (
-                                                    <div key={idx} style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '8px',
-                                                        background: 'rgba(46, 213, 115, 0.1)',
-                                                        padding: '6px 12px',
-                                                        borderRadius: '8px',
-                                                        border: '1px solid rgba(46, 213, 115, 0.2)',
-                                                        fontSize: '0.8rem',
-                                                        fontFamily: 'monospace',
-                                                        color: '#2ed573'
-                                                    }}>
-                                                        <FaKey size={10} />
-                                                        <span>{k.key}</span>
-                                                        <div style={{ display: 'flex', gap: '5px', marginLeft: '5px', borderLeft: '1px solid rgba(46, 213, 115, 0.3)', paddingLeft: '5px' }}>
-                                                            <FaEdit
-                                                                size={12}
-                                                                style={{ cursor: 'pointer', color: '#2ed573' }}
-                                                                title="Modifier"
-                                                                onClick={() => handleUpdateKey(isEditing._id, k._id, k.key)}
-                                                            />
-                                                            <FaTrash
-                                                                size={12}
-                                                                style={{ cursor: 'pointer', color: '#ff4757' }}
-                                                                title="Supprimer"
-                                                                onClick={() => handleDeleteKey(isEditing._id, k._id)}
-                                                            />
-                                                        </div>
+                                            {(isEditing || (showAddForm && newProduct.type !== 'normal')) && <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: '800', opacity: 0.8, marginTop: '10px' }}>* Les nouvelles clés seront ajoutées au stock existant. Pour les produits API, elles seront utilisées si le client choisit "Code".</p>}
+
+                                            {/* Existing/Registered Code Display */}
+                                            {isEditing && isEditing.keys && isEditing.keys.length > 0 && (
+                                                <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <label className="form-label" style={{ marginBottom: 0 }}>Stock Enregistré (Base de Données)</label>
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: '900' }}>
+                                                            {isEditing.keys.filter(k => !k.isSold).length} Disponibles
+                                                        </span>
                                                     </div>
-                                                ))}
-                                                {isEditing.keys.filter(k => !k.isSold).length === 0 && (
-                                                    <div style={{ width: '100%', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Stock épuisé.</div>
-                                                )}
-                                            </div>
-                                        </div>
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        flexWrap: 'wrap',
+                                                        gap: '8px',
+                                                        maxHeight: '150px',
+                                                        overflowY: 'auto',
+                                                        padding: '10px',
+                                                        background: 'rgba(0,0,0,0.3)',
+                                                        borderRadius: '12px'
+                                                    }}>
+                                                        {isEditing.keys.filter(k => !k.isSold).map((k, idx) => (
+                                                            <div key={idx} style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                background: 'rgba(46, 213, 115, 0.1)',
+                                                                padding: '6px 12px',
+                                                                borderRadius: '8px',
+                                                                border: '1px solid rgba(46, 213, 115, 0.2)',
+                                                                fontSize: '0.8rem',
+                                                                fontFamily: 'monospace',
+                                                                color: '#2ed573'
+                                                            }}>
+                                                                <FaKey size={10} />
+                                                                <span>{k.key}</span>
+                                                                <div style={{ display: 'flex', gap: '5px', marginLeft: '5px', borderLeft: '1px solid rgba(46, 213, 115, 0.3)', paddingLeft: '5px' }}>
+                                                                    <FaEdit
+                                                                        size={12}
+                                                                        style={{ cursor: 'pointer', color: '#2ed573' }}
+                                                                        title="Modifier"
+                                                                        onClick={() => handleUpdateKey(isEditing._id, k._id, k.key)}
+                                                                    />
+                                                                    <FaTrash
+                                                                        size={12}
+                                                                        style={{ cursor: 'pointer', color: '#ff4757' }}
+                                                                        title="Supprimer"
+                                                                        onClick={() => handleDeleteKey(isEditing._id, k._id)}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        {isEditing.keys.filter(k => !k.isSold).length === 0 && (
+                                                            <div style={{ width: '100%', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>Stock épuisé.</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            </>)}
+                                        </>
                                     )}
-                                    </>)}
 
                                     {/* Multi-duration Pricing for both normal and API products */}
                                     <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -2647,6 +2696,36 @@ const Admin = () => {
                                         )}
                                     </div>
 
+
+                                {/* Visibility Options - For ALL product types */}
+                                <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '0' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: '800', marginBottom: '15px', color: 'var(--accent-color)', textTransform: 'uppercase' }}>Options d'affichage (Page Produit)</h4>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <input
+                                            type="checkbox"
+                                            id="showBouquetSorter"
+                                            checked={showAddForm ? (newProduct.showBouquetSorter !== false) : (isEditing.showBouquetSorter !== false)}
+                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, showBouquetSorter: e.target.checked }) : setIsEditing({ ...isEditing, showBouquetSorter: e.target.checked })}
+                                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        />
+                                        <label htmlFor="showBouquetSorter" className="form-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
+                                            Afficher le tri des bouquets (Sort Bouquets Client)
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="showCountrySelector"
+                                            checked={showAddForm ? (newProduct.showCountrySelector !== false) : (isEditing.showCountrySelector !== false)}
+                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, showCountrySelector: e.target.checked }) : setIsEditing({ ...isEditing, showCountrySelector: e.target.checked })}
+                                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        />
+                                        <label htmlFor="showCountrySelector" className="form-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
+                                            Afficher la sélection du pays (Country Selector)
+                                        </label>
+                                    </div>
+                                </div>
+
                                 {/* API / IPTV Configuration */}
                                 <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <h4 style={{ fontSize: '0.9rem', fontWeight: '800', marginBottom: '15px', color: 'var(--accent-color)', textTransform: 'uppercase' }}>Configuration API Automatique</h4>
@@ -2729,18 +2808,6 @@ const Admin = () => {
                                         */}
 
                                         <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <input
-                                                    type="checkbox"
-                                                    id="showBouquetSorter"
-                                                    checked={showAddForm ? (newProduct.showBouquetSorter !== false) : (isEditing.showBouquetSorter !== false)}
-                                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, showBouquetSorter: e.target.checked }) : setIsEditing({ ...isEditing, showBouquetSorter: e.target.checked })}
-                                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                                                />
-                                                <label htmlFor="showBouquetSorter" className="form-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
-                                                    Afficher le tri des bouquets (Sort Bouquets Client)
-                                                </label>
-                                            </div>
 
                                             {providerPackages.length > 0 && (
                                                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', maxHeight: '200px', overflowY: 'auto' }}>
