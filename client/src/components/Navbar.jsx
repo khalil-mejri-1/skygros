@@ -197,46 +197,77 @@ const Navbar = () => {
                         <img src="/logo.png" alt="SKYGROS" style={{ height: isSmallMobile ? '38px' : '45px', width: 'auto' }} />
                     </Link>
 
-                    <div style={{ position: 'relative', flexGrow: 1, maxWidth: '600px' }} ref={searchRef}>
-                        <input
-                            className="input-search"
-                            placeholder={isSmallMobile ? "Rechercher..." : "Que recherchez-vous ?"}
-                            style={{
-                                paddingLeft: '44px',
-                                height: isSmallMobile ? '46px' : '48px',
-                                fontSize: isSmallMobile ? '0.9rem' : '0.95rem',
-                                borderRadius: 'var(--radius-lg)',
-                                background: 'rgba(255,255,255,0.03)'
-                            }}
-                            value={searchQuery}
-                            onChange={handleSearch}
-                            onFocus={() => searchQuery.length > 0 && setShowSearchResults(true)}
-                        />
-                        <FaSearch style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: isSmallMobile ? '0.9rem' : '0.9rem' }} />
+                    {/* Middle Section: Search for Users, Nav Links for Desktop Guests */}
+                    {user ? (
+                        <div style={{ position: 'relative', flexGrow: 1, maxWidth: '600px' }} ref={searchRef}>
+                            <input
+                                className="input-search"
+                                placeholder={isSmallMobile ? "Rechercher..." : "Que recherchez-vous ?"}
+                                style={{
+                                    paddingLeft: '44px',
+                                    height: isSmallMobile ? '46px' : '48px',
+                                    fontSize: isSmallMobile ? '0.9rem' : '0.95rem',
+                                    borderRadius: 'var(--radius-lg)',
+                                    background: 'rgba(255,255,255,0.03)'
+                                }}
+                                value={searchQuery}
+                                onChange={handleSearch}
+                                onFocus={() => searchQuery.length > 0 && setShowSearchResults(true)}
+                            />
+                            <FaSearch style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: isSmallMobile ? '0.9rem' : '0.9rem' }} />
 
-                        {showSearchResults && searchQuery.length > 0 && (
-                            <div className="glass custom-scrollbar" style={{ position: 'absolute', top: '110%', left: 0, width: '100%', maxHeight: '350px', overflowY: 'auto', background: 'rgba(18, 18, 26, 0.99)', border: '1px solid rgba(255,153,0,0.2)', borderRadius: '16px', zIndex: 99999, padding: '8px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
-                                {filteredProducts.length > 0 ? (
-                                    filteredProducts.map(product => (
-                                        <div key={product._id} onClick={() => { navigate(`/product/${product._id}`); setShowSearchResults(false); setSearchQuery(""); }} style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', borderRadius: '12px', marginBottom: '4px' }}>
-                                            <img src={formatImageUrl(product.image)} alt={product.title} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '8px' }} />
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ color: '#fff', fontSize: '0.9rem', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.title}</div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{product.category}</span>
-                                                    <span style={{ color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: '900' }}>${product.price?.toFixed(2)}</span>
+                            {showSearchResults && searchQuery.length > 0 && (
+                                <div className="glass custom-scrollbar" style={{ position: 'absolute', top: '110%', left: 0, width: '100%', maxHeight: '350px', overflowY: 'auto', background: 'rgba(18, 18, 26, 0.99)', border: '1px solid rgba(255,153,0,0.2)', borderRadius: '16px', zIndex: 99999, padding: '8px', boxShadow: '0 20px 50px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
+                                    {filteredProducts.length > 0 ? (
+                                        filteredProducts.map(product => (
+                                            <div key={product._id} onClick={() => { navigate(`/product/${product._id}`); setShowSearchResults(false); setSearchQuery(""); }} style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', borderRadius: '12px', marginBottom: '4px' }}>
+                                                <img src={formatImageUrl(product.image)} alt={product.title} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '8px' }} />
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ color: '#fff', fontSize: '0.9rem', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.title}</div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{product.category}</span>
+                                                        <span style={{ color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: '900' }}>${product.price?.toFixed(2)}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>Aucun produit trouvé</div>
-                                )}
+                                        ))
+                                    ) : (
+                                        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>Aucun produit trouvé</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        // Guest user: show horizontal scrolling buttons only if not mobile
+                        !isMobile && (
+                        <div className="flex items-center space-x-2 px-2 overflow-x-auto custom-scrollbar pb-4 pt-2" style={{ flexGrow: 1 }}>
+                                {[
+                                    { name: "Home", icon: "fas fa-home", href: "#home", color: "bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white" },
+                                    { name: "SERVER LIST", icon: "fas fa-server", href: "#all-server-list", color: "bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white" },
+                                    { name: "PAID APPs", icon: "fas fa-mobile-alt", href: "#paid-apps", color: "bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white" },
+                                    { name: "Pricing", icon: "fas fa-tags", href: "#pricing", color: "bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white" },
+                                    { name: "FAQ", icon: "fas fa-question-circle", href: "#faq", color: "bg-orange-500/10 hover:bg-orange-500 text-orange-500 hover:text-white" },
+                                    { name: "Contact", icon: "fas fa-headset", href: "#contact-us", color: "bg-indigo-500/10 hover:bg-indigo-500 text-indigo-500 hover:text-white" },
+                                    { name: "Privacy", icon: "fas fa-shield-alt", href: "#privacy-policy", color: "bg-cyan-500/10 hover:bg-cyan-500 text-cyan-500 hover:text-white" },
+                                    { name: "Disclaimer", icon: "fas fa-exclamation-triangle", href: "#disclaimer", color: "bg-red-600/10 hover:bg-red-600 text-red-600 hover:text-white" },
+                                    { name: "M3U", icon: "fas fa-exchange-alt", href: "#convert-m3u", color: "bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-white" },
+                                    { name: "Track", icon: "fas fa-search-location", href: "#track-order", color: "bg-pink-500/10 hover:bg-pink-500 text-pink-500 hover:text-white" }
+                                ].map((item, idx) => (
+                                    <a
+                                        key={idx}
+                                        href={item.href}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border border-white/5 whitespace-nowrap shadow-sm group ${item.color}`}
+                                    >
+                                        <i className={`${item.icon} transition-transform group-hover:scale-110`}></i>
+                                        <span>{item.name}</span>
+                                    </a>
+                                ))}
                             </div>
-                        )}
-                    </div>
+                        )
+                    )}
 
-                    <div className="flex items-center" style={{ gap: isMobile ? '8px' : '12px', order: 2, display: 'flex' }}>
+                    {/* Right Section: Controls */}
+                    <div className="flex items-center" style={{ gap: isMobile ? '8px' : '12px', display: 'flex' }}>
                         {user ? (
                             <>
                                 {/* Hide balance on top for small mobile as it's in bottom bar */}
@@ -256,25 +287,23 @@ const Navbar = () => {
                                 )}
 
                                 {isMobile ? (
-                                    !isSmallMobile && (
-                                        <button
-                                            onClick={() => setMobileMenuOpen(true)}
-                                            className="hover-lift"
-                                            style={{
-                                                background: 'rgba(255,255,255,0.05)',
-                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                color: '#fff',
-                                                padding: '10px',
-                                                borderRadius: '12px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            <FaBars size={20} />
-                                        </button>
-                                    )
+                                    <button
+                                        onClick={() => setMobileMenuOpen(true)}
+                                        className="hover-lift"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            color: '#fff',
+                                            padding: '10px',
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <FaBars size={20} />
+                                    </button>
                                 ) : (
                                     <button
                                         onClick={() => setMobileMenuOpen(true)}
@@ -296,45 +325,43 @@ const Navbar = () => {
                             </>
                         ) : (
                             <div className="flex items-center gap-3">
+                                {!isMobile && (
+                                    <Link to="/login" className="btn btn-primary" style={{ padding: '8px 20px', borderRadius: '12px', fontWeight: '800' }}>CONNEXION</Link>
+                                )}
                                 {isMobile ? (
-                                    !isSmallMobile && (
-                                        <button
-                                            onClick={() => setMobileMenuOpen(true)}
-                                            className="hover-lift"
-                                            style={{
-                                                background: 'rgba(255,255,255,0.05)',
-                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                color: '#fff',
-                                                padding: '10px',
-                                                borderRadius: '12px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            <FaBars size={20} />
-                                        </button>
-                                    )
+                                    <button
+                                        onClick={() => setMobileMenuOpen(true)}
+                                        className="hover-lift"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            color: '#fff',
+                                            padding: '10px',
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <FaBars size={20} />
+                                    </button>
                                 ) : (
-                                    <>
-                                        <Link to="/login" className="btn btn-primary" style={{ padding: '8px 20px', borderRadius: '12px', fontWeight: '800' }}>CONNEXION</Link>
-                                        <button
-                                            onClick={() => setMobileMenuOpen(true)}
-                                            className="hover-lift flex items-center gap-3"
-                                            style={{
-                                                background: 'rgba(255,255,255,0.05)',
-                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                color: '#fff',
-                                                padding: '8px 16px',
-                                                borderRadius: '12px',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            <FaBars size={16} />
-                                            <span style={{ fontWeight: '800', fontSize: '0.85rem' }}>MENU</span>
-                                        </button>
-                                    </>
+                                    <button
+                                        onClick={() => setMobileMenuOpen(true)}
+                                        className="hover-lift flex items-center gap-3"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            color: '#fff',
+                                            padding: '8px 16px',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <FaBars size={16} />
+                                        <span style={{ fontWeight: '800', fontSize: '0.85rem' }}>MENU</span>
+                                    </button>
                                 )}
                             </div>
                         )}
@@ -603,6 +630,37 @@ const Navbar = () => {
                                     </>
                                 ) : (
                                     <>
+                                        {[
+                                            { name: "Home", icon: "fas fa-home", href: "#home", color: "#ff4757" },
+                                            { name: "SERVER LIST", icon: "fas fa-server", href: "#all-server-list", color: "#3498db" },
+                                            { name: "PAID APPs", icon: "fas fa-mobile-alt", href: "#paid-apps", color: "#2ecc71" },
+                                            { name: "Pricing", icon: "fas fa-tags", href: "#pricing", color: "#9b59b6" },
+                                            { name: "FAQ", icon: "fas fa-question-circle", href: "#faq", color: "#e67e22" },
+                                            { name: "Contact", icon: "fas fa-headset", href: "#contact-us", color: "#3f51b5" },
+                                            { name: "Privacy", icon: "fas fa-shield-alt", href: "#privacy-policy", color: "#00bcd4" },
+                                            { name: "Disclaimer", icon: "fas fa-exclamation-triangle", href: "#disclaimer", color: "#f44336" },
+                                            { name: "M3U Converter", icon: "fas fa-exchange-alt", href: "#convert-m3u", color: "#009688" },
+                                            { name: "Track Order", icon: "fas fa-search-location", href: "#track-order", color: "#e91e63" }
+                                        ].map((item, idx) => (
+                                            <a
+                                                key={idx}
+                                                href={item.href}
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className="nav-item-link flex items-center gap-4"
+                                                style={{
+                                                    padding: '14px',
+                                                    borderRadius: '14px',
+                                                    background: 'rgba(255,255,255,0.02)',
+                                                    border: '1px solid rgba(255,255,255,0.05)',
+                                                    color: '#fff'
+                                                }}
+                                            >
+                                                <i className={`${item.icon}`} style={{ color: item.color, fontSize: '18px' }}></i>
+                                                <span style={{ fontWeight: '700' }}>{item.name}</span>
+                                            </a>
+                                        ))}
+
+                                        <div style={{ margin: '15px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}></div>
                                         <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="btn btn-primary" style={{ padding: '16px', textAlign: 'center', marginBottom: '10px', borderRadius: '14px' }}>CONNEXION</Link>
                                         <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="btn" style={{ padding: '16px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '14px' }}>S'INSCRIRE</Link>
                                     </>
@@ -679,11 +737,12 @@ const Navbar = () => {
                 .dropdown-item:hover { background: rgba(255,255,255,0.05) !important; color: var(--accent-color) !important; transform: translateX(5px); transition: 0.2s; }
                 .nav-item-link { text-decoration: none; color: #fff; transition: 0.2s; }
                 .nav-item-link:hover { color: var(--accent-color); background: rgba(255,255,255,0.03); }
-                .custom-scrollbar::-webkit-scrollbar { height: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+                .custom-scrollbar::-webkit-scrollbar { height: 3px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(90deg, transparent, var(--accent-color), transparent); border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+                .nav-link-landing:hover { color: var(--accent-color) !important; transform: translateY(-2px); }
                 .hover-lift:active { transform: scale(0.95); }
             `}</style>
         </div>

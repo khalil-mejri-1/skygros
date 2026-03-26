@@ -1480,7 +1480,7 @@ const Home = () => {
             )}
 
             {/* Hero Section */}
-            <section className="relative min-h-screen flex items-center justify-center hero-gradient pt-20 overflow-hidden">
+            <section id="home" className="relative min-h-screen flex items-center justify-center hero-gradient pt-20 overflow-hidden">
                 <div className="absolute inset-0 grid-pattern opacity-50"></div>
 
                 {isAdmin && (
@@ -1547,9 +1547,74 @@ const Home = () => {
                 </div>
             </section>
 
+            {/* ALL SERVER LIST Section */}
+            <section id="all-server-list" className="py-24 relative overflow-hidden bg-black/20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl md:text-5xl font-black mb-4">ALL <span className="text-primary">SERVER LIST</span></h2>
+                        <p className="text-gray-400 text-lg">Découvrez la liste complète de nos serveurs optimisés par région.</p>
+                    </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[
+                            { name: "Europe Premium S1", status: "Online", load: "42%", locations: "FR, DE, NL, UK" },
+                            { name: "USA/Canada Ultra", status: "Online", load: "35%", locations: "US, CA" },
+                            { name: "MENA Fast Track", status: "Online", load: "28%", locations: "AE, SA, EG" },
+                            { name: "LatAm Speed", status: "Online", load: "31%", locations: "BR, MX, AR" },
+                            { name: "Asia Pacific", status: "Online", load: "15%", locations: "SG, JP, AU" },
+                            { name: "Backup Global", status: "Standby", load: "0%", locations: "Global" }
+                        ].map((srv, i) => (
+                            <div key={i} className="glass-effect p-6 rounded-2xl border border-white/10 hover:border-primary/50 transition-all group">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="text-xl font-bold text-white">{srv.name}</h3>
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${srv.status === 'Online' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>{srv.status}</span>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-400">Charge Serveur</span>
+                                        <span className="text-white font-bold">{srv.load}</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-primary" style={{ width: srv.load }}></div>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-2">
+                                        <i className="fas fa-map-marker-alt mr-1"></i> {srv.locations}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* PAID APPs Section */}
+            <section id="paid-apps" className="py-24 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl md:text-5xl font-black mb-4">PAID <span className="text-secondary">APPs</span></h2>
+                        <p className="text-gray-400 text-lg">Nos applications premium optimisées pour une expérience sans compromis.</p>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                        {[
+                            { name: "SKYGROS Player Pro", icon: "fas fa-play", color: "bg-blue-500" },
+                            { name: "IPTV Smarters Custom", icon: "fas fa-tv", color: "bg-purple-500" },
+                            { name: "TiviMate Premium", icon: "fas fa-shield-alt", color: "bg-orange-500" },
+                            { name: "OTT Navigator Pro", icon: "fas fa-compass", color: "bg-green-500" }
+                        ].map((app, i) => (
+                            <div key={i} className="group cursor-pointer">
+                                <div className={`aspect-square rounded-3xl ${app.color} flex items-center justify-center mb-4 shadow-2xl group-hover:scale-105 transition-transform duration-500`}>
+                                    <i className={`${app.icon} text-5xl text-white`}></i>
+                                </div>
+                                <h3 className="text-center font-bold text-white group-hover:text-primary transition-colors">{app.name}</h3>
+                                <p className="text-center text-xs text-gray-500 mt-1">Version 4.2 - Compatible 4K</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
 
             {/* Movies Section */}
-            <section className="py-12 bg-white/5 relative overflow-hidden">
+            <section id="movies" className="py-12 bg-white/5 relative overflow-hidden">
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('movies', settings?.home?.movies || {})}
@@ -1606,7 +1671,7 @@ const Home = () => {
                 </div>
             </section>
 
-            <section className="py-24 relative">
+            <section id="channels" className="py-24 relative">
                 {isAdmin && (
                     <div className="absolute top-8 right-8 z-50 flex flex-col gap-2">
                         <button
@@ -1697,7 +1762,7 @@ const Home = () => {
             </section>
 
             {/* Supported Devices Section */}
-            <section className="py-20 bg-black/20 relative group">
+            <section id="devices" className="py-20 bg-black/20 relative group">
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('devices', settings?.home?.devicesSection || {})}
@@ -1732,7 +1797,7 @@ const Home = () => {
             </section>
 
             {/* Countries Grid Section */}
-            <section className="py-20 bg-black/40 relative group">
+            <section id="countries" className="py-20 bg-black/40 relative group">
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('countries', settings?.home?.countriesSection || {})}
@@ -2074,7 +2139,7 @@ const Home = () => {
             </section>
 
             {/* Content Library */}
-            <section className="py-24 bg-white/5 relative">
+            <section id="library" className="py-24 bg-white/5 relative">
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('library', settings?.home?.librarySection || {})}
@@ -2123,7 +2188,7 @@ const Home = () => {
             </section>
 
             {/* Testimonials */}
-            <section className="py-24 relative overflow-hidden">
+            <section id="testimonials" className="py-24 relative overflow-hidden">
                 {isAdmin && (
                     <button
                         onClick={() => handleEditClick('testimonials', settings?.home?.testimonialsSection || {})}
@@ -2217,6 +2282,119 @@ const Home = () => {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Contact Us Section */}
+            <section id="contact-us" className="py-24 relative overflow-hidden bg-white/5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid lg:grid-cols-2 gap-16">
+                        <div>
+                            <h2 className="text-5xl font-black text-white mb-6">CONTACT <span className="text-primary">US</span></h2>
+                            <p className="text-gray-400 text-lg mb-10">Une question ? Un problème technique ? Notre équipe d'experts est disponible 24/7 pour vous accompagner.</p>
+                            
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-5 p-6 rounded-2xl bg-white/5 border border-white/10">
+                                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                                        <i className="fab fa-telegram-plane text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 uppercase font-black">Telegram Direct</div>
+                                        <div className="text-white font-bold">@Skygros_Support</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-5 p-6 rounded-2xl bg-white/5 border border-white/10">
+                                    <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400">
+                                        <i className="fab fa-whatsapp text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 uppercase font-black">WhatsApp Business</div>
+                                        <div className="text-white font-bold">+44 745 123 4567</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-5 p-6 rounded-2xl bg-white/5 border border-white/10">
+                                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                        <i className="fas fa-envelope text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 uppercase font-black">Email Support</div>
+                                        <div className="text-white font-bold">contact@skygros.com</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="glass-effect p-8 md:p-10 rounded-[40px] border border-white/10">
+                            <form className="space-y-5">
+                                <div className="grid sm:grid-cols-2 gap-5">
+                                    <input type="text" placeholder="Nom Complet" className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-primary outline-none" />
+                                    <input type="email" placeholder="Email" className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-primary outline-none" />
+                                </div>
+                                <input type="text" placeholder="Sujet" className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-primary outline-none" />
+                                <textarea placeholder="Votre message..." rows="6" className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:border-primary outline-none"></textarea>
+                                <button className="w-full py-5 bg-primary text-white font-black text-lg rounded-2xl shadow-huge hover:bg-indigo-600 transition-all uppercase tracking-widest">Envoyer le message</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Legal Sections */}
+            <section id="privacy-policy" className="py-24 relative overflow-hidden">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-black text-white mb-8 text-center uppercase tracking-widest">Privacy <span className="text-primary">Policy</span></h2>
+                    <div className="glass-effect p-10 rounded-3xl border border-white/10 prose prose-invert max-w-none text-gray-400 leading-relaxed text-sm md:text-base">
+                        <p className="mb-4">Chez SKYGROS, nous accordons une importance primordiale à la protection de vos données personnelles. Cette politique de confidentialité détaille comment nous collectons, utilisons et protégeons vos informations.</p>
+                        <h4 className="text-white font-bold mb-2">1. Collecte des données</h4>
+                        <p className="mb-4">Nous collectons uniquement les informations nécessaires au bon fonctionnement de votre compte revendeur : nom d'utilisateur, adresse email et historique des transactions.</p>
+                        <h4 className="text-white font-bold mb-2">2. Utilisation des données</h4>
+                        <p className="mb-4">Vos données sont utilisées pour traiter vos commandes, sécuriser votre accès (2FA) et vous fournir un support technique personnalisé.</p>
+                        <h4 className="text-white font-bold mb-2">3. Sécurité</h4>
+                        <p className="mb-4">Nous utilisons des protocoles de chiffrement SSL de pointe et des serveurs sécurisés pour garantir qu'aucune donnée ne soit compromise ou partagée avec des tiers.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="disclaimer" className="py-24 relative overflow-hidden bg-white/5">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl font-black text-white mb-8 text-center uppercase tracking-widest">Legal <span className="text-red-500">Disclaimer</span></h2>
+                    <div className="glass-effect p-10 rounded-3xl border border-red-500/10 border-dashed prose prose-invert max-w-none text-gray-500 leading-relaxed text-sm italic">
+                        <p className="mb-4">L'utilisation des services de SKYGROS est soumise aux conditions légales suivantes. SKYGROS n'héberge aucun contenu multimédia. Nous fournissons une infrastructure de gestion de flux pour les revendeurs professionnels.</p>
+                        <p>Il appartient à l'utilisateur final de s'assurer de la légalité des contenus diffusés dans sa juridiction. SKYGROS décline toute responsabilité en cas d'utilisation non conforme aux lois locales sur le droit d'auteur.</p>
+                    </div>
+                </div>
+            </section>
+
+            {/* CONVERT M3U Section */}
+            <section id="convert-m3u" className="py-24 relative overflow-hidden bg-white/5">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h2 className="text-4xl font-black mb-6">CONVERT <span className="text-primary">M3U</span></h2>
+                    <p className="text-gray-400 mb-10">Simplifiez vos fichiers M3U. Convertissez vos listes de lecture vers différents formats compatibles avec vos appareils.</p>
+                    <div className="glass-effect p-8 rounded-3xl border border-white/10 shadow-huge">
+                        <div className="flex flex-col md:flex-row gap-4 mb-6">
+                            <input type="text" placeholder="Collez votre lien M3U ici..." className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary outline-none" />
+                            <button className="px-8 py-4 bg-primary text-white font-black rounded-2xl hover:bg-indigo-600 transition-all">CONVERTIR</button>
+                        </div>
+                        <div className="flex justify-center gap-4 flex-wrap">
+                            <span className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-xs text-gray-400">MAG Format</span>
+                            <span className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-xs text-gray-400">Enigma2</span>
+                            <span className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-xs text-gray-400">TXT/XSPF</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Track Order Section */}
+            <section id="track-order" className="py-24 relative overflow-hidden">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h2 className="text-4xl font-black mb-6">TRACK <span className="text-accent">ORDER</span></h2>
+                    <p className="text-gray-400 mb-10">Suivez l'état de votre commande ou le statut de vos crédits en temps réel.</p>
+                    <div className="glass-effect p-8 rounded-3xl border border-white/10 shadow-huge">
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <input type="text" placeholder="Numéro de commande ou Username..." className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-accent outline-none" />
+                            <button className="px-8 py-4 bg-accent text-white font-black rounded-2xl hover:bg-pink-600 transition-all">SUIVRE</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -3293,9 +3471,8 @@ const Home = () => {
                         </div>
                     </div>
                 </div>
-            )
-            }
-        </div >
+            )}
+        </div>
     );
 };
 
