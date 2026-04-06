@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { createRoot, hydrateRoot } from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthContextProvider } from './context/AuthContext.jsx'
@@ -20,8 +20,7 @@ const app = (
   </StrictMode>
 );
 
-if (rootElement.hasChildNodes()) {
-  hydrateRoot(rootElement, app);
-} else {
-  createRoot(rootElement).render(app);
-}
+// Always use createRoot to prevent Error #418 (Hydration mismatch) 
+// caused by Tailwind CDN or external scripts modifying the DOM before React handles it.
+const root = createRoot(rootElement);
+root.render(app);
