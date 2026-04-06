@@ -288,11 +288,16 @@ const Home = () => {
     };
 
     const ColoredTitle = ({ title, coloredWord, color, useGradient, gradient, className, style, as: Component = "h2" }) => {
-        if (!coloredWord || !title.toLowerCase().includes(coloredWord.toLowerCase())) {
-            return <Component className={className} style={style}>{title}</Component>;
+        const safeTitle = title || "";
+        const safeColoredWord = coloredWord || "";
+
+        if (!safeColoredWord || !safeTitle.toLowerCase().includes(safeColoredWord.toLowerCase())) {
+            return <Component className={className} style={style}>{safeTitle}</Component>;
         }
 
-        const parts = title.split(new RegExp(`(${coloredWord})`, 'gi'));
+        // Escape regex special characters in coloredWord
+        const escapedWord = safeColoredWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const parts = safeTitle.split(new RegExp(`(${escapedWord})`, 'gi'));
 
         const coloredStyle = useGradient ? {
             backgroundImage: gradient || 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
@@ -307,7 +312,7 @@ const Home = () => {
         return (
             <Component className={className} style={style}>
                 {parts.map((part, i) =>
-                    part.toLowerCase() === coloredWord.toLowerCase()
+                    part.toLowerCase() === safeColoredWord.toLowerCase()
                         ? <span key={i} style={coloredStyle}>{part}</span>
                         : part
                 )}
