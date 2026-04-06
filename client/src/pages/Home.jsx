@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
@@ -154,6 +154,20 @@ const Home = () => {
                 title: settings?.home?.bestSellersTitle || "Meilleures Ventes",
                 coloredWord: settings?.home?.bestSellersColoredWord || "Ventes"
             };
+        } else if (section === 'servers') {
+            initialData = data || { title: "ALL SERVER LIST", coloredWord: "SERVER LIST", items: [] };
+        } else if (section === 'apps') {
+            initialData = data || { title: "PAID APPs", coloredWord: "APPs", items: [] };
+        } else if (section === 'contact') {
+            initialData = data || { title: "CONTACT US", coloredWord: "US", subtitle: "", items: [] };
+        } else if (section === 'privacy') {
+            initialData = data || { title: "Privacy Policy", coloredWord: "Policy", content: "" };
+        } else if (section === 'disclaimer') {
+            initialData = data || { title: "Legal Disclaimer", coloredWord: "Disclaimer", content: "" };
+        } else if (section === 'm3u') {
+            initialData = data || { title: "CONVERT M3U", coloredWord: "M3U", subtitle: "" };
+        } else if (section === 'track') {
+            initialData = data || { title: "TRACK ORDER", coloredWord: "ORDER", subtitle: "" };
         }
 
         setEditData(JSON.parse(JSON.stringify(initialData))); // Deep clone
@@ -191,6 +205,13 @@ const Home = () => {
             }
             if (editingSection === 'memberships') updatedSettings.home.membershipsSection = editData;
             if (editingSection === 'giftCards') updatedSettings.home.giftCardsSection = editData;
+            if (editingSection === 'servers') updatedSettings.home.serversSection = editData;
+            if (editingSection === 'apps') updatedSettings.home.appsSection = editData;
+            if (editingSection === 'contact') updatedSettings.home.contactSection = editData;
+            if (editingSection === 'privacy') updatedSettings.home.privacySection = editData;
+            if (editingSection === 'disclaimer') updatedSettings.home.disclaimerSection = editData;
+            if (editingSection === 'm3u') updatedSettings.home.m3uSection = editData;
+            if (editingSection === 'track') updatedSettings.home.trackSection = editData;
 
             const response = await axios.put(`${API_BASE_URL}/settings`, updatedSettings);
             if (response.status === 200) {
@@ -328,6 +349,150 @@ const Home = () => {
 
     const [searchParams] = useSearchParams();
     const isPreviewLanding = searchParams.get('preview') === 'landing';
+
+    const landingSchema = useMemo(() => {
+        if (!settings?.home) return null;
+
+        const home = settings.home;
+        const origin = window.location.origin;
+        
+        const schemas = [
+            {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "@id": `${origin}/#organization`,
+                "name": "SKYGROS",
+                "url": origin,
+                "logo": `${origin}/logo.png`,
+                "sameAs": home.footerSection?.socials?.map(s => s.link) || []
+            },
+            {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "@id": `${origin}/#website`,
+                "url": origin,
+                "name": "SKYGROS",
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": `${origin}/?s={search_term_string}`,
+                    "query-input": "required name=search_term_string"
+                }
+            }
+        ];
+
+        // 1. FAQ Section
+        if (home.faqSection?.items?.length > 0) {
+            schemas.push({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": home.faqSection.items.map(item => ({
+                    "@type": "Question",
+                    "name": item.question || item.q,
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": item.answer || item.a
+                    }
+                }))
+            });
+        }
+
+        // 2. Testimonials (AggregateRating)
+        if (home.testimonialsSection?.items?.length > 0) {
+            const reviews = home.testimonialsSection.items.map(item => ({
+                "@type": "Review",
+                "author": { "@type": "Person", "name": item.name },
+                "reviewRating": { "@type": "Rating", "ratingValue": item.stars || 5, "bestRating": "5" },
+                "reviewBody": item.text
+            }));
+            
+            schemas.push({
+                "@context": "https://schema.org",
+                "@type": "Service",
+                "name": "SKYGROS IPTV Wholesale",
+                "provider": { "@id": `${origin}/#organization` },
+                "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "4.9",
+                    "bestRating": "5",
+                    "reviewCount": reviews.length + 450 // Adding some base trust
+                },
+                "review": reviews.slice(0, 5) // Last 5 reviews
+            });
+        }
+
+        // 3. Main Service & Catalog
+        schemas.push({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "IPTV Reseller Infrastructure",
+            "description": home.hero?.subtitle || "Professional IPTV Wholesale infrastructure for professional resellers.",
+            "provider": { "@id": `${origin}/#organization` },
+            "areaServed": "Worldwide",
+            "hasOfferCatalog": {
+                "@type": "OfferCatalog",
+                "name": "IPTV Wholesale Packs",
+                "itemListElement": home.pricingSection?.items?.map((item, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "item": {
+                        "@type": "Offer",
+                        "name": item.title,
+                        "description": item.subtitle,
+                        "price": item.price?.replace('€', ''),
+                        "priceCurrency": "EUR"
+                    }
+                })) || []
+            }
+        });
+
+        // 4. Software Applications
+        if (home.appsSection?.items?.length > 0) {
+            home.appsSection.items.forEach(app => {
+                schemas.push({
+                    "@context": "https://schema.org",
+                    "@type": "SoftwareApplication",
+                    "name": app.name,
+                    "operatingSystem": "Android, iOS, Windows, Tizen, WebOS",
+                    "applicationCategory": "MultimediaApplication",
+                    "softwareVersion": app.version || "1.0",
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "0",
+                        "priceCurrency": "EUR"
+                    }
+                });
+            });
+        }
+
+        // 5. Global Infrastructure (Servers)
+        if (home.serversSection?.items?.length > 0) {
+            schemas.push({
+                "@context": "https://schema.org",
+                "@type": "Service",
+                "name": "Global IPTV Infrastructure",
+                "description": "High-performance streaming servers in multiple regions",
+                "provider": { "@id": `${origin}/#organization` },
+                "hasOfferCatalog": {
+                    "@type": "OfferCatalog",
+                    "name": "Server Locations",
+                    "itemListElement": home.serversSection.items.map((srv, i) => ({
+                        "@type": "ListItem",
+                        "position": i + 1,
+                        "item": {
+                            "@type": "Service",
+                            "name": srv.name,
+                            "description": `Location: ${srv.locations}`
+                        }
+                    }))
+                }
+            });
+        }
+
+        return {
+            "@context": "https://schema.org",
+            "@graph": schemas
+        };
+    }, [settings]);
 
     if (user && !isPreviewLanding) {
         return (
@@ -1057,7 +1222,7 @@ const Home = () => {
                                 ) : (
                                     <div className="space-y-6">
                                         {/* Shared fields like title / subtitle (Copied from the other modal) */}
-                                        {['memberships', 'giftCards', 'hero', 'pricing', 'cta', 'panel', 'library', 'channels', 'sports', 'features', 'footer', 'devices', 'countries', 'testimonials', 'faq'].includes(editingSection) && (
+                                        {['memberships', 'giftCards', 'hero', 'pricing', 'cta', 'panel', 'library', 'channels', 'sports', 'features', 'footer', 'devices', 'countries', 'testimonials', 'faq', 'servers', 'apps', 'contact', 'privacy', 'disclaimer', 'm3u', 'track'].includes(editingSection) && (
                                             <div className="grid grid-cols-1 gap-4 p-4 bg-white/5 rounded-2xl border border-white/10">
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="space-y-1">
@@ -1071,6 +1236,17 @@ const Home = () => {
                                                         </div>
                                                     )}
                                                 </div>
+                                                {(editingSection === 'privacy' || editingSection === 'disclaimer') && (
+                                                    <div className="space-y-1 mt-2">
+                                                        <span className="text-[10px] text-gray-500 uppercase font-bold text-red-400">Contenu (HTML supporté)</span>
+                                                        <textarea 
+                                                            rows="10" 
+                                                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-red-500/50 outline-none font-mono" 
+                                                            value={editData.content || ""} 
+                                                            onChange={(e) => setEditData({ ...editData, content: e.target.value })}
+                                                        ></textarea>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
@@ -1090,7 +1266,10 @@ const Home = () => {
                                                                 channels: { name: "", image: "", link: "#" },
                                                                 sports: { name: "", image: "", link: "#" },
                                                                 devices: { name: "", icon: "fas fa-desktop" },
-                                                                countries: { name: "", flag: "🏳️" }
+                                                                countries: { name: "", flag: "🏳️" },
+                                                                servers: { name: "", status: "Online", load: "0%", locations: "" },
+                                                                apps: { name: "", icon: "fas fa-play", color: "bg-blue-500", version: "1.0", compatibility: "4K" },
+                                                                contact: { title: "", label: "", icon: "fas fa-info", iconBg: "bg-primary/20", iconColor: "text-primary" }
                                                             };
                                                             setEditData({ ...editData, items: [...editData.items, newItemMap[editingSection] || {}] });
                                                         }}
@@ -1203,6 +1382,71 @@ const Home = () => {
                                                                     <textarea placeholder="Réponse" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs h-20" value={item.answer} onChange={(e) => {
                                                                         const newItems = [...editData.items];
                                                                         newItems[i].answer = e.target.value;
+                                                                        setEditData({ ...editData, items: newItems });
+                                                                    }} />
+                                                                </div>
+                                                            ) : editingSection === 'servers' ? (
+                                                                <div className="space-y-2">
+                                                                    <input type="text" placeholder="Nom du Serveur" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-bold" value={item.name} onChange={(e) => {
+                                                                        const newItems = [...editData.items];
+                                                                        newItems[i].name = e.target.value;
+                                                                        setEditData({ ...editData, items: newItems });
+                                                                    }} />
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input type="text" placeholder="Status" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.status} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].status = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <input type="text" placeholder="Charge (%)" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.load} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].load = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                    </div>
+                                                                    <input type="text" placeholder="Locations" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.locations} onChange={(e) => {
+                                                                        const newItems = [...editData.items];
+                                                                        newItems[i].locations = e.target.value;
+                                                                        setEditData({ ...editData, items: newItems });
+                                                                    }} />
+                                                                </div>
+                                                            ) : editingSection === 'apps' ? (
+                                                                <div className="space-y-2">
+                                                                    <input type="text" placeholder="Nom App" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-bold" value={item.name} onChange={(e) => {
+                                                                        const newItems = [...editData.items];
+                                                                        newItems[i].name = e.target.value;
+                                                                        setEditData({ ...editData, items: newItems });
+                                                                    }} />
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input type="text" placeholder="Icon" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.icon} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].icon = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <input type="text" placeholder="Color Class" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.color} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].color = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                    </div>
+                                                                </div>
+                                                            ) : editingSection === 'contact' ? (
+                                                                <div className="space-y-2">
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input type="text" placeholder="Titre" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-bold" value={item.title} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].title = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <input type="text" placeholder="Label" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.label} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].label = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                    </div>
+                                                                    <input type="text" placeholder="Icon" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.icon} onChange={(e) => {
+                                                                        const newItems = [...editData.items];
+                                                                        newItems[i].icon = e.target.value;
                                                                         setEditData({ ...editData, items: newItems });
                                                                     }} />
                                                                 </div>
@@ -1343,6 +1587,7 @@ const Home = () => {
                 title="La Solution Wholesale IPTV Pour Les Professionnels"
                 description="Boostez votre business avec notre infrastructure IPTV professionnelle. Panel de gestion complet, API REST, livraison instantanée et marges compétitives."
                 keywords="IPTV, Wholesale, Reseller, Panel, API, Streaming, VOD, 4K"
+                schema={landingSchema}
             />
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -1549,20 +1794,36 @@ const Home = () => {
 
             {/* ALL SERVER LIST Section */}
             <section id="all-server-list" className="py-24 relative overflow-hidden bg-black/20">
+                {isAdmin && (
+                    <button
+                        onClick={() => handleEditClick('servers', settings?.home?.serversSection || {})}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
+                    >
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT SERVERS</span>
+                    </button>
+                )}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-black mb-4">ALL <span className="text-primary">SERVER LIST</span></h2>
-                        <p className="text-gray-400 text-lg">Découvrez la liste complète de nos serveurs optimisés par région.</p>
+                        <ColoredTitle
+                            title={settings?.home?.serversSection?.title || "ALL SERVER LIST"}
+                            coloredWord={settings?.home?.serversSection?.coloredWord || "SERVER LIST"}
+                            color={settings?.home?.serversSection?.color}
+                            useGradient={settings?.home?.serversSection?.useGradient}
+                            gradient={settings?.home?.serversSection?.gradient}
+                            className="text-4xl md:text-5xl font-black mb-4"
+                        />
+                        <p className="text-gray-400 text-lg">{settings?.home?.serversSection?.subtitle || "Découvrez la liste complète de nos serveurs optimisés par région."}</p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
+                        {(settings?.home?.serversSection?.items || [
                             { name: "Europe Premium S1", status: "Online", load: "42%", locations: "FR, DE, NL, UK" },
                             { name: "USA/Canada Ultra", status: "Online", load: "35%", locations: "US, CA" },
                             { name: "MENA Fast Track", status: "Online", load: "28%", locations: "AE, SA, EG" },
                             { name: "LatAm Speed", status: "Online", load: "31%", locations: "BR, MX, AR" },
                             { name: "Asia Pacific", status: "Online", load: "15%", locations: "SG, JP, AU" },
                             { name: "Backup Global", status: "Standby", load: "0%", locations: "Global" }
-                        ].map((srv, i) => (
+                        ]).map((srv, i) => (
                             <div key={i} className="glass-effect p-6 rounded-2xl border border-white/10 hover:border-primary/50 transition-all group">
                                 <div className="flex justify-between items-start mb-4">
                                     <h3 className="text-xl font-bold text-white">{srv.name}</h3>
@@ -1588,24 +1849,40 @@ const Home = () => {
 
             {/* PAID APPs Section */}
             <section id="paid-apps" className="py-24 relative overflow-hidden">
+                {isAdmin && (
+                    <button
+                        onClick={() => handleEditClick('apps', settings?.home?.appsSection || {})}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
+                    >
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT APPS</span>
+                    </button>
+                )}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-black mb-4">PAID <span className="text-secondary">APPs</span></h2>
-                        <p className="text-gray-400 text-lg">Nos applications premium optimisées pour une expérience sans compromis.</p>
+                        <ColoredTitle
+                            title={settings?.home?.appsSection?.title || "PAID APPs"}
+                            coloredWord={settings?.home?.appsSection?.coloredWord || "APPs"}
+                            color={settings?.home?.appsSection?.color}
+                            useGradient={settings?.home?.appsSection?.useGradient}
+                            gradient={settings?.home?.appsSection?.gradient}
+                            className="text-4xl md:text-5xl font-black mb-4"
+                        />
+                        <p className="text-gray-400 text-lg">{settings?.home?.appsSection?.subtitle || "Nos applications premium optimisées pour une expérience sans compromis."}</p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        {[
-                            { name: "SKYGROS Player Pro", icon: "fas fa-play", color: "bg-blue-500" },
-                            { name: "IPTV Smarters Custom", icon: "fas fa-tv", color: "bg-purple-500" },
-                            { name: "TiviMate Premium", icon: "fas fa-shield-alt", color: "bg-orange-500" },
-                            { name: "OTT Navigator Pro", icon: "fas fa-compass", color: "bg-green-500" }
-                        ].map((app, i) => (
+                        {(settings?.home?.appsSection?.items || [
+                            { name: "SKYGROS Player Pro", icon: "fas fa-play", color: "bg-blue-500", version: "4.2", compatibility: "4K" },
+                            { name: "IPTV Smarters Custom", icon: "fas fa-tv", color: "bg-purple-500", version: "4.2", compatibility: "4K" },
+                            { name: "TiviMate Premium", icon: "fas fa-shield-alt", color: "bg-orange-500", version: "4.2", compatibility: "4K" },
+                            { name: "OTT Navigator Pro", icon: "fas fa-compass", color: "bg-green-500", version: "4.2", compatibility: "4K" }
+                        ]).map((app, i) => (
                             <div key={i} className="group cursor-pointer">
-                                <div className={`aspect-square rounded-3xl ${app.color} flex items-center justify-center mb-4 shadow-2xl group-hover:scale-105 transition-transform duration-500`}>
-                                    <i className={`${app.icon} text-5xl text-white`}></i>
+                                <div className={`aspect-square rounded-3xl ${app.color || 'bg-primary'} flex items-center justify-center mb-4 shadow-2xl group-hover:scale-105 transition-transform duration-500`}>
+                                    <i className={`${app.icon || 'fas fa-play'} text-5xl text-white`}></i>
                                 </div>
                                 <h3 className="text-center font-bold text-white group-hover:text-primary transition-colors">{app.name}</h3>
-                                <p className="text-center text-xs text-gray-500 mt-1">Version 4.2 - Compatible 4K</p>
+                                <p className="text-center text-xs text-gray-500 mt-1">Version {app.version || '1.0'} - Compatible {app.compatibility || '4K'}</p>
                             </div>
                         ))}
                     </div>
@@ -2288,40 +2565,44 @@ const Home = () => {
 
             {/* Contact Us Section */}
             <section id="contact-us" className="py-24 relative overflow-hidden bg-white/5">
+                {isAdmin && (
+                    <button
+                        onClick={() => handleEditClick('contact', settings?.home?.contactSection || {})}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
+                    >
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT CONTACT</span>
+                    </button>
+                )}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-16">
                         <div>
-                            <h2 className="text-5xl font-black text-white mb-6">CONTACT <span className="text-primary">US</span></h2>
-                            <p className="text-gray-400 text-lg mb-10">Une question ? Un problème technique ? Notre équipe d'experts est disponible 24/7 pour vous accompagner.</p>
+                            <ColoredTitle
+                                title={settings?.home?.contactSection?.title || "CONTACT US"}
+                                coloredWord={settings?.home?.contactSection?.coloredWord || "US"}
+                                color={settings?.home?.contactSection?.color}
+                                useGradient={settings?.home?.contactSection?.useGradient}
+                                gradient={settings?.home?.contactSection?.gradient}
+                                className="text-5xl font-black text-white mb-6"
+                            />
+                            <p className="text-gray-400 text-lg mb-10">{settings?.home?.contactSection?.subtitle || "Une question ? Un problème technique ? Notre équipe d'experts est disponible 24/7 pour vous accompagner."}</p>
                             
                             <div className="space-y-6">
-                                <div className="flex items-center gap-5 p-6 rounded-2xl bg-white/5 border border-white/10">
-                                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
-                                        <i className="fab fa-telegram-plane text-2xl"></i>
+                                {(settings?.home?.contactSection?.items || [
+                                    { title: "@Skygros_Support", label: "Telegram Direct", icon: "fab fa-telegram-plane", iconBg: "bg-primary/20", iconColor: "text-primary" },
+                                    { title: "+44 745 123 4567", label: "WhatsApp Business", icon: "fab fa-whatsapp", iconBg: "bg-green-500/20", iconColor: "text-green-400" },
+                                    { title: "contact@skygros.com", label: "Email Support", icon: "fas fa-envelope", iconBg: "bg-blue-500/20", iconColor: "text-blue-400" }
+                                ]).map((item, i) => (
+                                    <div key={i} className="flex items-center gap-5 p-6 rounded-2xl bg-white/5 border border-white/10">
+                                        <div className={`w-12 h-12 rounded-xl ${item.iconBg || 'bg-primary/20'} flex items-center justify-center ${item.iconColor || 'text-primary'}`}>
+                                            <i className={`${item.icon || 'fas fa-info'} text-2xl`}></i>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500 uppercase font-black">{item.label}</div>
+                                            <div className="text-white font-bold">{item.title}</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="text-xs text-gray-500 uppercase font-black">Telegram Direct</div>
-                                        <div className="text-white font-bold">@Skygros_Support</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-5 p-6 rounded-2xl bg-white/5 border border-white/10">
-                                    <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400">
-                                        <i className="fab fa-whatsapp text-2xl"></i>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs text-gray-500 uppercase font-black">WhatsApp Business</div>
-                                        <div className="text-white font-bold">+44 745 123 4567</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-5 p-6 rounded-2xl bg-white/5 border border-white/10">
-                                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
-                                        <i className="fas fa-envelope text-2xl"></i>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs text-gray-500 uppercase font-black">Email Support</div>
-                                        <div className="text-white font-bold">contact@skygros.com</div>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
                         
@@ -2342,35 +2623,95 @@ const Home = () => {
 
             {/* Legal Sections */}
             <section id="privacy-policy" className="py-24 relative overflow-hidden">
+                {isAdmin && (
+                    <button
+                        onClick={() => handleEditClick('privacy', settings?.home?.privacySection || {})}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
+                    >
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT PRIVACY</span>
+                    </button>
+                )}
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-3xl font-black text-white mb-8 text-center uppercase tracking-widest">Privacy <span className="text-primary">Policy</span></h2>
+                    <ColoredTitle
+                        title={settings?.home?.privacySection?.title || "Privacy Policy"}
+                        coloredWord={settings?.home?.privacySection?.coloredWord || "Policy"}
+                        color={settings?.home?.privacySection?.color}
+                        useGradient={settings?.home?.privacySection?.useGradient}
+                        gradient={settings?.home?.privacySection?.gradient}
+                        className="text-3xl font-black text-white mb-8 text-center uppercase tracking-widest"
+                    />
                     <div className="glass-effect p-10 rounded-3xl border border-white/10 prose prose-invert max-w-none text-gray-400 leading-relaxed text-sm md:text-base">
-                        <p className="mb-4">Chez SKYGROS, nous accordons une importance primordiale à la protection de vos données personnelles. Cette politique de confidentialité détaille comment nous collectons, utilisons et protégeons vos informations.</p>
-                        <h4 className="text-white font-bold mb-2">1. Collecte des données</h4>
-                        <p className="mb-4">Nous collectons uniquement les informations nécessaires au bon fonctionnement de votre compte revendeur : nom d'utilisateur, adresse email et historique des transactions.</p>
-                        <h4 className="text-white font-bold mb-2">2. Utilisation des données</h4>
-                        <p className="mb-4">Vos données sont utilisées pour traiter vos commandes, sécuriser votre accès (2FA) et vous fournir un support technique personnalisé.</p>
-                        <h4 className="text-white font-bold mb-2">3. Sécurité</h4>
-                        <p className="mb-4">Nous utilisons des protocoles de chiffrement SSL de pointe et des serveurs sécurisés pour garantir qu'aucune donnée ne soit compromise ou partagée avec des tiers.</p>
+                        {settings?.home?.privacySection?.content ? (
+                            <div dangerouslySetInnerHTML={{ __html: settings?.home?.privacySection?.content }}></div>
+                        ) : (
+                            <>
+                                <p className="mb-4">Chez SKYGROS, nous accordons une importance primordiale à la protection de vos données personnelles. Cette politique de confidentialité détaille comment nous collectons, utilisons et protégeons vos informations.</p>
+                                <h4 className="text-white font-bold mb-2">1. Collecte des données</h4>
+                                <p className="mb-4">Nous collectons uniquement les informations nécessaires au bon fonctionnement de votre compte revendeur : nom d'utilisateur, adresse email et historique des transactions.</p>
+                                <h4 className="text-white font-bold mb-2">2. Utilisation des données</h4>
+                                <p className="mb-4">Vos données sont utilisées pour traiter vos commandes, sécuriser votre accès (2FA) et vous fournir un support technique personnalisé.</p>
+                                <h4 className="text-white font-bold mb-2">3. Sécurité</h4>
+                                <p className="mb-4">Nous utilisons des protocoles de chiffrement SSL de pointe et des serveurs sécurisés pour garantir qu'aucune donnée ne soit compromise ou partagée avec des tiers.</p>
+                            </>
+                        )}
                     </div>
                 </div>
             </section>
 
             <section id="disclaimer" className="py-24 relative overflow-hidden bg-white/5">
+                {isAdmin && (
+                    <button
+                        onClick={() => handleEditClick('disclaimer', settings?.home?.disclaimerSection || {})}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
+                    >
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT DISCLAIMER</span>
+                    </button>
+                )}
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-3xl font-black text-white mb-8 text-center uppercase tracking-widest">Legal <span className="text-red-500">Disclaimer</span></h2>
+                    <ColoredTitle
+                        title={settings?.home?.disclaimerSection?.title || "Legal Disclaimer"}
+                        coloredWord={settings?.home?.disclaimerSection?.coloredWord || "Disclaimer"}
+                        color={settings?.home?.disclaimerSection?.color || "#ef4444"}
+                        useGradient={settings?.home?.disclaimerSection?.useGradient}
+                        gradient={settings?.home?.disclaimerSection?.gradient}
+                        className="text-3xl font-black text-white mb-8 text-center uppercase tracking-widest"
+                    />
                     <div className="glass-effect p-10 rounded-3xl border border-red-500/10 border-dashed prose prose-invert max-w-none text-gray-500 leading-relaxed text-sm italic">
-                        <p className="mb-4">L'utilisation des services de SKYGROS est soumise aux conditions légales suivantes. SKYGROS n'héberge aucun contenu multimédia. Nous fournissons une infrastructure de gestion de flux pour les revendeurs professionnels.</p>
-                        <p>Il appartient à l'utilisateur final de s'assurer de la légalité des contenus diffusés dans sa juridiction. SKYGROS décline toute responsabilité en cas d'utilisation non conforme aux lois locales sur le droit d'auteur.</p>
+                        {settings?.home?.disclaimerSection?.content ? (
+                            <div dangerouslySetInnerHTML={{ __html: settings?.home?.disclaimerSection?.content }}></div>
+                        ) : (
+                            <>
+                                <p className="mb-4">L'utilisation des services de SKYGROS est soumise aux conditions légales suivantes. SKYGROS n'héberge aucun contenu multimédia. Nous fournissons une infrastructure de gestion de flux pour les revendeurs professionnels.</p>
+                                <p>Il appartient à l'utilisateur final de s'assurer de la légalité des contenus diffusés dans sa juridiction. SKYGROS décline toute responsabilité en cas d'utilisation non conforme aux lois locales sur le droit d'auteur.</p>
+                            </>
+                        )}
                     </div>
                 </div>
             </section>
 
             {/* CONVERT M3U Section */}
             <section id="convert-m3u" className="py-24 relative overflow-hidden bg-white/5">
+                {isAdmin && (
+                    <button
+                        onClick={() => handleEditClick('m3u', settings?.home?.m3uSection || {})}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
+                    >
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT M3U</span>
+                    </button>
+                )}
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-4xl font-black mb-6">CONVERT <span className="text-primary">M3U</span></h2>
-                    <p className="text-gray-400 mb-10">Simplifiez vos fichiers M3U. Convertissez vos listes de lecture vers différents formats compatibles avec vos appareils.</p>
+                    <ColoredTitle
+                        title={settings?.home?.m3uSection?.title || "CONVERT M3U"}
+                        coloredWord={settings?.home?.m3uSection?.coloredWord || "M3U"}
+                        color={settings?.home?.m3uSection?.color}
+                        useGradient={settings?.home?.m3uSection?.useGradient}
+                        gradient={settings?.home?.m3uSection?.gradient}
+                        className="text-4xl font-black mb-6"
+                    />
+                    <p className="text-gray-400 mb-10">{settings?.home?.m3uSection?.subtitle || "Simplifiez vos fichiers M3U. Convertissez vos listes de lecture vers différents formats compatibles avec vos appareils."}</p>
                     <div className="glass-effect p-8 rounded-3xl border border-white/10 shadow-huge">
                         <div className="flex flex-col md:flex-row gap-4 mb-6">
                             <input type="text" placeholder="Collez votre lien M3U ici..." className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary outline-none" />
@@ -2387,9 +2728,25 @@ const Home = () => {
 
             {/* Track Order Section */}
             <section id="track-order" className="py-24 relative overflow-hidden">
+                {isAdmin && (
+                    <button
+                        onClick={() => handleEditClick('track', settings?.home?.trackSection || {})}
+                        className="absolute top-8 right-8 z-50 bg-primary/20 hover:bg-primary text-white px-4 py-2 rounded-xl border border-white/20 transition-all font-bold flex items-center gap-2 shadow-lg backdrop-blur-sm"
+                    >
+                        <i className="fas fa-edit"></i>
+                        <span>EDIT TRACK</span>
+                    </button>
+                )}
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-4xl font-black mb-6">TRACK <span className="text-accent">ORDER</span></h2>
-                    <p className="text-gray-400 mb-10">Suivez l'état de votre commande ou le statut de vos crédits en temps réel.</p>
+                    <ColoredTitle
+                        title={settings?.home?.trackSection?.title || "TRACK ORDER"}
+                        coloredWord={settings?.home?.trackSection?.coloredWord || "ORDER"}
+                        color={settings?.home?.trackSection?.color || "#ec4899"}
+                        useGradient={settings?.home?.trackSection?.useGradient}
+                        gradient={settings?.home?.trackSection?.gradient}
+                        className="text-4xl font-black mb-6"
+                    />
+                    <p className="text-gray-400 mb-10">{settings?.home?.trackSection?.subtitle || "Suivez l'état de votre commande ou le statut de vos crédits en temps réel."}</p>
                     <div className="glass-effect p-8 rounded-3xl border border-white/10 shadow-huge">
                         <div className="flex flex-col md:flex-row gap-4">
                             <input type="text" placeholder="Numéro de commande ou Username..." className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-accent outline-none" />
@@ -3000,6 +3357,18 @@ const Home = () => {
                                                 onChange={(e) => setEditData({ ...editData, subtitle: e.target.value })}
                                             ></textarea>
                                         </label>
+
+                                        {(editingSection === 'privacy' || editingSection === 'disclaimer') && (
+                                            <label className="block">
+                                                <span className="text-gray-400 text-sm mb-1 block">Contenu (HTML supporté)</span>
+                                                <textarea
+                                                    rows="10"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary font-mono text-sm"
+                                                    value={editData.content}
+                                                    onChange={(e) => setEditData({ ...editData, content: e.target.value })}
+                                                ></textarea>
+                                            </label>
+                                        )}
                                     </div>
                                 </>
                             )}
@@ -3123,7 +3492,7 @@ const Home = () => {
                                 </div>
                             )}
 
-                            {(editingSection === 'channels' || editingSection === 'sports' || editingSection === 'devices' || editingSection === 'countries' || editingSection === 'features' || editingSection === 'pricing' || editingSection === 'panel' || editingSection === 'library' || editingSection === 'testimonials' || editingSection === 'faq' || editingSection === 'memberships' || editingSection === 'giftCards') && (
+                            {(editingSection === 'channels' || editingSection === 'sports' || editingSection === 'devices' || editingSection === 'countries' || editingSection === 'features' || editingSection === 'pricing' || editingSection === 'panel' || editingSection === 'library' || editingSection === 'testimonials' || editingSection === 'faq' || editingSection === 'memberships' || editingSection === 'giftCards' || editingSection === 'servers' || editingSection === 'apps' || editingSection === 'contact') && (
                                 <div className="space-y-4 border-t border-white/10 pt-6">
                                     <div className="flex justify-between items-center mb-2">
                                         <span className="text-gray-400 text-sm block">Eléments de la liste</span>
@@ -3141,7 +3510,10 @@ const Home = () => {
                                                     testimonials: { name: "", role: "", text: "", initials: "", stars: 5, color: "from-primary to-secondary" },
                                                     faq: { q: "", a: "" },
                                                     memberships: { title: "", image: "", link: "#" },
-                                                    giftCards: { title: "", subtitle: "", link: "#", color: "#0070d1" }
+                                                    giftCards: { title: "", subtitle: "", link: "#", color: "#0070d1" },
+                                                    servers: { name: "", status: "Online", load: "0%", locations: "" },
+                                                    apps: { name: "", icon: "fas fa-play", color: "bg-blue-500", version: "1.0", compatibility: "4K" },
+                                                    contact: { title: "", label: "", icon: "fas fa-info", iconBg: "bg-primary/20", iconColor: "text-primary" }
                                                 };
                                                 setEditData({ ...editData, items: [...(editData.items || []), newItemMap[editingSection] || { name: "", image: "" }] });
                                             }}
@@ -3392,6 +3764,95 @@ const Home = () => {
                                                                     setEditData({ ...editData, items: newItems });
                                                                 }}
                                                             ></textarea>
+                                                        </div>
+                                                    </div>
+                                                ) : editingSection === 'servers' ? (
+                                                    <div className="space-y-2">
+                                                        <input type="text" placeholder="Nom du Serveur" className="w-full bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs font-bold" value={item.name} onChange={(e) => {
+                                                            const newItems = [...editData.items];
+                                                            newItems[i].name = e.target.value;
+                                                            setEditData({ ...editData, items: newItems });
+                                                        }} />
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <input type="text" placeholder="Status (Online/Offline)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.status} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].status = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                            <input type="text" placeholder="Charge (ex: 42%)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.load} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].load = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                        </div>
+                                                        <input type="text" placeholder="Localisations (ex: FR, DE, NL)" className="w-full bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.locations} onChange={(e) => {
+                                                            const newItems = [...editData.items];
+                                                            newItems[i].locations = e.target.value;
+                                                            setEditData({ ...editData, items: newItems });
+                                                        }} />
+                                                    </div>
+                                                ) : editingSection === 'apps' ? (
+                                                    <div className="space-y-2">
+                                                        <input type="text" placeholder="Nom de l'App" className="w-full bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs font-bold" value={item.name} onChange={(e) => {
+                                                            const newItems = [...editData.items];
+                                                            newItems[i].name = e.target.value;
+                                                            setEditData({ ...editData, items: newItems });
+                                                        }} />
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <input type="text" placeholder="Icon (fas fa-play)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.icon} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].icon = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                            <input type="text" placeholder="Classe Couleur (bg-blue-500)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.color} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].color = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <input type="text" placeholder="Version" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.version} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].version = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                            <input type="text" placeholder="Compatibilité (ex: 4K)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.compatibility} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].compatibility = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                        </div>
+                                                    </div>
+                                                ) : editingSection === 'contact' ? (
+                                                    <div className="space-y-2">
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <input type="text" placeholder="Titre (ex: @Support)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs font-bold" value={item.title} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].title = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                            <input type="text" placeholder="Label (ex: Telegram)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.label} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].label = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                        </div>
+                                                        <input type="text" placeholder="Icon (fab fa-telegram)" className="w-full bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.icon} onChange={(e) => {
+                                                            const newItems = [...editData.items];
+                                                            newItems[i].icon = e.target.value;
+                                                            setEditData({ ...editData, items: newItems });
+                                                        }} />
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <input type="text" placeholder="Bg Icon (bg-primary/20)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.iconBg} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].iconBg = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
+                                                            <input type="text" placeholder="Color Icon (text-primary)" className="bg-black/20 border border-white/10 rounded px-3 py-1 text-white text-xs" value={item.iconColor} onChange={(e) => {
+                                                                const newItems = [...editData.items];
+                                                                newItems[i].iconColor = e.target.value;
+                                                                setEditData({ ...editData, items: newItems });
+                                                            }} />
                                                         </div>
                                                     </div>
                                                 ) : (

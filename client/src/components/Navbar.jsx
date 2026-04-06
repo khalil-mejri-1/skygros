@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect, useRef } from 'react';
 import API_BASE_URL, { formatImageUrl } from "../config/api";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { FaShoppingCart, FaUser, FaSearch, FaWallet, FaHistory, FaShieldAlt, FaChevronDown, FaSignOutAlt, FaBars, FaTimes, FaGift, FaHome, FaMedal, FaTrophy, FaStar } from 'react-icons/fa';
@@ -13,6 +13,8 @@ const Navbar = () => {
     const { user, dispatch } = useContext(AuthContext);
     const { cartCount } = useContext(CartContext);
     const navigate = useNavigate();
+    const location = useLocation();
+    const isPreviewLanding = new URLSearchParams(location.search).get('preview') === 'landing';
     const [categories, setCategories] = useState([]);
     const [hoveredCategory, setHoveredCategory] = useState(null);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -198,7 +200,7 @@ const Navbar = () => {
                     </Link>
 
                     {/* Middle Section: Search for Users, Nav Links for Desktop Guests */}
-                    {user ? (
+                    {(user && !isPreviewLanding) ? (
                         <div style={{ position: 'relative', flexGrow: 1, maxWidth: '600px' }} ref={searchRef}>
                             <input
                                 className="input-search"
@@ -238,7 +240,7 @@ const Navbar = () => {
                             )}
                         </div>
                     ) : (
-                        // Guest user: show horizontal scrolling buttons only if not mobile
+                        // Guest or Preview Landing user: show horizontal scrolling buttons only if not mobile
                         !isMobile && (
                         <div className="flex items-center space-x-2 px-2 overflow-x-auto custom-scrollbar pb-4 pt-2" style={{ flexGrow: 1 }}>
                                 {[
@@ -268,7 +270,7 @@ const Navbar = () => {
 
                     {/* Right Section: Controls */}
                     <div className="flex items-center" style={{ gap: isMobile ? '8px' : '12px', display: 'flex' }}>
-                        {user ? (
+                        {user && !isPreviewLanding ? (
                             <>
                                 {/* Hide balance on top for small mobile as it's in bottom bar */}
                                 {!isSmallMobile && (
@@ -369,8 +371,8 @@ const Navbar = () => {
                 </div>
             </nav>
 
-            {/* Sub-navbar with categories - Only visible if logged in */}
-            {user && (
+            {/* Sub-navbar with categories - Only visible if logged in and NOT in landing preview */}
+            {user && !isPreviewLanding && (
                 <div ref={subNavRef} style={{ background: 'var(--bg-secondary)', padding: '6px 0', position: 'relative', zIndex: 9990 }}>
                     <div className="container" style={{ overflow: 'visible' }}>
                         <div ref={scrollContainerRef} className="flex gap-2 md:gap-4 custom-scrollbar" style={{
@@ -555,7 +557,7 @@ const Navbar = () => {
                                         <FaPlusCircle /> RECHARGER LE SOLDE
                                     </button>
                                 )}
-                                {user ? (
+                                {user && !isPreviewLanding ? (
                                     <>
                                         <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="nav-item-link flex items-center gap-4" style={{
                                             padding: '14px',
@@ -713,7 +715,7 @@ const Navbar = () => {
                         <FaHome size={20} style={{ color: window.location.pathname === '/' ? 'var(--accent-color)' : 'var(--text-muted)' }} />
                         <span style={{ fontSize: '0.6rem', fontWeight: '800' }}>ACCUEIL</span>
                     </Link>
-                    {user && (
+                    {user && !isPreviewLanding && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', minWidth: '60px' }}>
                             <FaWallet size={20} />
                             <span style={{ fontSize: '0.65rem', fontWeight: '900' }}>${Number(user?.balance || 0).toFixed(0)}</span>

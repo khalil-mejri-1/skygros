@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-const SEO = ({ title, description, keywords, image, url, noindex }) => {
+const SEO = ({ title, description, keywords, image, url, noindex, schema }) => {
     return (
         <Helmet>
             {/* Standard Metadata */}
@@ -24,6 +24,13 @@ const SEO = ({ title, description, keywords, image, url, noindex }) => {
             <meta property="twitter:title" content={title || 'Skygros'} />
             <meta property="twitter:description" content={description || "Skygros - Your best choice for IPTV and more."} />
             {image && <meta property="twitter:image" content={image} />}
+
+            {/* Structured Data (JSON-LD) */}
+            {schema && (
+                <script type="application/ld+json">
+                    {JSON.stringify(schema)}
+                </script>
+            )}
         </Helmet>
     );
 };
