@@ -27,9 +27,10 @@ const SEO = ({ title, description, keywords, image, url, noindex, schema }) => {
 
             {/* Structured Data (JSON-LD) */}
             {schema && (
-                <script type="application/ld+json">
-                    {JSON.stringify(schema)}
-                </script>
+                <script 
+                    type="application/ld+json" 
+                    dangerouslySetInnerHTML={{ __html: typeof schema === 'string' ? schema : JSON.stringify(schema) }}
+                />
             )}
         </Helmet>
     );

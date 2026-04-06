@@ -351,10 +351,8 @@ const Home = () => {
     const isPreviewLanding = searchParams.get('preview') === 'landing';
 
     const landingSchema = useMemo(() => {
-        if (!settings?.home) return null;
-
-        const home = settings.home;
         const origin = window.location.origin;
+        const home = settings?.home;
         
         const schemas = [
             {
@@ -364,7 +362,7 @@ const Home = () => {
                 "name": "SKYGROS",
                 "url": origin,
                 "logo": `${origin}/logo.png`,
-                "sameAs": home.footerSection?.socials?.map(s => s.link) || []
+                "sameAs": home?.footerSection?.socials?.map(s => s.link) || []
             },
             {
                 "@context": "https://schema.org",
@@ -380,112 +378,114 @@ const Home = () => {
             }
         ];
 
-        // 1. FAQ Section
-        if (home.faqSection?.items?.length > 0) {
-            schemas.push({
-                "@context": "https://schema.org",
-                "@type": "FAQPage",
-                "mainEntity": home.faqSection.items.map(item => ({
-                    "@type": "Question",
-                    "name": item.question || item.q,
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": item.answer || item.a
-                    }
-                }))
-            });
-        }
-
-        // 2. Testimonials (AggregateRating)
-        if (home.testimonialsSection?.items?.length > 0) {
-            const reviews = home.testimonialsSection.items.map(item => ({
-                "@type": "Review",
-                "author": { "@type": "Person", "name": item.name },
-                "reviewRating": { "@type": "Rating", "ratingValue": item.stars || 5, "bestRating": "5" },
-                "reviewBody": item.text
-            }));
-            
-            schemas.push({
-                "@context": "https://schema.org",
-                "@type": "Service",
-                "name": "SKYGROS IPTV Wholesale",
-                "provider": { "@id": `${origin}/#organization` },
-                "aggregateRating": {
-                    "@type": "AggregateRating",
-                    "ratingValue": "4.9",
-                    "bestRating": "5",
-                    "reviewCount": reviews.length + 450 // Adding some base trust
-                },
-                "review": reviews.slice(0, 5) // Last 5 reviews
-            });
-        }
-
-        // 3. Main Service & Catalog
-        schemas.push({
-            "@context": "https://schema.org",
-            "@type": "Service",
-            "name": "IPTV Reseller Infrastructure",
-            "description": home.hero?.subtitle || "Professional IPTV Wholesale infrastructure for professional resellers.",
-            "provider": { "@id": `${origin}/#organization` },
-            "areaServed": "Worldwide",
-            "hasOfferCatalog": {
-                "@type": "OfferCatalog",
-                "name": "IPTV Wholesale Packs",
-                "itemListElement": home.pricingSection?.items?.map((item, index) => ({
-                    "@type": "ListItem",
-                    "position": index + 1,
-                    "item": {
-                        "@type": "Offer",
-                        "name": item.title,
-                        "description": item.subtitle,
-                        "price": item.price?.replace('€', ''),
-                        "priceCurrency": "EUR"
-                    }
-                })) || []
-            }
-        });
-
-        // 4. Software Applications
-        if (home.appsSection?.items?.length > 0) {
-            home.appsSection.items.forEach(app => {
+        if (home) {
+            // 1. FAQ Section
+            if (home.faqSection?.items?.length > 0) {
                 schemas.push({
                     "@context": "https://schema.org",
-                    "@type": "SoftwareApplication",
-                    "name": app.name,
-                    "operatingSystem": "Android, iOS, Windows, Tizen, WebOS",
-                    "applicationCategory": "MultimediaApplication",
-                    "softwareVersion": app.version || "1.0",
-                    "offers": {
-                        "@type": "Offer",
-                        "price": "0",
-                        "priceCurrency": "EUR"
-                    }
+                    "@type": "FAQPage",
+                    "mainEntity": home.faqSection.items.map(item => ({
+                        "@type": "Question",
+                        "name": item.question || item.q,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": item.answer || item.a
+                        }
+                    }))
                 });
-            });
-        }
+            }
 
-        // 5. Global Infrastructure (Servers)
-        if (home.serversSection?.items?.length > 0) {
+            // 2. Testimonials (AggregateRating)
+            if (home.testimonialsSection?.items?.length > 0) {
+                const reviews = home.testimonialsSection.items.map(item => ({
+                    "@type": "Review",
+                    "author": { "@type": "Person", "name": item.name },
+                    "reviewRating": { "@type": "Rating", "ratingValue": item.stars || 5, "bestRating": "5" },
+                    "reviewBody": item.text
+                }));
+                
+                schemas.push({
+                    "@context": "https://schema.org",
+                    "@type": "Service",
+                    "name": "SKYGROS IPTV Wholesale",
+                    "provider": { "@id": `${origin}/#organization` },
+                    "aggregateRating": {
+                        "@type": "AggregateRating",
+                        "ratingValue": "4.9",
+                        "bestRating": "5",
+                        "reviewCount": reviews.length + 450
+                    },
+                    "review": reviews.slice(0, 5)
+                });
+            }
+
+            // 3. Main Service & Catalog
             schemas.push({
                 "@context": "https://schema.org",
                 "@type": "Service",
-                "name": "Global IPTV Infrastructure",
-                "description": "High-performance streaming servers in multiple regions",
+                "name": "IPTV Reseller Infrastructure",
+                "description": home.hero?.subtitle || "Professional IPTV Wholesale infrastructure for professional resellers.",
                 "provider": { "@id": `${origin}/#organization` },
+                "areaServed": "Worldwide",
                 "hasOfferCatalog": {
                     "@type": "OfferCatalog",
-                    "name": "Server Locations",
-                    "itemListElement": home.serversSection.items.map((srv, i) => ({
+                    "name": "IPTV Wholesale Packs",
+                    "itemListElement": home.pricingSection?.items?.map((item, index) => ({
                         "@type": "ListItem",
-                        "position": i + 1,
+                        "position": index + 1,
                         "item": {
-                            "@type": "Service",
-                            "name": srv.name,
-                            "description": `Location: ${srv.locations}`
+                            "@type": "Offer",
+                            "name": item.title,
+                            "description": item.subtitle,
+                            "price": item.price?.replace('€', ''),
+                            "priceCurrency": "EUR"
                         }
-                    }))
+                    })) || []
                 }
             });
+
+            // 4. Software Applications
+            if (home.appsSection?.items?.length > 0) {
+                home.appsSection.items.forEach(app => {
+                    schemas.push({
+                        "@context": "https://schema.org",
+                        "@type": "SoftwareApplication",
+                        "name": app.name,
+                        "operatingSystem": "Android, iOS, Windows, Tizen, WebOS",
+                        "applicationCategory": "MultimediaApplication",
+                        "softwareVersion": app.version || "1.0",
+                        "offers": {
+                            "@type": "Offer",
+                            "price": "0",
+                            "priceCurrency": "EUR"
+                        }
+                    });
+                });
+            }
+
+            // 5. Global Infrastructure (Servers)
+            if (home.serversSection?.items?.length > 0) {
+                schemas.push({
+                    "@context": "https://schema.org",
+                    "@type": "Service",
+                    "name": "Global IPTV Infrastructure",
+                    "description": "High-performance streaming servers in multiple regions",
+                    "provider": { "@id": `${origin}/#organization` },
+                    "hasOfferCatalog": {
+                        "@type": "OfferCatalog",
+                        "name": "Server Locations",
+                        "itemListElement": home.serversSection.items.map((srv, i) => ({
+                            "@type": "ListItem",
+                            "position": i + 1,
+                            "item": {
+                                "@type": "Service",
+                                "name": srv.name,
+                                "description": `Location: ${srv.locations}`
+                            }
+                        }))
+                    }
+                });
+            }
         }
 
         return {
