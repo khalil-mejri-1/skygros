@@ -488,6 +488,20 @@ const Home = () => {
             }
         }
 
+        // 6. BreadcrumbList
+        schemas.push({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": origin
+                }
+            ]
+        });
+
         return {
             "@context": "https://schema.org",
             "@graph": schemas
