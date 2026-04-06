@@ -351,9 +351,10 @@ const Home = () => {
     const isPreviewLanding = searchParams.get('preview') === 'landing';
 
     const landingSchema = useMemo(() => {
-        const origin = window.location.origin;
+        const origin = window?.location?.origin || "https://skygros.com";
         const home = settings?.home;
         
+        // Base Schemas that are always rendered
         const schemas = [
             {
                 "@context": "https://schema.org",
@@ -362,7 +363,7 @@ const Home = () => {
                 "name": "SKYGROS",
                 "url": origin,
                 "logo": `${origin}/logo.png`,
-                "sameAs": home?.footerSection?.socials?.map(s => s.link) || []
+                "sameAs": home?.footerSection?.socials?.map(s => s.link).filter(Boolean) || []
             },
             {
                 "@context": "https://schema.org",
@@ -384,12 +385,12 @@ const Home = () => {
                 schemas.push({
                     "@context": "https://schema.org",
                     "@type": "FAQPage",
-                    "mainEntity": home.faqSection.items.map(item => ({
+                    "mainEntity": home.faqSection.items.filter(i => i.question || i.q).map(item => ({
                         "@type": "Question",
                         "name": item.question || item.q,
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": item.answer || item.a
+                            "text": item.answer || item.a || ""
                         }
                     }))
                 });
@@ -399,9 +400,9 @@ const Home = () => {
             if (home.testimonialsSection?.items?.length > 0) {
                 const reviews = home.testimonialsSection.items.map(item => ({
                     "@type": "Review",
-                    "author": { "@type": "Person", "name": item.name },
+                    "author": { "@type": "Person", "name": item.name || "Client" },
                     "reviewRating": { "@type": "Rating", "ratingValue": item.stars || 5, "bestRating": "5" },
-                    "reviewBody": item.text
+                    "reviewBody": item.text || ""
                 }));
                 
                 schemas.push({
@@ -430,17 +431,17 @@ const Home = () => {
                 "hasOfferCatalog": {
                     "@type": "OfferCatalog",
                     "name": "IPTV Wholesale Packs",
-                    "itemListElement": home.pricingSection?.items?.map((item, index) => ({
+                    "itemListElement": (home.pricingSection?.items || []).map((item, index) => ({
                         "@type": "ListItem",
                         "position": index + 1,
                         "item": {
                             "@type": "Offer",
-                            "name": item.title,
-                            "description": item.subtitle,
-                            "price": item.price?.replace('€', ''),
+                            "name": item.title || "Pack",
+                            "description": item.subtitle || "",
+                            "price": String(item.price || "0").replace(/[^\d.]/g, ''),
                             "priceCurrency": "EUR"
                         }
-                    })) || []
+                    }))
                 }
             });
 
@@ -450,7 +451,7 @@ const Home = () => {
                     schemas.push({
                         "@context": "https://schema.org",
                         "@type": "SoftwareApplication",
-                        "name": app.name,
+                        "name": app.name || "IPTV App",
                         "operatingSystem": "Android, iOS, Windows, Tizen, WebOS",
                         "applicationCategory": "MultimediaApplication",
                         "softwareVersion": app.version || "1.0",
@@ -460,30 +461,6 @@ const Home = () => {
                             "priceCurrency": "EUR"
                         }
                     });
-                });
-            }
-
-            // 5. Global Infrastructure (Servers)
-            if (home.serversSection?.items?.length > 0) {
-                schemas.push({
-                    "@context": "https://schema.org",
-                    "@type": "Service",
-                    "name": "Global IPTV Infrastructure",
-                    "description": "High-performance streaming servers in multiple regions",
-                    "provider": { "@id": `${origin}/#organization` },
-                    "hasOfferCatalog": {
-                        "@type": "OfferCatalog",
-                        "name": "Server Locations",
-                        "itemListElement": home.serversSection.items.map((srv, i) => ({
-                            "@type": "ListItem",
-                            "position": i + 1,
-                            "item": {
-                                "@type": "Service",
-                                "name": srv.name,
-                                "description": `Location: ${srv.locations}`
-                            }
-                        }))
-                    }
                 });
             }
         }
