@@ -401,25 +401,35 @@ const Home = () => {
                 });
             }
 
-            // 2. Testimonials (AggregateRating)
+            // 2. Testimonials (Service with AggregateRating and Reviews)
             if (home.testimonialsSection?.items?.length > 0) {
                 const reviews = home.testimonialsSection.items.map(item => ({
                     "@type": "Review",
                     "author": { "@type": "Person", "name": item.name || "Client" },
-                    "reviewRating": { "@type": "Rating", "ratingValue": item.stars || 5, "bestRating": "5" },
-                    "reviewBody": item.text || ""
+                    "reviewRating": { 
+                        "@type": "Rating", 
+                        "ratingValue": item.stars || 5, 
+                        "bestRating": "5" 
+                    },
+                    "reviewBody": item.text || "Service exceptionnel",
+                    "itemReviewed": {
+                        "@type": "Service",
+                        "name": "SKYGROS IPTV Wholesale"
+                    }
                 }));
                 
                 schemas.push({
                     "@context": "https://schema.org",
                     "@type": "Service",
+                    "@id": `${origin}/#service`,
                     "name": "SKYGROS IPTV Wholesale",
+                    "description": "Infrastructure IPTV professionnelle pour revendeurs",
                     "provider": { "@id": `${origin}/#organization` },
                     "aggregateRating": {
                         "@type": "AggregateRating",
                         "ratingValue": "4.9",
                         "bestRating": "5",
-                        "reviewCount": reviews.length + 450
+                        "reviewCount": String(reviews.length + 450)
                     },
                     "review": reviews.slice(0, 5)
                 });
