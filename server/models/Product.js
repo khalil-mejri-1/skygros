@@ -42,7 +42,9 @@ const ProductSchema = new mongoose.Schema({
         duration: { type: String, required: true }, // e.g. "1 mois", "5 mois", "1 an"
         price: { type: Number, required: true },
         oldPrice: { type: Number }
-    }]
+    }],
+    metaTitle: { type: String },
+    metaDescription: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', ProductSchema);

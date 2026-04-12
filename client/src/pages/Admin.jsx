@@ -2726,6 +2726,33 @@ const Admin = () => {
                                     </div>
                                 </div>
 
+                                {/* SEO Configuration */}
+                                <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: '800', marginBottom: '15px', color: 'var(--accent-color)', textTransform: 'uppercase' }}>Configuration SEO</h4>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label className="form-label">Meta Title (Titre SEO)</label>
+                                            <input
+                                                type="text"
+                                                className="admin-input"
+                                                placeholder="Titre optimisé pour Google..."
+                                                value={showAddForm ? (newProduct.metaTitle || "") : (isEditing.metaTitle || "")}
+                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, metaTitle: e.target.value }) : setIsEditing({ ...isEditing, metaTitle: e.target.value })}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label className="form-label">Meta Description</label>
+                                            <textarea
+                                                className="admin-input"
+                                                placeholder="Description pour les résultats de recherche..."
+                                                value={showAddForm ? (newProduct.metaDescription || "") : (isEditing.metaDescription || "")}
+                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, metaDescription: e.target.value }) : setIsEditing({ ...isEditing, metaDescription: e.target.value })}
+                                                style={{ height: '80px', resize: 'none' }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* API / IPTV Configuration */}
                                 <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <h4 style={{ fontSize: '0.9rem', fontWeight: '800', marginBottom: '15px', color: 'var(--accent-color)', textTransform: 'uppercase' }}>Configuration API Automatique</h4>
@@ -2971,6 +2998,28 @@ const Admin = () => {
                                         onChange={(e) => showCategoryForm ? setNewCategory({ ...newCategory, description: e.target.value }) : setIsEditingCategory({ ...isEditingCategory, description: e.target.value })}
                                         style={{ height: '80px', resize: 'none' }}
                                     />
+                                </div>
+                                <div className="glass" style={{ padding: '15px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--accent-color)', textTransform: 'uppercase' }}>SEO (Page de Catégorie)</h4>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="form-label">Meta Title (Titre SEO)</label>
+                                        <input
+                                            className="admin-input"
+                                            placeholder="Ex: Acheter IPTV Pas Cher | Skygros"
+                                            value={showCategoryForm ? (newCategory.metaTitle || "") : (isEditingCategory.metaTitle || "")}
+                                            onChange={(e) => showCategoryForm ? setNewCategory({ ...newCategory, metaTitle: e.target.value }) : setIsEditingCategory({ ...isEditingCategory, metaTitle: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="form-label">Meta Description</label>
+                                        <textarea
+                                            className="admin-input"
+                                            placeholder="Description affichée sur Google..."
+                                            value={showCategoryForm ? (newCategory.metaDescription || "") : (isEditingCategory.metaDescription || "")}
+                                            onChange={(e) => showCategoryForm ? setNewCategory({ ...newCategory, metaDescription: e.target.value }) : setIsEditingCategory({ ...isEditingCategory, metaDescription: e.target.value })}
+                                            style={{ height: '60px', resize: 'none' }}
+                                        />
+                                    </div>
                                 </div>
                                 <button type="submit" className="btn btn-primary" style={{ padding: '16px', borderRadius: '14px', background: 'var(--success)', fontWeight: '800' }}>
                                     {showCategoryForm ? "CRÉER LA CATÉGORIE" : "METTRE À JOUR"}

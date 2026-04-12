@@ -146,28 +146,45 @@ const Home = () => {
                 items: settings?.home?.deals || [],
                 title: settings?.home?.dealsTitle || "Deals",
                 coloredWord: settings?.home?.dealsColoredWord || "Deals",
-                subtitle: settings?.home?.dealsSubtitle || "Offres exceptionnelles à durée limitée"
+                subtitle: settings?.home?.dealsSubtitle || "Offres exceptionnelles à durée limitée",
+                metaTitle: settings?.home?.dealsMetaTitle || "",
+                metaDescription: settings?.home?.dealsMetaDescription || ""
             };
         } else if (section === 'bestSellers') {
             initialData = {
                 items: settings?.home?.bestSellers || [],
                 title: settings?.home?.bestSellersTitle || "Meilleures Ventes",
-                coloredWord: settings?.home?.bestSellersColoredWord || "Ventes"
+                coloredWord: settings?.home?.bestSellersColoredWord || "Ventes",
+                metaTitle: settings?.home?.bestSellersMetaTitle || "",
+                metaDescription: settings?.home?.bestSellersMetaDescription || ""
             };
+        } else if (section === 'carousel') {
+             initialData = {
+                 items: Array.isArray(data) ? data : [],
+                 metaTitle: settings?.home?.carouselMetaTitle || "",
+                 metaDescription: settings?.home?.carouselMetaDescription || ""
+             };
         } else if (section === 'servers') {
-            initialData = data || { title: "ALL SERVER LIST", coloredWord: "SERVER LIST", items: [] };
+            initialData = (data && (data.title || data.items)) ? data : { title: "ALL SERVER LIST", coloredWord: "SERVER LIST", items: [], metaTitle: "", metaDescription: "" };
         } else if (section === 'apps') {
-            initialData = data || { title: "PAID APPs", coloredWord: "APPs", items: [] };
+            initialData = (data && (data.title || data.items)) ? data : { title: "PAID APPs", coloredWord: "APPs", items: [], metaTitle: "", metaDescription: "" };
         } else if (section === 'contact') {
-            initialData = data || { title: "CONTACT US", coloredWord: "US", subtitle: "", items: [] };
+            initialData = (data && (data.title || data.items)) ? data : { title: "CONTACT US", coloredWord: "US", subtitle: "", items: [], metaTitle: "", metaDescription: "" };
         } else if (section === 'privacy') {
-            initialData = data || { title: "Privacy Policy", coloredWord: "Policy", content: "" };
+            initialData = (data && (data.title || data.content)) ? data : { title: "Privacy Policy", coloredWord: "Policy", content: "", metaTitle: "", metaDescription: "" };
         } else if (section === 'disclaimer') {
-            initialData = data || { title: "Legal Disclaimer", coloredWord: "Disclaimer", content: "" };
+            initialData = (data && (data.title || data.content)) ? data : { title: "Legal Disclaimer", coloredWord: "Disclaimer", content: "", metaTitle: "", metaDescription: "" };
         } else if (section === 'm3u') {
-            initialData = data || { title: "CONVERT M3U", coloredWord: "M3U", subtitle: "" };
+            initialData = (data && data.title) ? data : { title: "CONVERT M3U", coloredWord: "M3U", subtitle: "", metaTitle: "", metaDescription: "" };
         } else if (section === 'track') {
-            initialData = data || { title: "TRACK ORDER", coloredWord: "ORDER", subtitle: "" };
+            initialData = (data && data.title) ? data : { title: "TRACK ORDER", coloredWord: "ORDER", subtitle: "", metaTitle: "", metaDescription: "" };
+        } else {
+            // For sections that are objects (hero, movies, etc.)
+            initialData = {
+                ...data,
+                metaTitle: data?.metaTitle || "",
+                metaDescription: data?.metaDescription || ""
+            };
         }
 
         setEditData(JSON.parse(JSON.stringify(initialData))); // Deep clone
@@ -191,17 +208,25 @@ const Home = () => {
             if (editingSection === 'faq') updatedSettings.home.faqSection = editData;
             if (editingSection === 'cta') updatedSettings.home.ctaSection = editData;
             if (editingSection === 'footer') updatedSettings.home.footerSection = editData;
-            if (editingSection === 'carousel') updatedSettings.home.carousel = editData;
+            if (editingSection === 'carousel') {
+                updatedSettings.home.carousel = editData.items;
+                updatedSettings.home.carouselMetaTitle = editData.metaTitle;
+                updatedSettings.home.carouselMetaDescription = editData.metaDescription;
+            }
             if (editingSection === 'bestSellers') {
                 updatedSettings.home.bestSellers = editData.items;
                 updatedSettings.home.bestSellersTitle = editData.title;
                 updatedSettings.home.bestSellersColoredWord = editData.coloredWord;
+                updatedSettings.home.bestSellersMetaTitle = editData.metaTitle;
+                updatedSettings.home.bestSellersMetaDescription = editData.metaDescription;
             }
             if (editingSection === 'deals') {
                 updatedSettings.home.deals = editData.items;
                 updatedSettings.home.dealsTitle = editData.title;
                 updatedSettings.home.dealsColoredWord = editData.coloredWord;
                 updatedSettings.home.dealsSubtitle = editData.subtitle;
+                updatedSettings.home.dealsMetaTitle = editData.metaTitle;
+                updatedSettings.home.dealsMetaDescription = editData.metaDescription;
             }
             if (editingSection === 'memberships') updatedSettings.home.membershipsSection = editData;
             if (editingSection === 'giftCards') updatedSettings.home.giftCardsSection = editData;
@@ -858,7 +883,7 @@ const Home = () => {
 
                 {/* Edit Home Modal (Duplicate for User View) */}
                 {isEditModalOpen && (
-                    <div className="fixed inset-0 z-[9000] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black/40 backdrop-blur-xl animate-modal-backdrop" onClick={() => setIsEditModalOpen(false)}></div>
                         <div className="relative bg-[#0f172a]/95 border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-6 sm:p-8 custom-scrollbar text-left text-white animate-modal-content">
                             <div className="flex justify-between items-center mb-6">
@@ -1235,13 +1260,36 @@ const Home = () => {
                                                         <span className="text-[10px] text-gray-500 uppercase font-bold">Titre principal</span>
                                                         <input type="text" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={editData.title || ""} onChange={(e) => setEditData({ ...editData, title: e.target.value })} />
                                                     </div>
+                                                    <div className="space-y-1">
+                                                        <span className="text-[10px] text-gray-500 uppercase font-bold">Mot à colorer</span>
+                                                        <input type="text" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={editData.coloredWord || ""} onChange={(e) => setEditData({ ...editData, coloredWord: e.target.value })} />
+                                                    </div>
                                                     {editingSection !== 'footer' && (
-                                                        <div className="space-y-1">
+                                                        <div className="col-span-1 sm:col-span-2 space-y-1">
                                                             <span className="text-[10px] text-gray-500 uppercase font-bold">Sous-titre / Description</span>
                                                             <input type="text" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={editData.subtitle || ""} onChange={(e) => setEditData({ ...editData, subtitle: e.target.value })} />
                                                         </div>
                                                     )}
                                                 </div>
+
+                                                {/* Color/Gradient Controls */}
+                                                {editingSection !== 'footer' && (
+                                                    <div className="p-3 bg-black/20 rounded-xl border border-white/5 space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[10px] text-gray-400 font-bold uppercase">Style Couleur</span>
+                                                            <div className="flex bg-black/40 p-0.5 rounded-lg">
+                                                                <button onClick={() => setEditData({ ...editData, useGradient: false })} className={`px-3 py-1 rounded-md text-[9px] font-bold transition-all ${!editData.useGradient ? 'bg-primary text-white' : 'text-gray-500'}`}>Solide</button>
+                                                                <button onClick={() => setEditData({ ...editData, useGradient: true })} className={`px-3 py-1 rounded-md text-[9px] font-bold transition-all ${editData.useGradient ? 'bg-primary text-white' : 'text-gray-500'}`}>Dégradé</button>
+                                                            </div>
+                                                        </div>
+                                                        {!editData.useGradient ? (
+                                                            <input type="color" className="w-full h-8 bg-transparent cursor-pointer" value={editData.color || "#6366f1"} onChange={(e) => setEditData({ ...editData, color: e.target.value })} />
+                                                        ) : (
+                                                            <input type="text" placeholder="linear-gradient(...)" className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-white text-[10px] font-mono" value={editData.gradient || ""} onChange={(e) => setEditData({ ...editData, gradient: e.target.value })} />
+                                                        )}
+                                                    </div>
+                                                )}
+
                                                 {(editingSection === 'privacy' || editingSection === 'disclaimer') && (
                                                     <div className="space-y-1 mt-2">
                                                         <span className="text-[10px] text-gray-500 uppercase font-bold text-red-400">Contenu (HTML supporté)</span>
@@ -1268,14 +1316,19 @@ const Home = () => {
                                                                 giftCards: { title: "", subtitle: "", link: "#", color: "#0070d1" },
                                                                 hero: { title: "", subtitle: "", image: "", buttonText: "Commencer", link: "#" },
                                                                 testimonials: { name: "", initials: "", text: "", stars: 5 },
-                                                                faq: { question: "", answer: "" },
+                                                                faq: { q: "", a: "" },
                                                                 channels: { name: "", image: "", link: "#" },
                                                                 sports: { name: "", image: "", link: "#" },
                                                                 devices: { name: "", icon: "fas fa-desktop" },
                                                                 countries: { name: "", flag: "🏳️" },
                                                                 servers: { name: "", status: "Online", load: "0%", locations: "" },
                                                                 apps: { name: "", icon: "fas fa-play", color: "bg-blue-500", version: "1.0", compatibility: "4K" },
-                                                                contact: { title: "", label: "", icon: "fas fa-info", iconBg: "bg-primary/20", iconColor: "text-primary" }
+                                                                contact: { title: "", label: "", icon: "fas fa-info", iconBg: "bg-primary/20", iconColor: "text-primary" },
+                                                                panel: { title: "", description: "", icon: "fas fa-users", iconBg: "bg-primary/20", iconColor: "text-primary" },
+                                                                features: { title: "", description: "", icon: "fas fa-star", iconBg: "bg-primary/20", iconColor: "text-primary" },
+                                                                library: { title: "", description: "", icon: "fas fa-film", iconColor: "text-primary" },
+                                                                pricing: { badge: "", title: "", subtitle: "", price: "0€", unit: "/crédit", features: [], buttonText: "Choisir", isPopular: false },
+                                                                carousel: { image: "", title: "", subtitle: "", color: "#6366f1", buttonText: "DÉCOUVRIR", link: "#" }
                                                             };
                                                             setEditData({ ...editData, items: [...editData.items, newItemMap[editingSection] || {}] });
                                                         }}
@@ -1380,14 +1433,14 @@ const Home = () => {
                                                                 </div>
                                                             ) : editingSection === 'faq' ? (
                                                                 <div className="space-y-2">
-                                                                    <input type="text" placeholder="Question" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.question} onChange={(e) => {
+                                                                    <input type="text" placeholder="Question" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.q} onChange={(e) => {
                                                                         const newItems = [...editData.items];
-                                                                        newItems[i].question = e.target.value;
+                                                                        newItems[i].q = e.target.value;
                                                                         setEditData({ ...editData, items: newItems });
                                                                     }} />
-                                                                    <textarea placeholder="Réponse" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs h-20" value={item.answer} onChange={(e) => {
+                                                                    <textarea placeholder="Réponse" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs h-20" value={item.a} onChange={(e) => {
                                                                         const newItems = [...editData.items];
-                                                                        newItems[i].answer = e.target.value;
+                                                                        newItems[i].a = e.target.value;
                                                                         setEditData({ ...editData, items: newItems });
                                                                     }} />
                                                                 </div>
@@ -1435,6 +1488,59 @@ const Home = () => {
                                                                             setEditData({ ...editData, items: newItems });
                                                                         }} />
                                                                     </div>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input type="text" placeholder="Version" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.version} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].version = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <input type="text" placeholder="Compatibilité" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.compatibility} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].compatibility = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                    </div>
+                                                                </div>
+                                                            ) : editingSection === 'carousel' ? (
+                                                                <div className="space-y-3">
+                                                                    <div className="flex gap-3">
+                                                                        <div className="flex-1 space-y-2">
+                                                                            <input type="text" placeholder="Titre (ex: Cyberpunk Edge)" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.title} onChange={(e) => {
+                                                                                const newItems = [...editData.items];
+                                                                                newItems[i].title = e.target.value;
+                                                                                setEditData({ ...editData, items: newItems });
+                                                                            }} />
+                                                                            <input type="text" placeholder="Sous-titre (ex: FUTUR DU GAMING)" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.subtitle} onChange={(e) => {
+                                                                                const newItems = [...editData.items];
+                                                                                newItems[i].subtitle = e.target.value;
+                                                                                setEditData({ ...editData, items: newItems });
+                                                                            }} />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input type="text" placeholder="Image URL" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.image} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].image = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <input type="color" className="w-full h-8 bg-transparent border-none cursor-pointer" value={item.color || "#6366f1"} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].color = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input type="text" placeholder="Texte Bouton" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.buttonText} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].buttonText = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <input type="text" placeholder="Lien" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.link} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].link = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                    </div>
                                                                 </div>
                                                             ) : editingSection === 'contact' ? (
                                                                 <div className="space-y-2">
@@ -1456,14 +1562,60 @@ const Home = () => {
                                                                         setEditData({ ...editData, items: newItems });
                                                                     }} />
                                                                 </div>
-                                                            ) : (
-                                                                <div className="grid grid-cols-2 gap-2">
-                                                                    <input type="text" placeholder="Nom" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.name} onChange={(e) => {
+                                                            ) : editingSection === 'panel' || editingSection === 'features' ? (
+                                                                <div className="space-y-2">
+                                                                    <div className="grid grid-cols-1 gap-2">
+                                                                        <input type="text" placeholder="Titre" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-bold" value={item.title} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].title = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <textarea placeholder="Description" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs h-16" value={item.description} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].description = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input type="text" placeholder="Icon (ex: fas fa-users)" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.icon} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].icon = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <input type="text" placeholder="Icon BG (ex: bg-primary/20)" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.iconBg} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            newItems[i].iconBg = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                    </div>
+                                                                </div>
+                                                            ) : editingSection === 'library' ? (
+                                                                <div className="grid grid-cols-1 gap-2">
+                                                                    <input type="text" placeholder="Titre" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-bold" value={item.title} onChange={(e) => {
                                                                         const newItems = [...editData.items];
-                                                                        newItems[i].name = e.target.value;
+                                                                        newItems[i].title = e.target.value;
                                                                         setEditData({ ...editData, items: newItems });
                                                                     }} />
-                                                                    <input type="text" placeholder="Lien/Image" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.image || item.icon || item.flag} onChange={(e) => {
+                                                                    <input type="text" placeholder="Description" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.description} onChange={(e) => {
+                                                                        const newItems = [...editData.items];
+                                                                        newItems[i].description = e.target.value;
+                                                                        setEditData({ ...editData, items: newItems });
+                                                                    }} />
+                                                                    <input type="text" placeholder="Icon" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.icon} onChange={(e) => {
+                                                                        const newItems = [...editData.items];
+                                                                        newItems[i].icon = e.target.value;
+                                                                        setEditData({ ...editData, items: newItems });
+                                                                    }} />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                    <input type="text" placeholder="Nom/Titre" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.name || item.title} onChange={(e) => {
+                                                                        const newItems = [...editData.items];
+                                                                        if (item.name !== undefined) newItems[i].name = e.target.value;
+                                                                        else newItems[i].title = e.target.value;
+                                                                        setEditData({ ...editData, items: newItems });
+                                                                    }} />
+                                                                    <input type="text" placeholder="Lien/Image/Icon" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.image || item.icon || item.flag} onChange={(e) => {
                                                                         const newItems = [...editData.items];
                                                                         if (item.flag !== undefined) newItems[i].flag = e.target.value;
                                                                         else if (item.icon !== undefined) newItems[i].icon = e.target.value;
@@ -1479,7 +1631,37 @@ const Home = () => {
                                         )}
                                     </div>
                                 )}
-                                <div className="flex gap-4 pt-6 border-t border-white/10">
+                                        {/* Global SEO Controls for Section */}
+                                        <div className="space-y-4 border-t border-white/10 pt-6">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <i className="fas fa-search text-primary"></i>
+                                                <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Paramètres SEO de la Section</span>
+                                            </div>
+                                            <div className="grid gap-4">
+                                                <label className="block">
+                                                    <span className="text-gray-400 text-[10px] mb-1 block uppercase font-bold text-xs opacity-70">Meta Title (SEO)</span>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Titre pour les moteurs de recherche..."
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary/50 outline-none text-xs"
+                                                        value={editData.metaTitle || ""}
+                                                        onChange={(e) => setEditData({ ...editData, metaTitle: e.target.value })}
+                                                    />
+                                                </label>
+                                                <label className="block">
+                                                    <span className="text-gray-400 text-[10px] mb-1 block uppercase font-bold text-xs opacity-70">Meta Description (SEO)</span>
+                                                    <textarea
+                                                        rows="2"
+                                                        placeholder="Description pour les moteurs de recherche..."
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary/50 outline-none text-xs"
+                                                        value={editData.metaDescription || ""}
+                                                        onChange={(e) => setEditData({ ...editData, metaDescription: e.target.value })}
+                                                    ></textarea>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-4 pt-6 border-t border-white/10">
                                     <button
                                         onClick={handleSaveSettings}
                                         className="flex-1 py-3 bg-primary rounded-xl font-bold text-white hover:bg-primary/80 transition-all"
@@ -1590,8 +1772,8 @@ const Home = () => {
     return (
         <div className="antialiased bg-[#020617] text-[#e2e8f0] font-[Inter]" style={{ overflowX: 'hidden' }}>
             <SEO
-                title="La Solution Wholesale IPTV Pour Les Professionnels"
-                description="Boostez votre business avec notre infrastructure IPTV professionnelle. Panel de gestion complet, API REST, livraison instantanée et marges compétitives."
+                title={settings?.home?.hero?.metaTitle || "La Solution Wholesale IPTV Pour Les Professionnels | Skygros"}
+                description={settings?.home?.hero?.metaDescription || "Boostez votre business avec notre infrastructure IPTV professionnelle. Panel de gestion complet, API REST, livraison instantanée et marges compétitives."}
                 keywords="IPTV, Wholesale, Reseller, Panel, API, Streaming, VOD, 4K"
                 schema={landingSchema}
             />
@@ -2897,7 +3079,7 @@ const Home = () => {
 
             {/* Edit Home Modal */}
             {isEditModalOpen && (
-                <div className="fixed inset-0 z-[9000] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-xl animate-modal-backdrop" onClick={() => setIsEditModalOpen(false)}></div>
                     <div className="relative bg-[#0f172a]/95 border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-6 sm:p-8 custom-scrollbar animate-modal-content">
                         <div className="flex justify-between items-center mb-6">
@@ -3297,7 +3479,7 @@ const Home = () => {
                                             <input
                                                 type="text"
                                                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary"
-                                                value={editData.title}
+                                                value={editData.title || ""}
                                                 onChange={(e) => setEditData({ ...editData, title: e.target.value })}
                                             />
                                         </label>
@@ -3306,7 +3488,7 @@ const Home = () => {
                                             <input
                                                 type="text"
                                                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary"
-                                                value={editData.coloredWord}
+                                                value={editData.coloredWord || ""}
                                                 onChange={(e) => setEditData({ ...editData, coloredWord: e.target.value })}
                                             />
                                         </label>
@@ -3921,16 +4103,46 @@ const Home = () => {
                                     </div>
                                 </div>
                             )}
+                            {/* Global SEO Controls for Section */}
+                            <div className="space-y-4 border-t border-white/10 pt-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <i className="fas fa-search text-primary"></i>
+                                    <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Paramètres SEO de la Section</span>
+                                </div>
+                                <div className="grid gap-4">
+                                    <label className="block">
+                                        <span className="text-gray-400 text-[10px] mb-1 block uppercase font-bold text-xs opacity-70">Meta Title (SEO)</span>
+                                        <input
+                                            type="text"
+                                            placeholder="Titre pour les moteurs de recherche..."
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary text-sm"
+                                            value={editData.metaTitle || ""}
+                                            onChange={(e) => setEditData({ ...editData, metaTitle: e.target.value })}
+                                        />
+                                    </label>
+                                    <label className="block">
+                                        <span className="text-gray-400 text-[10px] mb-1 block uppercase font-bold text-xs opacity-70">Meta Description (SEO)</span>
+                                        <textarea
+                                            rows="2"
+                                            placeholder="Description pour les moteurs de recherche..."
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary text-sm"
+                                            value={editData.metaDescription || ""}
+                                            onChange={(e) => setEditData({ ...editData, metaDescription: e.target.value })}
+                                        ></textarea>
+                                    </label>
+                                </div>
+                            </div>
+
                             <div className="flex gap-4 pt-6 border-t border-white/10">
                                 <button
                                     onClick={handleSaveSettings}
-                                    className="flex-1 py-3 bg-primary rounded-xl font-bold text-white hover:bg-primary/80 transition-all"
+                                    className="flex-1 py-3 bg-primary rounded-xl font-bold text-white hover:bg-primary/80 transition-all text-sm uppercase tracking-widest shadow-lg"
                                 >
                                     Enregistrer les modifications
                                 </button>
                                 <button
                                     onClick={() => setIsEditModalOpen(false)}
-                                    className="px-6 py-3 bg-white/10 rounded-xl font-bold text-white hover:bg-white/20 transition-all"
+                                    className="px-6 py-3 bg-white/10 rounded-xl font-bold text-white hover:bg-white/20 transition-all text-sm uppercase tracking-widest"
                                 >
                                     Annuler
                                 </button>

@@ -67,7 +67,9 @@ const Products = () => {
                     const fetchedCategories = res.data.map(cat => ({
                         id: cat.name,
                         label: cat.name,
-                        subcategories: cat.subcategories || []
+                        subcategories: cat.subcategories || [],
+                        metaTitle: cat.metaTitle,
+                        metaDescription: cat.metaDescription
                     }));
                     setCategories([initialCategory, ...fetchedCategories]);
                 } else {
@@ -135,11 +137,13 @@ const Products = () => {
         </div>
     );
 
+    const activeCategoryObj = categories.find(c => c.id === selectedCategory) || initialCategory;
+
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', paddingTop: '40px', paddingBottom: '80px' }}>
             <SEO
-                title={selectedCategory === 'all' ? 'Nos Produits' : `${selectedCategory} - Skygros`}
-                description="Explorez notre catalogue de produits IPTV et numériques."
+                title={activeCategoryObj.metaTitle || (selectedCategory === 'all' ? 'Nos Produits' : `${selectedCategory} - Skygros`)}
+                description={activeCategoryObj.metaDescription || "Explorez notre catalogue de produits IPTV et numériques."}
             />
             <div className="container">
                 {/* Header Section */}

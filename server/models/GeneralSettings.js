@@ -87,6 +87,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
                 }
             ]
         },
+        carouselMetaTitle: { type: String, default: "" },
+        carouselMetaDescription: { type: String, default: "" },
         hero: {
             title: { type: String, default: "La Solution Wholesale IPTV Pour Les Professionnels" },
             coloredWord: { type: String, default: "Wholesale IPTV" },
@@ -98,6 +100,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             primaryBtnLink: { type: String, default: "/register" },
             secondaryBtnText: { type: String, default: "Voir la Démo" },
             secondaryBtnLink: { type: String, default: "/demos" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             stats: {
                 type: [{
                     value: { type: String },
@@ -117,7 +121,9 @@ const GeneralSettingsSchema = new mongoose.Schema({
             color: { type: String, default: "#6366f1" },
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
-            subtitle: { type: String, default: "Découvrez les nouveautés disponibles sur notre plateforme VOD" }
+            subtitle: { type: String, default: "Découvrez les nouveautés disponibles sur notre plateforme VOD" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" }
         },
         channels: {
             title: { type: String, default: "Watch All Channels with IPTV No Cable TV Required" },
@@ -126,6 +132,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
             subtitle: { type: String, default: "We offer thousands of TV channels covering Canada, United States, United Kingdom, Portugal, Albania, Germany, Italy, France, Brazil, Romania, Greece, Spain, Sweden, Finland, Ireland, Norway, Denmark, Latin American countries, Arab countries, and almost all countries worldwide." },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     name: { type: String },
@@ -149,6 +157,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #ef4444 0%, #f97316 100%)" },
             subtitle: { type: String, default: "Our sports channels cover a vast variety of sports including football, basketball, baseball, tennis, golf, rugby, and more." },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     name: { type: String },
@@ -170,6 +180,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
             subtitle: { type: String, default: "Our IPTV service is compatible with all devices. You can enjoy your favorite channels on your smartphone, tablet, smart TV, or computer." },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     name: { type: String },
@@ -192,6 +204,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
             subtitle: { type: String, default: "We offer thousands of TV channels from all over the world." },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     name: { type: String },
@@ -218,6 +232,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             toggleLabel2: { type: String, default: "Abonnement Mensuel" },
             toggleBadge: { type: String, default: "-20%" },
             footerText: { type: String, default: "1 Crédit = 1 Mois d'abonnement | Paiement sécurisé par Crypto, PayPal ou virement bancaire" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     badge: { type: String },
@@ -272,6 +288,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
             subtitle: { type: String, default: "Une infrastructure robuste conçue pour les revendeurs sérieux qui veulent scaler leur business." },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     title: { type: String },
@@ -282,7 +300,7 @@ const GeneralSettingsSchema = new mongoose.Schema({
                 }],
                 default: [
                     { title: "Panel Admin Pro", description: "Gérez vos clients, créez des lignes IPTV, surveillez l'utilisation en temps réel depuis une interface intuitive et moderne.", icon: "fas fa-server", iconBg: "bg-primary/20", iconColor: "text-primary" },
-                    { title: "API REST Complète", description: "Automatisez la création et le renouvellement des abonnements. Documentation complète avec exemples en PHP, Node.js et Python.", icon: "fas fa-code", iconBg: "bg-secondary/20", iconColor: "text-secondary" },
+                    { title: "API REST Complète", description: "Automatisez la création et le renouvellement des abonnements. Documentation complète with examples in PHP, Node.js and Python.", icon: "fas fa-code", iconBg: "bg-secondary/20", iconColor: "text-secondary" },
                     { title: "Livraison Instantanée", description: "Crédits ajoutés instantanément. Création de lignes en moins de 2 secondes. Zéro délai d'attente pour vos clients.", icon: "fas fa-bolt", iconBg: "bg-accent/20", iconColor: "text-accent" },
                     { title: "Anti-Freeze™", description: "Technologie propriétaire de buffering réduite. Serveurs CDN répartis sur 12 pays pour une latence minimale.", icon: "fas fa-shield-alt", iconBg: "bg-green-500/20", iconColor: "text-green-400" },
                     { title: "Support Prioritaire", description: "Assistance technique dédiée pour les revendeurs via Telegram, WhatsApp et ticket system. Réponse garantie sous 1h.", icon: "fas fa-headset", iconBg: "bg-orange-500/20", iconColor: "text-orange-400" },
@@ -297,6 +315,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
             subtitle: { type: String, default: "Gérez votre business IPTV comme un pro avec notre dashboard intuitif. Créez, modifiez, supprimez des lignes en quelques clics." },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             primaryBtnText: { type: String, default: "Voir la Démo Live" },
             primaryBtnLink: { type: String, default: "/demos" },
             items: {
@@ -321,6 +341,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
             subtitle: { type: String, default: "Plus de 22,000 chaînes et 80,000 VOD dans toutes les langues" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     title: { type: String },
@@ -346,6 +368,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             color: { type: String, default: "#6366f1" },
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     name: { type: String },
@@ -358,7 +382,7 @@ const GeneralSettingsSchema = new mongoose.Schema({
                 default: [
                     { name: "Alex K.", role: "Revendeur depuis 2021", text: "Le meilleur fournisseur avec lequel j'ai travaillé. L'API est stable, le support réactif et mes clients sont satisfaits. J'ai multiplié mon CA par 3 en 6 mois.", initials: "AK", color: "from-primary to-secondary" },
                     { name: "Sarah M.", role: "Agence Digital", text: "L'intégration API a été un jeu changer pour mon business. Je peux maintenant vendre des abonnements automatiquement sur mon site sans intervention manuelle.", initials: "SM", color: "from-secondary to-accent" },
-                    { name: "Jean D.", role: "Revendeur Pro", text: "Le panel est intuitif et professionnel. La qualité des streams est excellente avec très peu de buffering. Je recommande à 100% pour les sérieux.", initials: "JD", color: "from-accent to-primary" }
+                    { name: "Jean D.", role: "Revendeur Pro", text: "Le panel est intuitif et professionnel. La qualité des streams est excellente with very little buffering. I recommend 100% for serious people.", initials: "JD", color: "from-accent to-primary" }
                 ]
             }
         },
@@ -368,6 +392,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             color: { type: String, default: "#6366f1" },
             useGradient: { type: Boolean, default: true },
             gradient: { type: String, default: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     q: { type: String },
@@ -377,7 +403,7 @@ const GeneralSettingsSchema = new mongoose.Schema({
                     { q: "Comment fonctionne le système de crédits ?", a: "1 crédit équivaut à 1 mois d'abonnement pour 1 appareil. Vous achetez des crédits en gros à prix réduit et vous les utilisez pour créer des lignes IPTV pour vos clients. Plus vous achetez de crédits, plus le prix unitaire est bas." },
                     { q: "Puis-je tester le service avant d'acheter ?", a: "Oui, nous offrons un compte démo avec 5 crédits pour tester le panel et la qualité des streams. Contactez-nous via Telegram ou le chat pour obtenir votre accès test." },
                     { q: "Quels sont les délais de livraison ?", a: "Les crédits sont ajoutés instantanément après confirmation du paiement (souvent moins de 2 minutes). Pour les virements bancaires, cela peut prendre 24-48h." },
-                    { q: "Proposez-vous du support technique ?", a: "Absolument. Nous offrons un support 24/7 via Telegram, WhatsApp et ticket system. Les revendeurs Pro et Platinum ont accès à un support prioritaire avec temps de réponse garanti sous 1 heure." }
+                    { q: "Proposez-vous du support technique ?", a: "Absolument. Nous offrons un support 24/7 via Telegram, WhatsApp et ticket system. Les revendeurs Pro and Platinum have access to priority support with guaranteed response times under 1 hour." }
                 ]
             }
         },
@@ -388,6 +414,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
             primaryBtnLink: { type: String, default: "/register" },
             secondaryBtnText: { type: String, default: "Discuter sur Telegram" },
             secondaryBtnLink: { type: String, default: "#" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             features: {
                 type: [String],
                 default: ["Sans engagement", "Support inclus", "Mise à jour auto"]
@@ -396,8 +424,10 @@ const GeneralSettingsSchema = new mongoose.Schema({
         footerSection: {
             brandTitle: { type: String, default: "SKYGROS" },
             brandColoredWord: { type: String, default: "Wholesale" },
-            description: { type: String, default: "La solution wholesale IPTV la plus fiable pour les revendeurs professionnels. Infrastructure stable, API puissante et support 24/7." },
-            copyright: { type: String, default: "© 2026SKYGROS. Tous droits réservés." },
+            description: { type: String, default: "La solution wholesale IPTV la plus fiable for professional resellers. Stable infrastructure, powerful API and 24/7 support." },
+            copyright: { type: String, default: "© 2026 SKYGROS. Tous droits réservés." },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             socials: {
                 type: [{
                     icon: { type: String },
@@ -449,47 +479,21 @@ const GeneralSettingsSchema = new mongoose.Schema({
                 ]
             }
         },
-        statsCards: {
-            type: [{
-                title: { type: String },
-                value: { type: String },
-                icon: { type: String },
-                accent: { type: String },
-                label: { type: String }
-            }],
-            default: [
-                {
-                    title: "Total Codes",
-                    value: "2,245",
-                    icon: "FaShoppingCart",
-                    accent: "#0099ff",
-                    label: "ACHETÉS"
-                },
-                {
-                    title: "Abos Actifs",
-                    value: "16",
-                    icon: "MdOndemandVideo",
-                    accent: "#ff4757",
-                    label: "beIN Sports"
-                },
-                {
-                    title: "Sur Demande",
-                    value: "51",
-                    icon: "FaUser",
-                    accent: "#00d285",
-                    label: "REQUÊTES"
-                }
-            ]
-        },
         bestSellers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
         bestSellersTitle: { type: String, default: "Meilleures Ventes" },
         bestSellersColoredWord: { type: String, default: "Ventes" },
+        bestSellersMetaTitle: { type: String, default: "" },
+        bestSellersMetaDescription: { type: String, default: "" },
         deals: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
         dealsTitle: { type: String, default: "Deals" },
         dealsColoredWord: { type: String, default: "Deals" },
         dealsSubtitle: { type: String, default: "Offres exceptionnelles à durée limitée" },
+        dealsMetaTitle: { type: String, default: "" },
+        dealsMetaDescription: { type: String, default: "" },
         membershipsSection: {
             title: { type: String, default: "Memberships" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     title: { type: String },
@@ -505,6 +509,8 @@ const GeneralSettingsSchema = new mongoose.Schema({
         },
         giftCardsSection: {
             title: { type: String, default: "Gift Cards" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
             items: {
                 type: [{
                     title: { type: String },
@@ -519,6 +525,56 @@ const GeneralSettingsSchema = new mongoose.Schema({
                     { title: "Steam", subtitle: "Gift Cards", link: "#", color: "#171a21" }
                 ]
             }
+        },
+        serversSection: {
+            title: { type: String, default: "ALL SERVER LIST" },
+            coloredWord: { type: String, default: "SERVER LIST" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
+            items: { type: Array, default: [] }
+        },
+        appsSection: {
+            title: { type: String, default: "PAID APPs" },
+            coloredWord: { type: String, default: "APPs" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
+            items: { type: Array, default: [] }
+        },
+        contactSection: {
+            title: { type: String, default: "CONTACT US" },
+            coloredWord: { type: String, default: "US" },
+            subtitle: { type: String, default: "" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" },
+            items: { type: Array, default: [] }
+        },
+        privacySection: {
+            title: { type: String, default: "Privacy Policy" },
+            coloredWord: { type: String, default: "Policy" },
+            content: { type: String, default: "" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" }
+        },
+        disclaimerSection: {
+            title: { type: String, default: "Legal Disclaimer" },
+            coloredWord: { type: String, default: "Disclaimer" },
+            content: { type: String, default: "" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" }
+        },
+        m3uSection: {
+            title: { type: String, default: "CONVERT M3U" },
+            coloredWord: { type: String, default: "M3U" },
+            subtitle: { type: String, default: "" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" }
+        },
+        trackSection: {
+            title: { type: String, default: "TRACK ORDER" },
+            coloredWord: { type: String, default: "ORDER" },
+            subtitle: { type: String, default: "" },
+            metaTitle: { type: String, default: "" },
+            metaDescription: { type: String, default: "" }
         },
         stats: [{ // For backward compatibility
             name: { type: String },
