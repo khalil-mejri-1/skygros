@@ -2,6 +2,10 @@ const router = require('express').Router();
 const axios = require('axios');
 const User = require('../models/User');
 const Order = require('../models/Order');
+const https = require('https');
+
+// Create an agent to force IPv4 (matching curl -4)
+const ipv4Agent = new https.Agent({ family: 4 });
 
 const MANGO_BASE_URL = 'https://api.coinmango.org/api/v1';
 
@@ -15,8 +19,8 @@ const getAuthToken = async () => {
         return cachedToken;
     }
 
-    const clientID = process.env.MANGO_CLIENT_ID;
-    const apiKey = process.env.MANGO_API_KEY;
+    const clientID = (process.env.MANGO_CLIENT_ID || '').trim();
+    const apiKey = (process.env.MANGO_API_KEY || '').trim();
 
     if (!clientID || !apiKey) {
         throw new Error("MANGO_CLIENT_ID or MANGO_API_KEY missing in environment");
@@ -24,6 +28,7 @@ const getAuthToken = async () => {
 
     try {
         const response = await axios.post(`${MANGO_BASE_URL}/authentication/login`, {}, {
+            httpsAgent: ipv4Agent,
             headers: {
                 'x-client-id': clientID,
                 'x-api-key': apiKey,
@@ -55,7 +60,8 @@ const unlockAccount = async (token) => {
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            httpsAgent: ipv4Agent
         });
         return response.data.code === "200";
     } catch (err) {
@@ -82,7 +88,8 @@ router.get('/services/:type/:identifier', async (req, res) => {
         }
 
         const response = await axios.get(`${MANGO_BASE_URL}${endpoint}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            httpsAgent: ipv4Agent
         });
 
         res.status(200).json(response.data);
@@ -115,7 +122,8 @@ router.post('/purchase', async (req, res) => {
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            httpsAgent: ipv4Agent
         });
 
         if (orderRes.data.code !== "200") {
@@ -134,7 +142,8 @@ router.post('/purchase', async (req, res) => {
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            httpsAgent: ipv4Agent
         });
 
         if (paymentRes.data.code !== "200") {
@@ -175,8 +184,8 @@ router.post('/purchase', async (req, res) => {
 // TEST CONNECTION
 router.post('/test-connection', async (req, res) => {
     try {
-        const clientID = process.env.MANGO_CLIENT_ID;
-        const apiKey = process.env.MANGO_API_KEY;
+        const clientID = (process.env.MANGO_CLIENT_ID || '').trim();
+        const apiKey = (process.env.MANGO_API_KEY || '').trim();
 
         // Fetch Server Public IP
         let serverIp = "Unknown";
@@ -188,6 +197,7 @@ router.post('/test-connection', async (req, res) => {
         }
 
         const response = await axios.post(`${MANGO_BASE_URL}/authentication/login`, {}, {
+            httpsAgent: ipv4Agent,
             headers: {
                 'x-client-id': clientID,
                 'x-api-key': apiKey,
