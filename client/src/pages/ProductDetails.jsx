@@ -523,93 +523,93 @@ const ProductDetails = () => {
                             </div>
 
                             <div className="flex gap-4">
-                                        <div className="flex flex-col gap-3 w-full">
-                                            <div className="flex flex-col sm:flex-row gap-3 w-full">
-                                                <button
-                                                    onClick={() => {
-                                                        setMangoRenewType('box');
-                                                        setSubscriptionType('box');
-                                                        setMangoIdentifier("");
-                                                        setMangoServices([]);
-                                                        setSelectedMangoService(null);
-                                                        setShowMangoModal(true);
-                                                    }}
-                                                    style={{
-                                                        background: 'linear-gradient(135deg, #FF9900 0%, #FF6B00 100%)',
-                                                        color: '#000',
-                                                        padding: isMobile ? '12px' : '15px',
-                                                        fontSize: '0.95rem',
-                                                        fontWeight: '900',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        flex: 1,
-                                                        boxShadow: '0 4px 15px rgba(255, 153, 0, 0.3)',
-                                                        transition: 'all 0.3s ease'
-                                                    }}
-                                                >
-                                                    RENEW BOX
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setMangoRenewType('netfly');
-                                                        setSubscriptionType('netfly');
-                                                        setMangoIdentifier("");
-                                                        setMangoServices([]);
-                                                        setSelectedMangoService(null);
-                                                        setShowMangoModal(true);
-                                                    }}
-                                                    style={{
-                                                        background: 'linear-gradient(135deg, #1A1C2E 0%, #151725 100%)',
-                                                        border: '1px solid var(--accent-color)',
-                                                        color: 'var(--accent-color)',
-                                                        padding: isMobile ? '12px' : '15px',
-                                                        fontSize: '0.95rem',
-                                                        fontWeight: '900',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        flex: 1,
-                                                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
-                                                        transition: 'all 0.3s ease'
-                                                    }}
-                                                >
-                                                    RENEW NETFLY
-                                                </button>
-                                            </div>
-                                            <button
-                                                onClick={handleTestMangoConnection}
-                                                disabled={isTestingConnection}
-                                                style={{
-                                                    background: 'transparent',
-                                                    border: '1px dashed rgba(255,255,255,0.2)',
-                                                    color: 'var(--text-muted)',
-                                                    padding: '10px',
-                                                    fontSize: '0.8rem',
-                                                    fontWeight: '700',
-                                                    borderRadius: 'var(--radius-md)',
-                                                    marginTop: '5px'
-                                                }}
-                                            >
-                                                {isTestingConnection ? "VÉRIFICATION..." : "TESTER LA CONNEXION API"}
-                                            </button>
-                                        </div>
-                                    ) : (
+                                <div className="flex flex-col gap-3 w-full">
+                                    <div className="flex flex-col sm:flex-row gap-3 w-full">
                                         <button
-                                            onClick={handleBuy}
+                                            onClick={() => {
+                                                setMangoRenewType('box');
+                                                setSubscriptionType('box');
+                                                setMangoIdentifier("");
+                                                setMangoServices([]);
+                                                setSelectedMangoService(null);
+                                                setShowMangoModal(true);
+                                            }}
                                             style={{
-                                                background: isPurchased ? 'var(--success)' : 'var(--accent-color)',
+                                                background: 'linear-gradient(135deg, #FF9900 0%, #FF6B00 100%)',
                                                 color: '#000',
-                                                padding: isMobile ? '15px' : '18px',
-                                                fontSize: isMobile ? '1rem' : '1.1rem',
+                                                padding: isMobile ? '12px' : '15px',
+                                                fontSize: '0.95rem',
                                                 fontWeight: '900',
                                                 borderRadius: 'var(--radius-md)',
-                                                boxShadow: '0 10px 20px rgba(255, 153, 0, 0.2)',
-                                                flex: 1
+                                                flex: 1,
+                                                boxShadow: '0 4px 15px rgba(255, 153, 0, 0.3)',
+                                                transition: 'all 0.3s ease'
                                             }}
-                                            disabled={isPurchased}
                                         >
-                                            {isLoading ? "Chargement..." :
-                                                (isPurchased ? <FaCheck /> :
-                                                    (subscriptionType === 'code' ? "COMMANDER" : "ACHETER MAINTENANT"))}
+                                            RENEW BOX
                                         </button>
-                                    )}
+                                        <button
+                                            onClick={() => {
+                                                setMangoRenewType('netfly');
+                                                setSubscriptionType('netfly');
+                                                setMangoIdentifier("");
+                                                setMangoServices([]);
+                                                setSelectedMangoService(null);
+                                                setShowMangoModal(true);
+                                            }}
+                                            style={{
+                                                background: 'linear-gradient(135deg, #1A1C2E 0%, #151725 100%)',
+                                                border: '1px solid var(--accent-color)',
+                                                color: 'var(--accent-color)',
+                                                padding: isMobile ? '12px' : '15px',
+                                                fontSize: '0.95rem',
+                                                fontWeight: '900',
+                                                borderRadius: 'var(--radius-md)',
+                                                flex: 1,
+                                                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            RENEW NETFLY
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={handleTestMangoConnection}
+                                        disabled={isTestingConnection}
+                                        style={{
+                                            background: 'transparent',
+                                            border: '1px dashed rgba(255,255,255,0.2)',
+                                            color: 'var(--text-muted)',
+                                            padding: '10px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '700',
+                                            borderRadius: 'var(--radius-md)',
+                                            marginTop: '5px'
+                                        }}
+                                    >
+                                        {isTestingConnection ? "VÉRIFICATION..." : "TESTER LA CONNEXION API"}
+                                    </button>
+                                </div>
+                                ) : (
+                                <button
+                                    onClick={handleBuy}
+                                    style={{
+                                        background: isPurchased ? 'var(--success)' : 'var(--accent-color)',
+                                        color: '#000',
+                                        padding: isMobile ? '15px' : '18px',
+                                        fontSize: isMobile ? '1rem' : '1.1rem',
+                                        fontWeight: '900',
+                                        borderRadius: 'var(--radius-md)',
+                                        boxShadow: '0 10px 20px rgba(255, 153, 0, 0.2)',
+                                        flex: 1
+                                    }}
+                                    disabled={isPurchased}
+                                >
+                                    {isLoading ? "Chargement..." :
+                                        (isPurchased ? <FaCheck /> :
+                                            (subscriptionType === 'code' ? "COMMANDER" : "ACHETER MAINTENANT"))}
+                                </button>
+                                )
                                 <button
                                     onClick={handleAddToCart}
                                     className="btn"
@@ -635,123 +635,123 @@ const ProductDetails = () => {
                                 const hasVisibilityOptions = product.showBouquetSorter || product.showCountrySelector !== false;
                                 return (product.type === 'm3u' || product.type === 'mango' || product.hasMultiDuration || isHybrid || hasVisibilityOptions);
                             })() && (
-                                <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
-                                    <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
+                                    <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
+                                        <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
 
-                                    {/* Subscription Duration */}
-                                    <div className="mb-4">
-                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Durée (Option)</label>
-                                        <select
-                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                            value={selectedDuration}
-                                            onChange={(e) => setSelectedDuration(e.target.value)}
-                                        >
-                                            <option value="">Sélectionner une durée</option>
+                                        {/* Subscription Duration */}
+                                        <div className="mb-4">
+                                            <label className="block text-gray-400 text-sm mb-2 font-bold">Durée (Option)</label>
+                                            <select
+                                                className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                value={selectedDuration}
+                                                onChange={(e) => setSelectedDuration(e.target.value)}
+                                            >
+                                                <option value="">Sélectionner une durée</option>
 
-                                            {/* Dynamic Options from Backend */}
-                                            {product.durationPrices && product.durationPrices.length > 0 ? (
-                                                product.durationPrices.map((dp, i) => (
-                                                    <option key={i} value={dp.duration}>
-                                                        {dp.duration}
-                                                    </option>
-                                                ))
-                                            ) : (
+                                                {/* Dynamic Options from Backend */}
+                                                {product.durationPrices && product.durationPrices.length > 0 ? (
+                                                    product.durationPrices.map((dp, i) => (
+                                                        <option key={i} value={dp.duration}>
+                                                            {dp.duration}
+                                                        </option>
+                                                    ))
+                                                ) : (
+                                                    <>
+                                                        {product.provider === 'tivipanel' && <option value="trial">24h (Test)</option>}
+                                                        <option value="1">1 Month</option>
+                                                        <option value="3">3 Months</option>
+                                                        <option value="6">6 Months</option>
+                                                        <option value="12">12 Months</option>
+                                                    </>
+                                                )}
+                                            </select>
+                                        </div>
+                                        {(() => {
+                                            const subs = (product.subcategory || "").split(',').map(s => s.trim());
+                                            const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                            return (product.type === 'm3u' || isHybrid);
+                                        })() && (
                                                 <>
-                                                    {product.provider === 'tivipanel' && <option value="trial">24h (Test)</option>}
-                                                    <option value="1">1 Month</option>
-                                                    <option value="3">3 Months</option>
-                                                    <option value="6">6 Months</option>
-                                                    <option value="12">12 Months</option>
-                                                </>
-                                            )}
-                                        </select>
-                                    </div>
-                                    {(() => {
-                                        const subs = (product.subcategory || "").split(',').map(s => s.trim());
-                                        const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
-                                        return (product.type === 'm3u' || isHybrid);
-                                    })() && (
-                                        <>
-                                            {/* Subscription Type Selector - Specific to multi-choice subcategories */}
-                                            {(() => {
-                                                const subs = (product.subcategory || "").split(',').map(s => s.trim());
-                                                return subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
-                                            })() && (
-                                                <div className="mb-4">
-                                                    <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
-                                                    <div className="flex gap-4">
-                                                        <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
-                                                            <input
-                                                                type="radio"
-                                                                name="subtype"
-                                                                value="code"
-                                                                checked={subscriptionType === 'code'}
-                                                                onChange={() => setSubscriptionType('code')}
-                                                                className="hidden"
-                                                            />
-                                                            <div className="text-center font-bold">Lien M3U</div>
-                                                        </label>
-                                                        <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
-                                                            <input
-                                                                type="radio"
-                                                                name="subtype"
-                                                                value="m3u"
-                                                                checked={subscriptionType === 'm3u'}
-                                                                onChange={() => setSubscriptionType('m3u')}
-                                                                className="hidden"
-                                                            />
-                                                            <div className="text-center font-bold">Code d'activation</div>
-                                                        </label>
-                                                    </div>
-                                                    {subscriptionType === 'code' && (
-                                                        <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
-                                                            <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
-                                                            <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
-                                                                {product.keys?.filter(k => !k.isSold).length > 0 ? `${product.keys?.filter(k => !k.isSold).length} Codes Disponibles en stock` : "Commande en attente (Livraison manuelle par l'admin)"}
-                                                            </span>
+                                                    {/* Subscription Type Selector - Specific to multi-choice subcategories */}
+                                                    {(() => {
+                                                        const subs = (product.subcategory || "").split(',').map(s => s.trim());
+                                                        return subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                                    })() && (
+                                                            <div className="mb-4">
+                                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
+                                                                <div className="flex gap-4">
+                                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                                        <input
+                                                                            type="radio"
+                                                                            name="subtype"
+                                                                            value="code"
+                                                                            checked={subscriptionType === 'code'}
+                                                                            onChange={() => setSubscriptionType('code')}
+                                                                            className="hidden"
+                                                                        />
+                                                                        <div className="text-center font-bold">Lien M3U</div>
+                                                                    </label>
+                                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                                        <input
+                                                                            type="radio"
+                                                                            name="subtype"
+                                                                            value="m3u"
+                                                                            checked={subscriptionType === 'm3u'}
+                                                                            onChange={() => setSubscriptionType('m3u')}
+                                                                            className="hidden"
+                                                                        />
+                                                                        <div className="text-center font-bold">Code d'activation</div>
+                                                                    </label>
+                                                                </div>
+                                                                {subscriptionType === 'code' && (
+                                                                    <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
+                                                                        <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
+                                                                        <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
+                                                                            {product.keys?.filter(k => !k.isSold).length > 0 ? `${product.keys?.filter(k => !k.isSold).length} Codes Disponibles en stock` : "Commande en attente (Livraison manuelle par l'admin)"}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                    {/* Sort Bouquets (Packages) */}
+                                                    {product.showBouquetSorter !== false && subscriptionType === 'm3u' && (
+                                                        <div className="mb-4">
+                                                            <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
+                                                            <select
+                                                                className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                                value={selectedRegion}
+                                                                onChange={(e) => setSelectedRegion(e.target.value)}
+                                                            >
+                                                                <option value="">Sélectionner un bouquet</option>
+                                                                {packages.map(pkg => (
+                                                                    <option key={pkg.id} value={pkg.id}>
+                                                                        {(product.bouquetNames && product.bouquetNames[pkg.id]) ? product.bouquetNames[pkg.id] : pkg.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
                                                         </div>
                                                     )}
-                                                </div>
-                                            )}
 
-                                            {/* Sort Bouquets (Packages) */}
-                                            {product.showBouquetSorter !== false && subscriptionType === 'm3u' && (
-                                                <div className="mb-4">
-                                                    <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
-                                                    <select
-                                                        className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                        value={selectedRegion}
-                                                        onChange={(e) => setSelectedRegion(e.target.value)}
-                                                    >
-                                                        <option value="">Sélectionner un bouquet</option>
-                                                        {packages.map(pkg => (
-                                                            <option key={pkg.id} value={pkg.id}>
-                                                                {(product.bouquetNames && product.bouquetNames[pkg.id]) ? product.bouquetNames[pkg.id] : pkg.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
+                                                    {/* Country */}
+                                                    {product.showCountrySelector !== false && (
+                                                        <div className="mb-2">
+                                                            <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
+                                                            <select
+                                                                className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                                value={selectedCountry}
+                                                                onChange={(e) => setSelectedCountry(e.target.value)}
+                                                            >
+                                                                {countries.map(c => (
+                                                                    <option key={c.code} value={c.code}>{c.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
-
-                                            {/* Country */}
-                                            {product.showCountrySelector !== false && (
-                                                <div className="mb-2">
-                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
-                                                <select
-                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                    value={selectedCountry}
-                                                    onChange={(e) => setSelectedCountry(e.target.value)}
-                                                >
-                                                    {countries.map(c => (
-                                                        <option key={c.code} value={c.code}>{c.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            )}
+                                    </div>
+                                )}
 
                             {/* Reviews and Guarantees Block */}
                             {(product.rating || product.reviewsCount || (product.guarantees && product.guarantees.length > 0)) && (
@@ -766,7 +766,7 @@ const ProductDetails = () => {
                                         </div>
                                     )}
                                     {product.rating && product.reviewsCount && <div className="border-b border-white/10 my-4"></div>}
-                                    
+
                                     {product.reviewsCount && (
                                         <div className="mb-4">
                                             <div className="flex items-center gap-2 mb-2">
@@ -852,13 +852,13 @@ const ProductDetails = () => {
                         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
                         position: 'relative'
                     }}>
-                        <button 
+                        <button
                             onClick={() => setShowMangoModal(false)}
                             style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '1.5rem', cursor: 'pointer' }}
                         >
                             &times;
                         </button>
-                        
+
                         <h2 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: '900', marginBottom: '10px', textAlign: 'center' }}>
                             {mangoRenewType === 'box' ? 'Renew Box' : 'Renew Netfly'}
                         </h2>
@@ -906,8 +906,8 @@ const ProductDetails = () => {
                                         <div key={serviceGroup.serviceName}>
                                             <div className="text-[0.7rem] text-primary font-bold mb-1 uppercase opacity-60">{serviceGroup.serviceName}</div>
                                             {serviceGroup.priceList.map((plan) => (
-                                                <div 
-                                                    key={plan.key} 
+                                                <div
+                                                    key={plan.key}
                                                     onClick={() => setSelectedMangoService(plan)}
                                                     className={`p-3 rounded-lg border cursor-pointer transition-all flex justify-between items-center ${selectedMangoService?.key === plan.key ? 'bg-primary/20 border-primary' : 'bg-black/20 border-white/5 hover:border-white/20'}`}
                                                 >
@@ -988,7 +988,7 @@ const ProductDetails = () => {
                         <h2 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: '900', marginBottom: '20px' }}>
                             Réponse Mango API
                         </h2>
-                        
+
                         <div style={{
                             background: '#000',
                             padding: '20px',

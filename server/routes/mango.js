@@ -178,6 +178,15 @@ router.post('/test-connection', async (req, res) => {
         const clientID = process.env.MANGO_CLIENT_ID;
         const apiKey = process.env.MANGO_API_KEY;
 
+        // Fetch Server Public IP
+        let serverIp = "Unknown";
+        try {
+            const ipRes = await axios.get('https://api.ipify.org?format=json');
+            serverIp = ipRes.data.ip;
+        } catch (ipErr) {
+            console.error("Failed to fetch server IP:", ipErr.message);
+        }
+
         const response = await axios.post(`${MANGO_BASE_URL}/authentication/login`, {}, {
             headers: {
                 'x-client-id': clientID,
@@ -186,7 +195,10 @@ router.post('/test-connection', async (req, res) => {
             }
         });
 
-        res.status(200).json(response.data);
+        res.status(200).json({
+            ...response.data,
+            serverIp: serverIp
+        });
     } catch (err) {
         console.error("Mango Test Error:", err.response?.data || err.message);
         res.status(err.response?.status || 500).json(err.response?.data || { message: err.message });
