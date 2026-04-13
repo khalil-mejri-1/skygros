@@ -2,6 +2,7 @@ const router = require('express').Router();
 const axios = require('axios');
 const User = require('../models/User');
 const Order = require('../models/Order');
+const GeneralSettings = require('../models/GeneralSettings');
 const https = require('https');
 
 // Create an agent to force IPv4 (matching curl -4)
@@ -107,12 +108,23 @@ router.post('/purchase', async (req, res) => {
     const { userId, serviceKey, identifier, type, price } = req.body;
 
     try {
-        // 1. Verify User Balance on our site
+        // 1. Calculate price from admin settings or use default
+        let finalPrice = price; // Fallback to provided price if not set
+        const settings = await GeneralSettings.findOne({});
+        if (settings && settings.mangoSettings) {
+            if (type === 'netfly' && settings.mangoSettings.netflyPrice > 0) {
+                finalPrice = settings.mangoSettings.netflyPrice;
+            } else if (type === 'box' && settings.mangoSettings.boxPrice > 0) {
+                finalPrice = settings.mangoSettings.boxPrice;
+            }
+        }
+
+        // 2. Verify User Balance on our site
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
-        if (user.balance < price) return res.status(400).json({ message: "Insufficient balance on site" });
+        if (user.balance < finalPrice) return res.status(400).json({ message: "Insufficient balance on site" });
 
-        // 2. Mango Operations
+        // 3. Mango Operations
         const token = await getAuthToken();
 
         // 3. Create Mango Order
@@ -151,13 +163,13 @@ router.post('/purchase', async (req, res) => {
         }
 
         // 6. Payment Success -> Update local database
-        user.balance -= price;
+        user.balance -= finalPrice;
         await user.save();
 
         const newOrder = new Order({
             user: userId,
             products: [], 
-            total: price,
+            total: finalPrice,
             status: 'completed',
             paymentMethod: 'balance',
             mangoDetails: {

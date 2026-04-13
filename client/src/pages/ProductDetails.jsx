@@ -42,6 +42,7 @@ const ProductDetails = () => {
     const [mangoTestResponse, setMangoTestResponse] = useState(null);
     const [showTestModal, setShowTestModal] = useState(false);
     const [isTestingConnection, setIsTestingConnection] = useState(false);
+    const [settings, setSettings] = useState(null);
 
     // Fetch NEO Options if M3U
     useEffect(() => {
@@ -102,16 +103,24 @@ const ProductDetails = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/products`);
-                if (Array.isArray(res.data)) {
-                    const currentProduct = res.data.find(p => p._id === id);
+                const [productRes, settingsRes] = await Promise.all([
+                    axios.get(`${API_BASE_URL}/products`),
+                    axios.get(`${API_BASE_URL}/settings`).catch(() => ({ data: null }))
+                ]);
+                
+                if (settingsRes.data) {
+                    setSettings(settingsRes.data);
+                }
+
+                if (Array.isArray(productRes.data)) {
+                    const currentProduct = productRes.data.find(p => p._id === id);
                     if (currentProduct) {
                         setProduct(currentProduct);
                         // Get similar products from the same category
-                        setSimilarProducts(res.data.filter(p => p.category === currentProduct.category && p._id !== id).slice(0, 4));
+                        setSimilarProducts(productRes.data.filter(p => p.category === currentProduct.category && p._id !== id).slice(0, 4));
                     }
                 } else {
-                    console.error("Products data is not an array:", res.data);
+                    console.error("Products data is not an array:", productRes.data);
                 }
             } catch (err) {
                 console.error(err);
@@ -163,6 +172,16 @@ const ProductDetails = () => {
             return;
         }
 
+        // Get calculated price
+        let finalPrice = selectedMangoService.price;
+        if (settings && settings.mangoSettings) {
+            if (mangoRenewType === 'netfly' && settings.mangoSettings.netflyPrice > 0) {
+                finalPrice = settings.mangoSettings.netflyPrice;
+            } else if (mangoRenewType === 'box' && settings.mangoSettings.boxPrice > 0) {
+                finalPrice = settings.mangoSettings.boxPrice;
+            }
+        }
+
         setIsLoading(true);
         try {
             const res = await axios.post(`${API_BASE_URL}/mango/purchase`, {
@@ -170,7 +189,7 @@ const ProductDetails = () => {
                 serviceKey: selectedMangoService.key,
                 identifier: mangoIdentifier,
                 type: mangoRenewType,
-                price: selectedMangoService.price
+                price: selectedMangoService.price // Backend calculates the overridden price securely
             });
 
             if (res.status === 200) {
@@ -915,7 +934,9 @@ const ProductDetails = () => {
                                                         <div className="text-sm font-bold text-white">{plan.name}</div>
                                                         <div className="text-[0.7rem] text-gray-500">{plan.description || "Plan de renouvellement"}</div>
                                                     </div>
-                                                    <div className="text-primary font-black">${plan.price}</div>
+                                                    <div className="text-primary font-black">
+                                                        ${settings?.mangoSettings && ((mangoRenewType === 'netfly' && settings.mangoSettings.netflyPrice > 0) || (mangoRenewType === 'box' && settings.mangoSettings.boxPrice > 0)) ? (mangoRenewType === 'netfly' ? settings.mangoSettings.netflyPrice : settings.mangoSettings.boxPrice) : plan.price}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -939,7 +960,7 @@ const ProductDetails = () => {
                                     cursor: (isLoading || !selectedMangoService) ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                {isLoading ? "Traitement..." : (selectedMangoService ? `CONFIRMER - $${selectedMangoService.price}` : "CHOISIR UN PLAN")}
+                                {isLoading ? "Traitement..." : (selectedMangoService ? `CONFIRMER - $${(settings?.mangoSettings && mangoRenewType === 'netfly' && settings.mangoSettings.netflyPrice > 0) ? settings.mangoSettings.netflyPrice : (settings?.mangoSettings && mangoRenewType === 'box' && settings.mangoSettings.boxPrice > 0) ? settings.mangoSettings.boxPrice : selectedMangoService.price}` : "CHOISIR UN PLAN")}
                             </button>
                             <button
                                 onClick={() => setShowMangoModal(false)}

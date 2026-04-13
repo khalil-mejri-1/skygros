@@ -2046,6 +2046,40 @@ const Admin = () => {
                                     </div>
                                 </div>
 
+                                {/* Mango Prices */}
+                                <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '20px' }}>
+                                    <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Prix Mango (Renew)</h3>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="form-label">Prix "Renew Netfly" ($)</label>
+                                            <input
+                                                className="admin-input"
+                                                type="number"
+                                                value={settings.mangoSettings?.netflyPrice || 0}
+                                                onChange={(e) => setSettings({
+                                                    ...settings,
+                                                    mangoSettings: { ...settings.mangoSettings, netflyPrice: parseFloat(e.target.value) }
+                                                })}
+                                                placeholder="ex: 15"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="form-label">Prix "Renew Box" ($)</label>
+                                            <input
+                                                className="admin-input"
+                                                type="number"
+                                                value={settings.mangoSettings?.boxPrice || 0}
+                                                onChange={(e) => setSettings({
+                                                    ...settings,
+                                                    mangoSettings: { ...settings.mangoSettings, boxPrice: parseFloat(e.target.value) }
+                                                })}
+                                                placeholder="ex: 20"
+                                            />
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '5px' }}>Ces prix s'appliqueront lors du renouvellement depuis la page produit.</p>
+                                </div>
+
                                 {/* Méthodes de Recharge */}
                                 <div className="glass" style={{ padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
                                     <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '20px', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px' }}>Méthodes de Recharge</h3>
