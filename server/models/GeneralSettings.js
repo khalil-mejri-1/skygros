@@ -586,11 +586,11 @@ const GeneralSettingsSchema = new mongoose.Schema({
             whatsapp: { type: String },
             isActive: { type: Boolean, default: true }
         }],
-        sessionTimeout: { type: Number, default: 1440 } // In minutes (default 24h)
-    },
-    mangoSettings: {
-        boxPrice: { type: Number, default: 0 },
-        netflyPrice: { type: Number, default: 0 }
+        sessionTimeout: { type: Number, default: 1440 }, // In minutes (default 24h)
+        mangoSettings: {
+            boxPrice: { type: Number, default: 0 },
+            netflyPrice: { type: Number, default: 0 }
+        }
     }
 }, { timestamps: true });
 

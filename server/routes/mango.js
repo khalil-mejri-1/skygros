@@ -112,11 +112,13 @@ router.post('/purchase', async (req, res) => {
         // 1. Calculate price from admin settings or use default
         let finalPrice = Number(price); // Fallback to provided price if not set
         const settings = await GeneralSettings.findOne({});
-        if (settings && settings.mangoSettings) {
-            if (type === 'netfly' && settings.mangoSettings.netflyPrice > 0) {
-                finalPrice += Number(settings.mangoSettings.netflyPrice);
-            } else if (type === 'box' && settings.mangoSettings.boxPrice > 0) {
-                finalPrice += Number(settings.mangoSettings.boxPrice);
+        const mangoPriceSettings = settings?.home?.mangoSettings;
+        
+        if (mangoPriceSettings) {
+            if (type === 'netfly' && mangoPriceSettings.netflyPrice > 0) {
+                finalPrice += Number(mangoPriceSettings.netflyPrice);
+            } else if (type === 'box' && mangoPriceSettings.boxPrice > 0) {
+                finalPrice += Number(mangoPriceSettings.boxPrice);
             }
         }
 

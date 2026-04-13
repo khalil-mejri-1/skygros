@@ -2092,13 +2092,16 @@ const Admin = () => {
                                                 type="number"
                                                 step="0.01"
                                                 style={{ textAlign: 'center' }}
-                                                value={settings?.mangoSettings?.netflyPrice !== undefined ? settings.mangoSettings.netflyPrice : ''}
+                                                value={settings?.home?.mangoSettings?.netflyPrice !== undefined ? settings.home.mangoSettings.netflyPrice : ''}
                                                 onChange={(e) => {
                                                     setSettings({
                                                         ...settings,
-                                                        mangoSettings: { 
-                                                            ...(settings.mangoSettings || {}), 
-                                                            netflyPrice: e.target.value 
+                                                        home: {
+                                                            ...settings.home,
+                                                            mangoSettings: { 
+                                                                ...(settings.home?.mangoSettings || {}), 
+                                                                netflyPrice: e.target.value 
+                                                            }
                                                         }
                                                     });
                                                 }}
@@ -2106,16 +2109,19 @@ const Admin = () => {
                                                     const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
                                                     setSettings({
                                                         ...settings,
-                                                        mangoSettings: { 
-                                                            ...(settings.mangoSettings || {}), 
-                                                            netflyPrice: isNaN(val) ? 0 : val 
+                                                        home: {
+                                                            ...settings.home,
+                                                            mangoSettings: { 
+                                                                ...(settings.home?.mangoSettings || {}), 
+                                                                netflyPrice: isNaN(val) ? 0 : val 
+                                                            }
                                                         }
                                                     });
                                                 }}
                                                 placeholder="ex: 15"
                                             />
                                             <div style={{ textAlign: 'center', marginTop: '8px', color: 'var(--accent-color)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                {settings?.mangoSettings?.netflyPrice !== undefined && settings?.mangoSettings?.netflyPrice !== "" ? `${settings.mangoSettings.netflyPrice} $` : '0 $'}
+                                                {settings?.home?.mangoSettings?.netflyPrice !== undefined && settings?.home?.mangoSettings?.netflyPrice !== "" ? `${settings.home.mangoSettings.netflyPrice} $` : '0 $'}
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-2">
@@ -2125,13 +2131,16 @@ const Admin = () => {
                                                 type="number"
                                                 step="0.01"
                                                 style={{ textAlign: 'center' }}
-                                                value={settings?.mangoSettings?.boxPrice !== undefined ? settings.mangoSettings.boxPrice : ''}
+                                                value={settings?.home?.mangoSettings?.boxPrice !== undefined ? settings.home.mangoSettings.boxPrice : ''}
                                                 onChange={(e) => {
                                                     setSettings({
                                                         ...settings,
-                                                        mangoSettings: { 
-                                                            ...(settings.mangoSettings || {}), 
-                                                            boxPrice: e.target.value 
+                                                        home: {
+                                                            ...settings.home,
+                                                            mangoSettings: { 
+                                                                ...(settings.home?.mangoSettings || {}), 
+                                                                boxPrice: e.target.value 
+                                                            }
                                                         }
                                                     });
                                                 }}
@@ -2139,16 +2148,19 @@ const Admin = () => {
                                                     const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
                                                     setSettings({
                                                         ...settings,
-                                                        mangoSettings: { 
-                                                            ...(settings.mangoSettings || {}), 
-                                                            boxPrice: isNaN(val) ? 0 : val 
+                                                        home: {
+                                                            ...settings.home,
+                                                            mangoSettings: { 
+                                                                ...(settings.home?.mangoSettings || {}), 
+                                                                boxPrice: isNaN(val) ? 0 : val 
+                                                            }
                                                         }
                                                     });
                                                 }}
                                                 placeholder="ex: 20"
                                             />
                                             <div style={{ textAlign: 'center', marginTop: '8px', color: 'var(--accent-color)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                {settings?.mangoSettings?.boxPrice !== undefined && settings?.mangoSettings?.boxPrice !== "" ? `${settings.mangoSettings.boxPrice} $` : '0 $'}
+                                                {settings?.home?.mangoSettings?.boxPrice !== undefined && settings?.home?.mangoSettings?.boxPrice !== "" ? `${settings.home.mangoSettings.boxPrice} $` : '0 $'}
                                             </div>
                                         </div>
                                     </div>
