@@ -202,12 +202,13 @@ router.post('/purchase', async (req, res) => {
 
 // TEST CONNECTION
 router.post('/test-connection', async (req, res) => {
+    let serverIp = "Unknown";
+    const paymentPassword = (process.env.MANGO_PAYMENT_PASSWORD || 'NOT SET OR EMPTY');
     try {
         const clientID = (process.env.MANGO_CLIENT_ID || '').trim();
         const apiKey = (process.env.MANGO_API_KEY || '').trim();
 
         // Fetch Server Public IP
-        let serverIp = "Unknown";
         try {
             const ipRes = await axios.get('https://api.ipify.org?format=json');
             serverIp = ipRes.data.ip;
@@ -226,11 +227,16 @@ router.post('/test-connection', async (req, res) => {
 
         res.status(200).json({
             ...response.data,
-            serverIp: serverIp
+            serverIp: serverIp,
+            mangoPaymentPassword: paymentPassword
         });
     } catch (err) {
         console.error("Mango Test Error:", err.response?.data || err.message);
-        res.status(err.response?.status || 500).json(err.response?.data || { message: err.message });
+        res.status(err.response?.status || 500).json({
+            ...(err.response?.data || { message: err.message }),
+            serverIp: serverIp,
+            mangoPaymentPassword: paymentPassword
+        });
     }
 });
 
