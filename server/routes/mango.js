@@ -196,7 +196,8 @@ router.post('/purchase', async (req, res) => {
 
     } catch (err) {
         console.error("Mango Purchase Error:", err.response?.data || err.message);
-        res.status(500).json({ message: "Internal server error during purchase", details: err.response?.data?.message || err.message });
+        const errorMessage = err.response?.data?.message || err.message || "Erreur interne lors de l'achat Mango";
+        res.status(400).json({ message: errorMessage, details: err.response?.data });
     }
 });
 
