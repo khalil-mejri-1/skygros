@@ -110,16 +110,26 @@ router.post('/purchase', async (req, res) => {
 
     try {
         // 1. Calculate price from admin settings or use default
-        let finalPrice = Number(price); // Fallback to provided price if not set
+        const parsePrice = (p) => {
+            if (!p) return 0;
+            const cleaned = String(p).replace(/[^0-9.]/g, '');
+            return parseFloat(cleaned) || 0;
+        };
+
+        let finalPrice = parsePrice(price);
         const settings = await GeneralSettings.findOne({});
         const mangoPriceSettings = settings?.home?.mangoSettings;
         
         if (mangoPriceSettings) {
             if (type === 'netfly' && mangoPriceSettings.netflyPrice > 0) {
-                finalPrice += Number(mangoPriceSettings.netflyPrice);
+                finalPrice += parsePrice(mangoPriceSettings.netflyPrice);
             } else if (type === 'box' && mangoPriceSettings.boxPrice > 0) {
-                finalPrice += Number(mangoPriceSettings.boxPrice);
+                finalPrice += parsePrice(mangoPriceSettings.boxPrice);
             }
+        }
+
+        if (isNaN(finalPrice)) {
+            return res.status(400).json({ message: "Calcul du prix invalide (NaN)" });
         }
 
         // 2. Verify User Balance on our site
