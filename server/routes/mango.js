@@ -2,6 +2,7 @@ const router = require('express').Router();
 const axios = require('axios');
 const User = require('../models/User');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const GeneralSettings = require('../models/GeneralSettings');
 const https = require('https');
 
@@ -109,13 +110,13 @@ router.post('/purchase', async (req, res) => {
 
     try {
         // 1. Calculate price from admin settings or use default
-        let finalPrice = price; // Fallback to provided price if not set
+        let finalPrice = Number(price); // Fallback to provided price if not set
         const settings = await GeneralSettings.findOne({});
         if (settings && settings.mangoSettings) {
             if (type === 'netfly' && settings.mangoSettings.netflyPrice > 0) {
-                finalPrice = settings.mangoSettings.netflyPrice;
+                finalPrice += Number(settings.mangoSettings.netflyPrice);
             } else if (type === 'box' && settings.mangoSettings.boxPrice > 0) {
-                finalPrice = settings.mangoSettings.boxPrice;
+                finalPrice += Number(settings.mangoSettings.boxPrice);
             }
         }
 
@@ -166,18 +167,22 @@ router.post('/purchase', async (req, res) => {
         user.balance -= finalPrice;
         await user.save();
 
+        const mangoProduct = await Product.findOne({ type: 'mango' });
+
         const newOrder = new Order({
-            user: userId,
-            products: [], 
-            total: finalPrice,
-            status: 'completed',
-            paymentMethod: 'balance',
+            userId: userId,
+            productId: mangoProduct ? mangoProduct._id : userId, // Fallback if no specific mango product
+            productTitle: type === 'box' ? 'Mango Renew Box' : 'Mango Renew Netfly',
+            price: finalPrice,
+            status: 'COMPLETED',
+            licenseKey: 'API_RENEWAL',
             mangoDetails: {
                 orderNumber: orderNumber,
                 identifier: identifier,
                 type: type,
                 serviceKey: serviceKey
-            }
+            },
+            customerDetails: req.body.customerDetails
         });
         await newOrder.save();
 

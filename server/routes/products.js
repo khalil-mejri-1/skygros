@@ -315,7 +315,8 @@ router.post('/purchase', async (req, res) => {
             price: finalPrice, // Save the actual price paid
             licenseKey: licenseKey,
             status: orderStatus,
-            subscription: subscriptionData
+            subscription: subscriptionData,
+            customerDetails: req.body.customerDetails
         });
 
         await newOrder.save();

@@ -25,6 +25,7 @@ const ProductDetails = () => {
     const [lastPurchasedKey, setLastPurchasedKey] = useState("");
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [isUltraSmall, setIsUltraSmall] = useState(window.innerWidth <= 660);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
 
     // M3U Options State
     const [packages, setPackages] = useState([]);
@@ -43,6 +44,18 @@ const ProductDetails = () => {
     const [showTestModal, setShowTestModal] = useState(false);
     const [isTestingConnection, setIsTestingConnection] = useState(false);
     const [settings, setSettings] = useState(null);
+    const [customerDetails, setCustomerDetails] = useState({ whatsapp: "", note: "" });
+
+    // Carousel Auto-play
+    useEffect(() => {
+        const allImages = product ? [product.image, ...(product.secondaryImages || [])] : [];
+        if (allImages.length > 1) {
+            const interval = setInterval(() => {
+                setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+            }, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [product]);
 
     // Fetch NEO Options if M3U
     useEffect(() => {
@@ -173,12 +186,18 @@ const ProductDetails = () => {
         }
 
         // Get calculated price
-        let finalPrice = selectedMangoService.price;
+        const parsePrice = (p) => {
+            if (!p) return 0;
+            const cleaned = String(p).replace(/[^0-9.]/g, '');
+            return parseFloat(cleaned) || 0;
+        };
+
+        let finalPrice = parsePrice(selectedMangoService.price);
         if (settings && settings.mangoSettings) {
-            if (mangoRenewType === 'netfly' && settings.mangoSettings.netflyPrice > 0) {
-                finalPrice = settings.mangoSettings.netflyPrice;
-            } else if (mangoRenewType === 'box' && settings.mangoSettings.boxPrice > 0) {
-                finalPrice = settings.mangoSettings.boxPrice;
+            if (mangoRenewType === 'netfly') {
+                finalPrice += parsePrice(settings.mangoSettings.netflyPrice);
+            } else if (mangoRenewType === 'box') {
+                finalPrice += parsePrice(settings.mangoSettings.boxPrice);
             }
         }
 
@@ -189,7 +208,8 @@ const ProductDetails = () => {
                 serviceKey: selectedMangoService.key,
                 identifier: mangoIdentifier,
                 type: mangoRenewType,
-                price: selectedMangoService.price // Backend calculates the overridden price securely
+                price: selectedMangoService.price, // Backend calculates the overridden price securely
+                customerDetails: customerDetails
             });
 
             if (res.status === 200) {
@@ -304,7 +324,8 @@ const ProductDetails = () => {
                     bouquetId: selectedRegion,
                     subscriptionType: (product.type === 'm3u' || product.type === 'mango' || ((product.subcategory || "").split(',').includes("Abonnement code") && (product.subcategory || "").split(',').includes("Abonnement M3u"))) ? subscriptionType : 'manual',
                     identifier: mangoIdentifier
-                } : null
+                } : null,
+                customerDetails: customerDetails
             });
 
             if (res.status === 200) {
@@ -463,25 +484,154 @@ const ProductDetails = () => {
                     <FaChevronLeft size={12} /> RETOUR AU MAGASIN
                 </Link>
 
+                {/* Admin Controls Window */}
+                {user?.role === 'admin' && (
+                    <div className="glass" style={{ 
+                        padding: '15px 25px', 
+                        borderRadius: '16px', 
+                        marginBottom: '30px', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        background: 'rgba(255, 153, 0, 0.1)',
+                        border: '1px solid rgba(255, 153, 0, 0.3)',
+                        animation: 'fadeIn 0.5s ease'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
+                                <FaBolt />
+                            </div>
+                            <div>
+                                <div style={{ fontWeight: '900', fontSize: '0.9rem', color: '#fff' }}>PANEL ADMIN</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--accent-color)', fontWeight: '700' }}>STOCK: {product.keys?.filter(k => !k.isSold).length || 0} DISPONIBLE</div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button 
+                                onClick={() => window.location.href = `/admin?tab=products&edit=${product._id}`}
+                                className="btn" 
+                                style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800' }}
+                            >
+                                MODIFIER
+                            </button>
+                            <button 
+                                onClick={() => window.location.href = `/admin?tab=stock&productId=${product._id}`}
+                                className="btn" 
+                                style={{ background: 'rgba(255, 153, 0, 0.2)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800' }}
+                            >
+                                GÉRER CODES
+                            </button>
+                            <button 
+                                onClick={async () => {
+                                    if(window.confirm("Supprimer ce produit ?")) {
+                                        try {
+                                            await axios.delete(`${API_BASE_URL}/products/${product._id}`);
+                                            window.location.href = '/products';
+                                        } catch (e) {
+                                            alert("Erreur lors de la suppression");
+                                        }
+                                    }
+                                }}
+                                className="btn" 
+                                style={{ background: 'rgba(255, 71, 87, 0.2)', color: '#ff4757', border: '1px solid rgba(255, 71, 87, 0.3)', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800' }}
+                            >
+                                SUPPRIMER
+                            </button>
+                        </div>
+
+                    </div>
+                )}
+
+
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.2fr', gap: isMobile ? '30px' : '60px', alignItems: 'start' }}>
                     <div style={{ position: isMobile ? 'relative' : 'sticky', top: isMobile ? 'unset' : '100px' }}>
-                        <div className="card-premium" style={{
-                            aspectRatio: isMobile ? '16/9' : '3/4',
-                            maxHeight: isMobile ? '350px' : 'unset',
-                            position: 'relative',
-                            background: '#0a0b14', // Match theme background or keep black
-                            borderRadius: 'var(--radius-lg)', // Ensure consistency
-                            overflow: 'hidden',
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.4)', // Add depth
-                            margin: '0 auto' // Center if width constrained
-                        }}>
-                            <img src={formatImageUrl(product.image)} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            {discountPercentage > 0 && (
-                                <div style={{ position: 'absolute', top: '15px', left: '15px', background: 'var(--accent-color)', color: '#000', padding: '6px 12px', borderRadius: '6px', fontWeight: '900', fontSize: '0.75rem', zIndex: 2, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-                                    OFFRE -{discountPercentage}%
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                            <div className="card-premium" style={{
+                                flex: 1,
+                                aspectRatio: isMobile ? '16/9' : '3/4',
+                                maxHeight: isMobile ? '350px' : 'unset',
+                                position: 'relative',
+                                background: '#0a0b14',
+                                borderRadius: 'var(--radius-lg)',
+                                overflow: 'hidden',
+                                boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
+                            }}>
+                                {(() => {
+                                    const allImages = [product.image, ...(product.secondaryImages || [])];
+                                    return (
+                                        <>
+                                            <img 
+                                                src={formatImageUrl(allImages[activeImageIndex])} 
+                                                alt={product.title} 
+                                                style={{ 
+                                                    width: '100%', 
+                                                    height: '100%', 
+                                                    objectFit: 'cover',
+                                                    transition: 'all 0.5s ease-in-out'
+                                                }} 
+                                            />
+                                            {allImages.length > 1 && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    bottom: '15px',
+                                                    left: '50%',
+                                                    transform: 'translateX(-50%)',
+                                                    display: 'flex',
+                                                    gap: '8px',
+                                                    zIndex: 10
+                                                }}>
+                                                    {allImages.map((_, idx) => (
+                                                        <div 
+                                                            key={idx}
+                                                            onClick={() => setActiveImageIndex(idx)}
+                                                            style={{
+                                                                width: activeImageIndex === idx ? '24px' : '8px',
+                                                                height: '8px',
+                                                                borderRadius: '4px',
+                                                                background: activeImageIndex === idx ? 'var(--accent-color)' : 'rgba(255,255,255,0.3)',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.3s ease'
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
+                                
+                                {discountPercentage > 0 && (
+                                    <div style={{ position: 'absolute', top: '15px', left: '15px', background: 'var(--accent-color)', color: '#000', padding: '6px 12px', borderRadius: '6px', fontWeight: '900', fontSize: '0.75rem', zIndex: 2, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
+                                        OFFRE -{discountPercentage}%
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Thumbnails on the right */}
+                            {!isMobile && product.secondaryImages?.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '80px' }}>
+                                    {[product.image, ...product.secondaryImages].map((img, idx) => (
+                                        <div 
+                                            key={idx}
+                                            onClick={() => setActiveImageIndex(idx)}
+                                            style={{
+                                                width: '80px',
+                                                height: '100px',
+                                                borderRadius: '10px',
+                                                overflow: 'hidden',
+                                                cursor: 'pointer',
+                                                border: activeImageIndex === idx ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.1)',
+                                                transition: 'all 0.2s ease',
+                                                opacity: activeImageIndex === idx ? 1 : 0.6
+                                            }}
+                                        >
+                                            <img src={formatImageUrl(img)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
+
 
                         {/* Badges moved here for mobile logic too, keeping structure consistency */}
                         <div className="flex gap-4 mt-6" style={{ flexDirection: isMobile ? 'row' : 'row' }}>
@@ -656,6 +806,32 @@ const ProductDetails = () => {
                             })() && (
                                     <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
                                         <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
+                                        
+                                        {/* Order Completion Inputs */}
+                                        <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'rgba(255,255,255,0.5)' }}>NUMÉRO WHATSAPP (POUR LE SUIVI)</label>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Ex: +216..."
+                                                    className="admin-input" 
+                                                    value={customerDetails.whatsapp}
+                                                    onChange={(e) => setCustomerDetails({...customerDetails, whatsapp: e.target.value})}
+                                                    style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'rgba(255,255,255,0.5)' }}>NOTES OU INSTRUCTIONS (OPTIONNEL)</label>
+                                                <textarea 
+                                                    placeholder="Précisez votre appareil ou demande spéciale..."
+                                                    className="admin-input" 
+                                                    value={customerDetails.note}
+                                                    onChange={(e) => setCustomerDetails({...customerDetails, note: e.target.value})}
+                                                    style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', minHeight: '80px', paddingTop: '10px' }}
+                                                />
+                                            </div>
+                                        </div>
+
 
                                         {/* Subscription Duration */}
                                         <div className="mb-4">
@@ -935,7 +1111,16 @@ const ProductDetails = () => {
                                                         <div className="text-[0.7rem] text-gray-500">{plan.description || "Plan de renouvellement"}</div>
                                                     </div>
                                                     <div className="text-primary font-black">
-                                                        ${settings?.mangoSettings && ((mangoRenewType === 'netfly' && settings.mangoSettings.netflyPrice > 0) || (mangoRenewType === 'box' && settings.mangoSettings.boxPrice > 0)) ? (mangoRenewType === 'netfly' ? settings.mangoSettings.netflyPrice : settings.mangoSettings.boxPrice) : plan.price}
+                                                        ${(() => {
+                                                            const parsePrice = (p) => {
+                                                                if (!p) return 0;
+                                                                const cleaned = String(p).replace(/[^0-9.]/g, '');
+                                                                return parseFloat(cleaned) || 0;
+                                                            };
+                                                            const basePrice = parsePrice(plan.price);
+                                                            const margin = settings?.mangoSettings ? (mangoRenewType === 'netfly' ? parsePrice(settings.mangoSettings.netflyPrice) : parsePrice(settings.mangoSettings.boxPrice)) : 0;
+                                                            return (basePrice + margin).toFixed(2);
+                                                        })()}
                                                     </div>
                                                 </div>
                                             ))}
@@ -950,17 +1135,25 @@ const ProductDetails = () => {
                                 onClick={handleMangoPurchase}
                                 disabled={isLoading || !selectedMangoService}
                                 style={{
-                                    background: (isLoading || !selectedMangoService) ? '#333' : 'var(--accent-color)',
-                                    color: (isLoading || !selectedMangoService) ? '#666' : '#000',
-                                    padding: '16px',
+                                    background: 'var(--accent-color)',
+                                    color: '#000',
+                                    padding: '12px',
                                     borderRadius: '12px',
                                     fontWeight: '900',
-                                    fontSize: '1.1rem',
-                                    boxShadow: selectedMangoService ? '0 10px 20px rgba(255, 153, 0, 0.2)' : 'none',
+                                    fontSize: '1rem',
                                     cursor: (isLoading || !selectedMangoService) ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                {isLoading ? "Traitement..." : (selectedMangoService ? `CONFIRMER - $${(settings?.mangoSettings && mangoRenewType === 'netfly' && settings.mangoSettings.netflyPrice > 0) ? settings.mangoSettings.netflyPrice : (settings?.mangoSettings && mangoRenewType === 'box' && settings.mangoSettings.boxPrice > 0) ? settings.mangoSettings.boxPrice : selectedMangoService.price}` : "CHOISIR UN PLAN")}
+                                {isLoading ? "Traitement..." : (selectedMangoService ? `CONFIRMER - $${(() => {
+                                    const parsePrice = (p) => {
+                                        if (!p) return 0;
+                                        const cleaned = String(p).replace(/[^0-9.]/g, '');
+                                        return parseFloat(cleaned) || 0;
+                                    };
+                                    const basePrice = parsePrice(selectedMangoService.price);
+                                    const margin = settings?.mangoSettings ? (mangoRenewType === 'netfly' ? parsePrice(settings.mangoSettings.netflyPrice) : parsePrice(settings.mangoSettings.boxPrice)) : 0;
+                                    return (basePrice + margin).toFixed(2);
+                                })()}` : "CHOISIR UN PLAN")}
                             </button>
                             <button
                                 onClick={() => setShowMangoModal(false)}

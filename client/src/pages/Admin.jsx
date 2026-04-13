@@ -72,6 +72,7 @@ const Admin = () => {
         oldPrice: 0,
         hasDiscount: false,
         image: "",
+        secondaryImages: [],
         category: "PC",
         keysInput: "",
         type: "normal",
@@ -257,14 +258,24 @@ const Admin = () => {
     };
 
     const handleUpdateSettings = async (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         try {
             const res = await axios.put(`${API_BASE_URL}/settings`, settings);
             setSettings(res.data);
-            triggerToast("Paramètres mis à jour.");
+            setAlertModal({ 
+                isOpen: true, 
+                title: "Succès", 
+                message: "L'enregistrement des nouveaux prix et des paramètres a réussi.", 
+                type: "success" 
+            });
         } catch (err) {
             console.error(err);
-            setAlertModal({ isOpen: true, title: "Erreur", message: "Erreur lors de la mise à jour des paramètres.", type: "error" });
+            setAlertModal({ 
+                isOpen: true, 
+                title: "Erreur", 
+                message: "Une erreur s'est produite et le prix n'a pas été enregistré. Veuillez réessayer.", 
+                type: "error" 
+            });
         }
     };
 
@@ -514,6 +525,30 @@ const Admin = () => {
         } catch (err) {
             console.error("Error uploading image:", err);
             triggerToast("Erreur lors de l'upload de l'image", "error");
+        }
+    };
+
+    const handleSecondaryImagesUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        try {
+            const uploadedUrls = [];
+            for (const file of files) {
+                const singleFormData = new FormData();
+                singleFormData.append('image', file);
+                const res = await axios.post(`${API_BASE_URL}/upload`, singleFormData);
+                uploadedUrls.push(res.data.filePath);
+            }
+
+            if (showAddForm) {
+                setNewProduct(prev => ({ ...prev, secondaryImages: [...prev.secondaryImages, ...uploadedUrls] }));
+            } else {
+                setIsEditing(prev => ({ ...prev, secondaryImages: [...(prev.secondaryImages || []), ...uploadedUrls] }));
+            }
+        } catch (err) {
+            console.error("Error uploading secondary images:", err);
+            triggerToast("Erreur lors de l'upload des images secondaires", "error");
         }
     };
 
@@ -2055,26 +2090,66 @@ const Admin = () => {
                                             <input
                                                 className="admin-input"
                                                 type="number"
-                                                value={settings.mangoSettings?.netflyPrice || 0}
-                                                onChange={(e) => setSettings({
-                                                    ...settings,
-                                                    mangoSettings: { ...settings.mangoSettings, netflyPrice: parseFloat(e.target.value) }
-                                                })}
+                                                step="0.01"
+                                                style={{ textAlign: 'center' }}
+                                                value={settings?.mangoSettings?.netflyPrice !== undefined ? settings.mangoSettings.netflyPrice : ''}
+                                                onChange={(e) => {
+                                                    setSettings({
+                                                        ...settings,
+                                                        mangoSettings: { 
+                                                            ...(settings.mangoSettings || {}), 
+                                                            netflyPrice: e.target.value 
+                                                        }
+                                                    });
+                                                }}
+                                                onBlur={(e) => {
+                                                    const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                    setSettings({
+                                                        ...settings,
+                                                        mangoSettings: { 
+                                                            ...(settings.mangoSettings || {}), 
+                                                            netflyPrice: isNaN(val) ? 0 : val 
+                                                        }
+                                                    });
+                                                }}
                                                 placeholder="ex: 15"
                                             />
+                                            <div style={{ textAlign: 'center', marginTop: '8px', color: 'var(--accent-color)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                {settings?.mangoSettings?.netflyPrice !== undefined && settings?.mangoSettings?.netflyPrice !== "" ? `${settings.mangoSettings.netflyPrice} $` : '0 $'}
+                                            </div>
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             <label className="form-label">Prix "Renew Box" ($)</label>
                                             <input
                                                 className="admin-input"
                                                 type="number"
-                                                value={settings.mangoSettings?.boxPrice || 0}
-                                                onChange={(e) => setSettings({
-                                                    ...settings,
-                                                    mangoSettings: { ...settings.mangoSettings, boxPrice: parseFloat(e.target.value) }
-                                                })}
+                                                step="0.01"
+                                                style={{ textAlign: 'center' }}
+                                                value={settings?.mangoSettings?.boxPrice !== undefined ? settings.mangoSettings.boxPrice : ''}
+                                                onChange={(e) => {
+                                                    setSettings({
+                                                        ...settings,
+                                                        mangoSettings: { 
+                                                            ...(settings.mangoSettings || {}), 
+                                                            boxPrice: e.target.value 
+                                                        }
+                                                    });
+                                                }}
+                                                onBlur={(e) => {
+                                                    const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                    setSettings({
+                                                        ...settings,
+                                                        mangoSettings: { 
+                                                            ...(settings.mangoSettings || {}), 
+                                                            boxPrice: isNaN(val) ? 0 : val 
+                                                        }
+                                                    });
+                                                }}
                                                 placeholder="ex: 20"
                                             />
+                                            <div style={{ textAlign: 'center', marginTop: '8px', color: 'var(--accent-color)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                {settings?.mangoSettings?.boxPrice !== undefined && settings?.mangoSettings?.boxPrice !== "" ? `${settings.mangoSettings.boxPrice} $` : '0 $'}
+                                            </div>
                                         </div>
                                     </div>
                                     <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '5px' }}>Ces prix s'appliqueront lors du renouvellement depuis la page produit.</p>
@@ -2283,7 +2358,7 @@ const Admin = () => {
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label className="form-label">Image du Produit</label>
+                                        <label className="form-label">Image Principale</label>
                                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                                             <input
                                                 type="file"
@@ -2301,6 +2376,43 @@ const Admin = () => {
                                                     />
                                                 </div>
                                             )}
+                                        </div>
+
+                                        <label className="form-label" style={{ marginTop: '10px' }}>Images Secondaires (Carousel)</label>
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="image/*"
+                                                className="admin-input"
+                                                onChange={handleSecondaryImagesUpload}
+                                                style={{ padding: '8px', fontSize: '0.8rem' }}
+                                            />
+                                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                                                {(showAddForm ? newProduct.secondaryImages : isEditing?.secondaryImages || []).map((img, idx) => (
+                                                    <div key={idx} style={{ position: 'relative', width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                                        <img
+                                                            src={formatImageUrl(img)}
+                                                            alt={`Secondary ${idx}`}
+                                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                        />
+                                                        <button 
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (showAddForm) {
+                                                                    setNewProduct(prev => ({ ...prev, secondaryImages: prev.secondaryImages.filter((_, i) => i !== idx) }));
+                                                                } else {
+                                                                    setIsEditing(prev => ({ ...prev, secondaryImages: prev.secondaryImages.filter((_, i) => i !== idx) }));
+                                                                }
+                                                            }}
+                                                            style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(255,0,0,0.7)', border: 'none', color: '#fff', fontSize: '10px', width: '15px', height: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
