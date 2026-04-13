@@ -244,25 +244,25 @@ const Navbar = () => {
                         !isMobile && (
                         <div className="flex items-center space-x-2 px-2 overflow-x-auto custom-scrollbar pb-4 pt-2" style={{ flexGrow: 1 }}>
                                 {[
-                                    { name: "Home", icon: "fas fa-home", href: "#home", color: "bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white" },
-                                    { name: "SERVER LIST", icon: "fas fa-server", href: "#all-server-list", color: "bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white" },
-                                    { name: "PAID APPs", icon: "fas fa-mobile-alt", href: "#paid-apps", color: "bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white" },
-                                    { name: "Pricing", icon: "fas fa-tags", href: "#pricing", color: "bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white" },
-                                    { name: "FAQ", icon: "fas fa-question-circle", href: "#faq", color: "bg-orange-500/10 hover:bg-orange-500 text-orange-500 hover:text-white" },
-                                    { name: "Contact", icon: "fas fa-headset", href: "#contact-us", color: "bg-indigo-500/10 hover:bg-indigo-500 text-indigo-500 hover:text-white" },
-                                    { name: "Privacy", icon: "fas fa-shield-alt", href: "#privacy-policy", color: "bg-cyan-500/10 hover:bg-cyan-500 text-cyan-500 hover:text-white" },
-                                    { name: "Disclaimer", icon: "fas fa-exclamation-triangle", href: "#disclaimer", color: "bg-red-600/10 hover:bg-red-600 text-red-600 hover:text-white" },
-                                    { name: "M3U", icon: "fas fa-exchange-alt", href: "#convert-m3u", color: "bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-white" },
-                                    { name: "Track", icon: "fas fa-search-location", href: "#track-order", color: "bg-pink-500/10 hover:bg-pink-500 text-pink-500 hover:text-white" }
+                                    { name: "Home", icon: "fas fa-home", href: "/", color: "bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white" },
+                                    { name: "SERVER LIST", icon: "fas fa-server", href: "/all-server-list", color: "bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white" },
+                                    { name: "PAID APPs", icon: "fas fa-mobile-alt", href: "/paid-apps", color: "bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white" },
+                                    { name: "Pricing", icon: "fas fa-tags", href: "/pricing", color: "bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white" },
+                                    { name: "FAQ", icon: "fas fa-question-circle", href: "/faq", color: "bg-orange-500/10 hover:bg-orange-500 text-orange-500 hover:text-white" },
+                                    { name: "Contact", icon: "fas fa-headset", href: "/contact-us", color: "bg-indigo-500/10 hover:bg-indigo-500 text-indigo-500 hover:text-white" },
+                                    { name: "Privacy", icon: "fas fa-shield-alt", href: "/privacy-policy", color: "bg-cyan-500/10 hover:bg-cyan-500 text-cyan-500 hover:text-white" },
+                                    { name: "Disclaimer", icon: "fas fa-exclamation-triangle", href: "/disclaimer", color: "bg-red-600/10 hover:bg-red-600 text-red-600 hover:text-white" },
+                                    { name: "M3U", icon: "fas fa-exchange-alt", href: "/convert-m3u", color: "bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-white" },
+                                    { name: "Track", icon: "fas fa-search-location", href: "/track-order", color: "bg-pink-500/10 hover:bg-pink-500 text-pink-500 hover:text-white" }
                                 ].map((item, idx) => (
-                                    <a
+                                    <Link
                                         key={idx}
-                                        href={item.href}
+                                        to={item.href}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border border-white/5 whitespace-nowrap shadow-sm group ${item.color}`}
                                     >
                                         <i className={`${item.icon} transition-transform group-hover:scale-110`}></i>
                                         <span>{item.name}</span>
-                                    </a>
+                                    </Link>
                                 ))}
                             </div>
                         )
@@ -633,20 +633,20 @@ const Navbar = () => {
                                 ) : (
                                     <>
                                         {[
-                                            { name: "Home", icon: "fas fa-home", href: "#home", color: "#ff4757" },
-                                            { name: "SERVER LIST", icon: "fas fa-server", href: "#all-server-list", color: "#3498db" },
-                                            { name: "PAID APPs", icon: "fas fa-mobile-alt", href: "#paid-apps", color: "#2ecc71" },
-                                            { name: "Pricing", icon: "fas fa-tags", href: "#pricing", color: "#9b59b6" },
-                                            { name: "FAQ", icon: "fas fa-question-circle", href: "#faq", color: "#e67e22" },
-                                            { name: "Contact", icon: "fas fa-headset", href: "#contact-us", color: "#3f51b5" },
-                                            { name: "Privacy", icon: "fas fa-shield-alt", href: "#privacy-policy", color: "#00bcd4" },
-                                            { name: "Disclaimer", icon: "fas fa-exclamation-triangle", href: "#disclaimer", color: "#f44336" },
-                                            { name: "M3U Converter", icon: "fas fa-exchange-alt", href: "#convert-m3u", color: "#009688" },
-                                            { name: "Track Order", icon: "fas fa-search-location", href: "#track-order", color: "#e91e63" }
+                                            { name: "Home", icon: "fas fa-home", href: "/", color: "#ff4757" },
+                                            { name: "SERVER LIST", icon: "fas fa-server", href: "/all-server-list", color: "#3498db" },
+                                            { name: "PAID APPs", icon: "fas fa-mobile-alt", href: "/paid-apps", color: "#2ecc71" },
+                                            { name: "Pricing", icon: "fas fa-tags", href: "/pricing", color: "#9b59b6" },
+                                            { name: "FAQ", icon: "fas fa-question-circle", href: "/faq", color: "#e67e22" },
+                                            { name: "Contact", icon: "fas fa-headset", href: "/contact-us", color: "#3f51b5" },
+                                            { name: "Privacy", icon: "fas fa-shield-alt", href: "/privacy-policy", color: "#00bcd4" },
+                                            { name: "Disclaimer", icon: "fas fa-exclamation-triangle", href: "/disclaimer", color: "#f44336" },
+                                            { name: "M3U Converter", icon: "fas fa-exchange-alt", href: "/convert-m3u", color: "#009688" },
+                                            { name: "Track Order", icon: "fas fa-search-location", href: "/track-order", color: "#e91e63" }
                                         ].map((item, idx) => (
-                                            <a
+                                            <Link
                                                 key={idx}
-                                                href={item.href}
+                                                to={item.href}
                                                 onClick={() => setMobileMenuOpen(false)}
                                                 className="nav-item-link flex items-center gap-4"
                                                 style={{
@@ -659,7 +659,7 @@ const Navbar = () => {
                                             >
                                                 <i className={`${item.icon}`} style={{ color: item.color, fontSize: '18px' }}></i>
                                                 <span style={{ fontWeight: '700' }}>{item.name}</span>
-                                            </a>
+                                            </Link>
                                         ))}
 
                                         <div style={{ margin: '15px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}></div>

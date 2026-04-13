@@ -17,6 +17,18 @@ router.get('/', async (req, res) => {
             ];
             await settings.save();
         }
+        
+        if (!settings.seoPages || settings.seoPages.length === 0) {
+            settings.seoPages = [
+                { path: "/", name: "Accueil", title: "Skygros - Accueil", description: "Plateforme moderne", keywords: "iptv, streaming" },
+                { path: "/products", name: "Produits", title: "Skygros - Produits", description: "Nos produits IPTV", keywords: "iptv, serveurs, acheter" },
+                { path: "/panier", name: "Panier", title: "Skygros - Panier", description: "Votre panier d'achat", keywords: "panier, achat" },
+                { path: "/login", name: "Connexion", title: "Skygros - Connexion", description: "Connectez-vous à votre compte", keywords: "login, connexion" },
+                { path: "/register", name: "Inscription", title: "Skygros - Inscription", description: "Créez votre compte", keywords: "inscription, register" },
+                { path: "/historique", name: "Historique", title: "Skygros - Historique", description: "Historique d'achat", keywords: "historique, commandes" }
+            ];
+            await settings.save();
+        }
         res.status(200).json(settings);
     } catch (err) {
         console.error("GET SETTINGS ERROR:", err);

@@ -48,7 +48,7 @@ const Toast = ({ message, type = 'success', duration = 3000, onClose }) => {
             position: 'fixed',
             top: '20px',
             right: '20px',
-            zIndex: 9999,
+            zIndex: 99999999,
             pointerEvents: 'none'
         }}>
             <div style={{

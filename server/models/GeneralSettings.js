@@ -5,6 +5,19 @@ const GeneralSettingsSchema = new mongoose.Schema({
     smtpPassword: { type: String, default: "" },
     whatsappNumber: { type: String, default: "" }, // Admin WhatsApp Number for notifications
     autoLogoutDuration: { type: Number, default: 24 }, // in hours
+    seoPages: [
+        {
+            path: { type: String }, // e.g. "/", "/products", "/login"
+            name: { type: String }, // e.g. "Accueil", "Produits", "Connexion"
+            title: { type: String, default: "" },
+            description: { type: String, default: "" },
+            keywords: { type: String, default: "" },
+            author: { type: String, default: "" },
+            ogTitle: { type: String, default: "" },
+            ogDescription: { type: String, default: "" },
+            ogImage: { type: String, default: "" }
+        }
+    ],
     rechargeMethods: [
         {
             name: { type: String },

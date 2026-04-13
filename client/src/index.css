@@ -393,7 +393,7 @@ ul {
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
-  z-index: 1000;
+  z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -417,6 +417,7 @@ ul {
   padding: 30px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   position: relative;
+  z-index: 9999999;
 }
 
 .modal-content::-webkit-scrollbar {

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 import API_BASE_URL, { formatImageUrl } from '../config/api';
 import axios from "axios";
-import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory, FaEye, FaBars, FaChartBar, FaMoneyBillWave } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes, FaTag, FaKey, FaBoxOpen, FaUsers, FaDolly, FaWallet, FaUserShield, FaUserCheck, FaChartLine, FaShoppingBag, FaUserFriends, FaExclamationTriangle, FaCog, FaMedal, FaTrophy, FaStar, FaHome, FaCheck, FaGift, FaHistory, FaEye, FaBars, FaChartBar, FaMoneyBillWave, FaFileAlt } from "react-icons/fa";
 import ConfirmModal from "../components/ConfirmModal";
 import AlertModal from "../components/AlertModal";
 import Toast from "../components/Toast";
@@ -48,6 +49,8 @@ const Admin = () => {
     const [tempSubcategory, setTempSubcategory] = useState("");
     const [settings, setSettings] = useState(null);
     const [col1Input, setCol1Input] = useState("");
+
+    const [editingSeoPage, setEditingSeoPage] = useState(null);
 
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, type: "warning" });
     const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "success" });
@@ -863,6 +866,31 @@ const Admin = () => {
 
 
 
+    const handleSaveSeoPage = async (e) => {
+        e.preventDefault();
+        try {
+            const updatedPages = [...settings.seoPages];
+            updatedPages[editingSeoPage.originalIndex] = {
+                path: editingSeoPage.path,
+                name: editingSeoPage.name,
+                title: editingSeoPage.title,
+                description: editingSeoPage.description,
+                keywords: editingSeoPage.keywords,
+                author: editingSeoPage.author || "",
+                ogTitle: editingSeoPage.ogTitle || "",
+                ogDescription: editingSeoPage.ogDescription || "",
+                ogImage: editingSeoPage.ogImage || ""
+            };
+            const updatedSettings = { ...settings, seoPages: updatedPages };
+            const res = await axios.put(`${API_BASE_URL}/settings`, updatedSettings);
+            setSettings(res.data);
+            setEditingSeoPage(null);
+            triggerToast("Paramètres SEO sauvegardés pour " + editingSeoPage.name);
+        } catch(err) {
+            console.error(err);
+            setAlertModal({ isOpen: true, title: "Erreur", message: "Impossible de sauvegarder la page SEO", type: "error"});
+        }
+    };
 
     return (
         <div style={{ minHeight: '100vh', background: '#0a0b14', display: 'flex', color: '#fff' }}>
@@ -943,16 +971,9 @@ const Admin = () => {
                     <SidebarItem id="ranks" label="Système de Rangs" icon={FaMedal} />
                     <SidebarItem id="demos" label="Gestion Demos" icon={FaGift} />
                     <SidebarItem id="resetcodes" label="Gestion Reset Codes" icon={FaTimes} badge={resetRequests.filter(r => r.status === 'PENDING').length} />
+                    <SidebarItem id="seopages" label="Gestion de page (SEO)" icon={FaFileAlt} />
                     <SidebarItem id="settings" label="Paramètres Généraux" icon={FaCog} />
                 </div>
-
-                {/* <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '800' }}>STATUT DU SERVEUR</div>
-                    <div className="flex items-center gap-2">
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 10px var(--success)' }}></div>
-                        <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>En Ligne</span>
-                    </div>
-                </div> */}
             </div>
 
             {/* Main Content */}
@@ -998,7 +1019,8 @@ const Admin = () => {
                                                 activeTab === "ranks" ? "Système de Rangs" :
                                                     activeTab === "demos" ? "Gestion des Demos" :
                                                         activeTab === "resetcodes" ? "Demandes de Reset Code" :
-                                                            activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
+                                                            activeTab === "seopages" ? "Gestion des Pages (SEO)" :
+                                                                activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
                             </h1>
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600', fontSize: isLargeDesktop ? '1rem' : '0.85rem' }}>
                                 {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
@@ -1008,7 +1030,9 @@ const Admin = () => {
                                                 activeTab === "historique" ? "Consultez toutes les transactions passées." :
                                                     activeTab === "ranks" ? "Définissez les paliers de fidélité et récompenses." :
                                                         activeTab === "demos" ? "Gérez les comptes d'essai et démos." :
-                                                            activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
+                                                            activeTab === "resetcodes" ? "Gérez les demandes de réinitialisation de code." :
+                                                                activeTab === "seopages" ? "Améliorez le référencement naturel et modifiez les métadonnées globales." :
+                                                                    activeTab === "settings" ? "Configurez les informations globales du site." : "Gérez les permissions et soldes de vos clients."}
                             </p>
                         </div>
                     </div>
@@ -2218,6 +2242,44 @@ const Admin = () => {
                             </form>
                         )}
                     </div>
+                ) : activeTab === "seopages" ? (
+                    <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', WebkitOverflowScrolling: 'touch' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '900px' }}>
+                            <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <tr>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase' }}>Page</th>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase' }}>Chemin (Path)</th>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase' }}>SEO Title</th>
+                                    <th style={{ padding: '24px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(settings?.seoPages || []).map((page, index) => (
+                                    <tr key={index} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                        <td style={{ padding: '20px 24px', fontWeight: '800' }}>{page.name}</td>
+                                        <td style={{ padding: '20px 24px', color: 'var(--accent-color)' }}>{page.path}</td>
+                                        <td style={{ padding: '20px 24px', color: 'rgba(255,255,255,0.6)' }}>{page.title || 'N/A'}</td>
+                                        <td style={{ padding: '20px 24px' }}>
+                                            <button 
+                                                onClick={() => setEditingSeoPage({ ...page, originalIndex: index })} 
+                                                className="btn hover-lift" 
+                                                style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '800' }}
+                                            >
+                                                <FaEdit style={{ display: 'inline', marginRight: '6px' }}/> MODIFIER
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {(!settings?.seoPages || settings.seoPages.length === 0) && (
+                                    <tr>
+                                        <td colSpan="4" style={{ padding: '20px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+                                            Aucune page trouvée.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : (
                     <div className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', WebkitOverflowScrolling: 'touch' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: isLargeDesktop ? 'auto' : '900px' }}>
@@ -2319,8 +2381,100 @@ const Admin = () => {
             </div>
 
             {/* Modals - Refined for Premium Feel */}
+            {editingSeoPage && createPortal(
+                <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setEditingSeoPage(null); }}>
+                    <div className="modal-content" style={{ animation: 'modalSlideUp 0.3s ease-out', maxWidth: '600px' }}>
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 style={{ fontSize: '1.6rem', fontWeight: '900' }}>
+                                SEO: {editingSeoPage.name}
+                            </h2>
+                            <FaTimes
+                                onClick={() => setEditingSeoPage(null)}
+                                style={{ color: 'rgba(255,255,255,0.3)', cursor: 'pointer', transition: '0.3s' }}
+                                className="hover:text-error"
+                            />
+                        </div>
+                        <form onSubmit={handleSaveSeoPage} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label className="form-label">Titre de la page (Balise Title)</label>
+                                <input
+                                    type="text"
+                                    value={editingSeoPage.title}
+                                    className="admin-input"
+                                    placeholder="Ex: Skygros - Meilleur IPTV"
+                                    onChange={(e) => setEditingSeoPage({ ...editingSeoPage, title: e.target.value })}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label className="form-label">Description (Meta Description)</label>
+                                <textarea
+                                    className="admin-input"
+                                    value={editingSeoPage.description}
+                                    placeholder="Ex: Découvrez le meilleur service IPTV..."
+                                    rows="3"
+                                    onChange={(e) => setEditingSeoPage({ ...editingSeoPage, description: e.target.value })}
+                                />
+                                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Recommandé: 150-160 caractères.</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label className="form-label">Mots-clés (Meta Keywords)</label>
+                                <input
+                                    type="text"
+                                    value={editingSeoPage.keywords}
+                                    className="admin-input"
+                                    placeholder="Ex: iptv, streaming, serveur"
+                                    onChange={(e) => setEditingSeoPage({ ...editingSeoPage, keywords: e.target.value })}
+                                />
+                                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Séparés par des virgules.</span>
+                            </div>
+                            
+                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '15px' }}>
+                                <h4 style={{ color: 'var(--accent-color)', fontWeight: 'bold', marginBottom: '15px' }}>Open Graph (Réseaux sociaux)</h4>
+                                
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label className="form-label">OG Title</label>
+                                        <input
+                                            type="text"
+                                            value={editingSeoPage.ogTitle}
+                                            className="admin-input"
+                                            placeholder="Titre pour Facebook/Twitter"
+                                            onChange={(e) => setEditingSeoPage({ ...editingSeoPage, ogTitle: e.target.value })}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label className="form-label">OG Description</label>
+                                        <textarea
+                                            className="admin-input"
+                                            value={editingSeoPage.ogDescription}
+                                            placeholder="Description courte pour Facebook/Twitter"
+                                            rows="2"
+                                            onChange={(e) => setEditingSeoPage({ ...editingSeoPage, ogDescription: e.target.value })}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label className="form-label">OG Image (URL)</label>
+                                        <input
+                                            type="text"
+                                            value={editingSeoPage.ogImage}
+                                            className="admin-input"
+                                            placeholder="https://..."
+                                            onChange={(e) => setEditingSeoPage({ ...editingSeoPage, ogImage: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" className="btn btn-primary" style={{ marginTop: '10px', padding: '14px', borderRadius: '12px' }}>
+                                ENREGISTRER LES MODIFICATIONS
+                            </button>
+                        </form>
+                    </div>
+                </div>,
+                document.body
+            )}
             {
-                (showAddForm || isEditing) && (
+                (showAddForm || isEditing) && createPortal(
                     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowAddForm(false); setIsEditing(null); } }}>
                         <div className="modal-content" style={{ animation: 'modalSlideUp 0.3s ease-out' }}>
                             <div className="flex justify-between items-center mb-8">
@@ -2848,12 +3002,24 @@ const Admin = () => {
                                                         showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
                                                     }}
                                                 >
-                                                    + Ajouter une option de durée
+                                                    <FaPlus size={10} style={{ marginRight: '5px' }} /> Ajouter une durée
                                                 </button>
                                             </div>
                                         )}
                                     </div>
 
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label className="form-label">Description (HTML supporté)</label>
+                                    <textarea
+                                        value={showAddForm ? newProduct.description : isEditing.description}
+                                        className="admin-input"
+                                        placeholder="Description détaillée du produit..."
+                                        rows="10"
+                                        style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, description: e.target.value }) : setIsEditing({ ...isEditing, description: e.target.value })}
+                                        required
+                                    ></textarea>
+                                </div>
 
                                 {/* Visibility Options - For ALL product types */}
                                 <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '0' }}>
@@ -3050,13 +3216,14 @@ const Admin = () => {
                                 </div>
                             </form>
                         </div>
-                    </div >
+                    </div>,
+                    document.body
                 )
             }
 
             {/* Category Form Modal */}
             {
-                (showCategoryForm || isEditingCategory) && (
+                (showCategoryForm || isEditingCategory) && createPortal(
                     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowCategoryForm(false); setIsEditingCategory(null); } }}>
                         <div className="modal-content" style={{ maxWidth: '400px', animation: 'modalSlideUp 0.3s ease-out' }}>
                             <div className="flex justify-between items-center mb-8">
@@ -3184,12 +3351,13 @@ const Admin = () => {
                                 </button>
                             </form>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )
             }
 
             {
-                showBalanceModal && (
+                showBalanceModal && createPortal(
                     <div className="modal-overlay">
                         <div className="glass modal-content" style={{ maxWidth: '420px', textAlign: 'center' }}>
                             <div style={{
@@ -3218,7 +3386,8 @@ const Admin = () => {
                                 <button onClick={() => setShowBalanceModal(null)} className="btn" style={{ background: 'rgba(255,255,255,0.05)', flex: 1, borderRadius: '12px', color: '#fff' }}>ANNULER</button>
                             </div>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )
             }
 
@@ -3237,7 +3406,7 @@ const Admin = () => {
                 
                 .modal-overlay { 
                     position: fixed; inset: 0; background: rgba(5,6,12,0.4); 
-                    z-index: 2000; display: flex; align-items: center; justify-content: center; 
+                    z-index: 999999; display: flex; align-items: center; justify-content: center; 
                     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
                     animation: modalBackdropIn 0.4s ease-out forwards;
                 }
@@ -3246,6 +3415,7 @@ const Admin = () => {
                     border: 1px solid rgba(255,255,255,0.1); position: relative;
                     background: linear-gradient(135deg, rgba(20,22,40,0.95), rgba(15,16,32,0.98));
                     box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+                    z-index: 1000000;
                     animation: modalContentIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
                 }
                 .admin-input { 
@@ -3269,7 +3439,7 @@ const Admin = () => {
             `}</style>
             {/* Fulfillment Logs Modal */}
             {
-                showLogModal && (
+                showLogModal && createPortal(
                     <div className="modal-overlay" onClick={() => setShowLogModal(false)}>
                         <div className="glass modal-content" style={{ maxWidth: '550px' }} onClick={e => e.stopPropagation()}>
                             <div style={{
@@ -3316,12 +3486,13 @@ const Admin = () => {
                                 D'ACCORD, COMPRIS
                             </button>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )
             }
             {/* Fulfillment Modal */}
             {
-                showFulfillModal && (
+                showFulfillModal && createPortal(
                     <div className="modal-overlay">
                         <div className="glass modal-content" style={{ maxWidth: '420px', textAlign: 'center' }}>
                             <div style={{
@@ -3351,7 +3522,8 @@ const Admin = () => {
                                 <button onClick={() => setShowFulfillModal(null)} className="btn" style={{ background: 'rgba(255,255,255,0.05)', flex: 1, borderRadius: '12px', color: '#fff' }}>ANNULER</button>
                             </div>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )
             }
 
@@ -3364,7 +3536,7 @@ const Admin = () => {
             {/* const filteredOrders = useMemo(() => { ... }, [orders, searchTerm, filterStatus, sortConfig]); */}
 
             {/* Mobile Stats Modal */}
-            {!isLargeDesktop && showStatsModal && (
+            {!isLargeDesktop && showStatsModal && createPortal(
                 <div className="modal-overlay" onClick={() => setShowStatsModal(false)}>
                     <div
                         className="modal-content"
@@ -3395,7 +3567,8 @@ const Admin = () => {
                             FERMER
                         </button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             <ConfirmModal

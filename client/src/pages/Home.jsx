@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 
@@ -27,6 +27,7 @@ const Home = () => {
     const [deals, setDeals] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const { user } = useContext(AuthContext);
+    const location = useLocation();
 
     // Notification State
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
@@ -123,6 +124,25 @@ const Home = () => {
             setDeals(filtered);
         }
     }, [settings, allProducts]);
+
+    // Scroll to section based on URL path for clean URLs
+    useEffect(() => {
+        const checkScroll = () => {
+            const path = location.pathname.slice(1);
+            if (path && !path.startsWith('products') && !path.startsWith('product') && !path.startsWith('panier')) {
+                const el = document.getElementById(path);
+                if (el) {
+                    setTimeout(() => {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                    }, 150); // Short delay for React to render the component if navigating from another page
+                }
+            } else if (path === "" || path === "/") {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        checkScroll();
+    }, [location.pathname, settings, allProducts]);
 
     const togglePricing = () => {
         setIsYearly(!isYearly);
@@ -380,6 +400,18 @@ const Home = () => {
     const [searchParams] = useSearchParams();
     const isPreviewLanding = searchParams.get('preview') === 'landing';
 
+    // Helper to format links: replaces "#some-path" with "/some-path"
+    const formatLink = (url) => {
+        if (!url || url === "#") return "#";
+        // If it starts directly with # (like "#paid-apps")
+        if (url.startsWith("#")) return "/" + url.slice(1);
+        // If it contains # but isn't just #, replace the # with / (e.g. "http://localhost:5173/#paid-apps" -> "http://localhost:5173/paid-apps")
+        if (url.includes("#")) {
+             return url.replace("#", "/");
+        }
+        return url;
+    };
+
     const landingSchema = useMemo(() => {
         const origin = window?.location?.origin || "https://skygros.com";
         const home = settings?.home;
@@ -466,7 +498,7 @@ const Home = () => {
                 "@type": "Service",
                 "name": "IPTV Reseller Infrastructure",
                 "description": home.hero?.subtitle || "Professional IPTV Wholesale infrastructure for professional resellers.",
-                "provider": { "@id": `${origin}/#organization` },
+                "provider": { "@id": `${origin}/organization` },
                 "areaServed": "Worldwide",
                 "hasOfferCatalog": {
                     "@type": "OfferCatalog",
@@ -656,7 +688,7 @@ const Home = () => {
                                         </p>
                                         {slide.buttonText && (
                                             <Link
-                                                to={slide.link || "#"}
+                                                to={formatLink(slide.link)}
                                                 className="inline-flex items-center gap-3 px-8 py-3 rounded-xl font-bold text-sm bg-primary hover:bg-white hover:text-primary transition-all shadow-xl shadow-primary/20"
                                                 style={{ backgroundColor: slide.color }}
                                             >
@@ -731,7 +763,7 @@ const Home = () => {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
                             {(settings?.home?.membershipsSection?.items || []).map((item, i) => (
-                                <Link to={item.link || "#"} key={i} className="group relative overflow-hidden rounded-xl md:rounded-[24px] aspect-square md:aspect-[3/4] block shadow-2xl border border-white/5 transition-all duration-500 hover:shadow-primary/20 hover:-translate-y-2">
+                                <Link to={formatLink(item.link)} key={i} className="group relative overflow-hidden rounded-xl md:rounded-[24px] aspect-square md:aspect-[3/4] block shadow-2xl border border-white/5 transition-all duration-500 hover:shadow-primary/20 hover:-translate-y-2">
                                     <img src={formatImageUrl(item.image)} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
 
@@ -770,7 +802,7 @@ const Home = () => {
                         </div>
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                             {(settings?.home?.giftCardsSection?.items || []).map((item, i) => (
-                                <Link to={item.link || "#"} key={i}
+                                <Link to={formatLink(item.link)} key={i}
                                     style={{ backgroundColor: item.color || '#0070d1' }}
                                     className="relative overflow-hidden p-6 rounded-2xl h-40 flex flex-col items-center justify-center text-center transition-all hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] group shadow-lg border border-white/10"
                                 >
@@ -2102,36 +2134,55 @@ const Home = () => {
                         <p className="text-gray-400">{settings?.home?.movies?.subtitle || "Découvrez les nouveautés disponibles sur notre plateforme VOD"}</p>
                     </div>
 
-                    <div className="relative">
-                        <div className="flex overflow-x-auto gap-6 pb-8 scrollbar-hide px-4">
-                            {movies.map((movie) => (
-                                <div key={movie.id} className="flex-none w-[160px] md:w-[200px] relative group cursor-pointer card-hover">
-                                    <div className="rounded-xl overflow-hidden aspect-[2/3] border border-white/10 relative">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10"></div>
-                                        <img
-                                            src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
-                                            alt={movie.title}
-                                            className="w-full h-full object-cover"
-                                            loading="lazy"
-                                        />
-                                        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-20">
-                                            <div className="flex items-center space-x-1 text-yellow-400 text-xs mb-1">
-                                                <i className="fas fa-star"></i>
-                                                <span>{movie.vote_average.toFixed(1)}</span>
+                    <div className="relative px-2 md:px-4">
+                        {movies.length > 0 ? (
+                            <Swiper
+                                modules={[Autoplay]}
+                                autoplay={{ delay: 2500, disableOnInteraction: false }}
+                                loop={true}
+                                spaceBetween={20}
+                                slidesPerView="auto"
+                                breakpoints={{
+                                    320: { spaceBetween: 15 },
+                                    768: { spaceBetween: 24 }
+                                }}
+                                className="pb-8"
+                                speed={1000}
+                            >
+                                {movies.map((movie) => (
+                                    <SwiperSlide key={movie.id} style={{ width: 'auto' }}>
+                                        <div className="w-[160px] md:w-[200px] relative group cursor-pointer card-hover h-full">
+                                            <div className="rounded-xl overflow-hidden aspect-[2/3] border border-white/10 relative">
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-300"></div>
+                                                <img
+                                                    src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
+                                                    alt={movie.title}
+                                                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                                                    loading="lazy"
+                                                />
+                                                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-20">
+                                                    <div className="flex items-center space-x-1 text-yellow-400 text-xs mb-1">
+                                                        <i className="fas fa-star"></i>
+                                                        <span>{movie.vote_average.toFixed(1)}</span>
+                                                    </div>
+                                                    <h4 className="text-white font-bold text-sm line-clamp-2 leading-tight">{movie.title}</h4>
+                                                </div>
+                                                <div className="absolute top-2 right-2 bg-primary/90 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm z-20">VOD</div>
                                             </div>
-                                            <h4 className="text-white font-bold text-sm line-clamp-2 leading-tight">{movie.title}</h4>
                                         </div>
-                                        <div className="absolute top-2 right-2 bg-primary/90 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm z-20">VOD</div>
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+                        ) : (
+                            <div className="flex overflow-x-hidden gap-6 pb-8 px-4">
+                                {/* Loading Skeletons */}
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="flex-none w-[160px] md:w-[200px] animate-pulse">
+                                        <div className="bg-white/5 rounded-xl aspect-[2/3]"></div>
                                     </div>
-                                </div>
-                            ))}
-                            {/* Loading Skeletons */}
-                            {movies.length === 0 && [...Array(6)].map((_, i) => (
-                                <div key={i} className="flex-none w-[160px] md:w-[200px] animate-pulse">
-                                    <div className="bg-white/5 rounded-xl aspect-[2/3]"></div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>
@@ -2173,9 +2224,9 @@ const Home = () => {
                     <div className="glass-effect rounded-3xl p-8 border border-white/10">
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-9 gap-4 text-center">
                             {(settings?.home?.channels?.items || defaultChannels.map(n => ({ name: n }))).map((channel, idx) => (
-                                <a
+                                <Link
                                     key={idx}
-                                    href={channel.link || "#"}
+                                    to={formatLink(channel.link)}
                                     className="bg-white/5 rounded-lg h-16 flex items-center justify-center border border-white/5 hover:bg-primary/20 hover:border-primary/30 transition-all group overflow-hidden"
                                 >
                                     {channel.image ? (
@@ -2183,7 +2234,7 @@ const Home = () => {
                                     ) : (
                                         <span className="text-white font-bold opacity-70 group-hover:opacity-100 text-xs sm:text-sm px-1 line-clamp-2">{channel.name}</span>
                                     )}
-                                </a>
+                                </Link>
                             ))}
                         </div>
                     </div>
@@ -2205,9 +2256,9 @@ const Home = () => {
                     <div className="glass-effect rounded-3xl p-8 border border-white/10">
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-6">
                             {(settings?.home?.sportsSection?.items || defaultSports.map(n => ({ name: n }))).map((sport, idx) => (
-                                <a
+                                <Link
                                     key={idx}
-                                    href={sport.link || "#"}
+                                    to={formatLink(sport.link)}
                                     className="bg-white/5 rounded-lg h-24 flex items-center justify-center border border-white/5 hover:bg-red-500/20 hover:border-red-500/30 transition-all group p-4 overflow-hidden"
                                 >
                                     {sport.image ? (
@@ -2219,7 +2270,7 @@ const Home = () => {
                                     ) : (
                                         <span className="text-white font-bold opacity-70 group-hover:opacity-100 text-center text-sm">{sport.name}</span>
                                     )}
-                                </a>
+                                </Link>
                             ))}
                         </div>
                     </div>

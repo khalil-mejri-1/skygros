@@ -34,6 +34,10 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        {/* Navbar sections mapped to Home for SPA smooth scrolling with clean URLs */}
+        {["all-server-list", "paid-apps", "pricing", "faq", "contact-us", "privacy-policy", "disclaimer", "convert-m3u", "track-order"].map(path => (
+          <Route key={path} path={`/${path}`} element={<Home />} />
+        ))}
         <Route path="/products" element={<Products />} />
         <Route path="/products/:categoryId" element={<Products />} />
         <Route path="/product/:id" element={<ProductDetails />} />

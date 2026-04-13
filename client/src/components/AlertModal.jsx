@@ -49,7 +49,7 @@ const AlertModal = ({
                 position: 'fixed',
                 inset: 0,
                 background: 'rgba(5, 6, 12, 0.4)',
-                zIndex: 10000,
+                zIndex: 9999999,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
