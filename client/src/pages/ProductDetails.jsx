@@ -4,7 +4,7 @@ import API_BASE_URL, { formatImageUrl } from "../config/api";
 import { useParams, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
-import { FaShoppingCart, FaCheck, FaShieldAlt, FaBolt, FaGlobe, FaChevronLeft, FaStar, FaPlus, FaRegStar, FaUser, FaRegCheckCircle } from "react-icons/fa";
+import { FaShoppingCart, FaCheck, FaShieldAlt, FaBolt, FaGlobe, FaChevronLeft, FaStar, FaPlus, FaRegStar, FaUser, FaRegCheckCircle, FaMoneyBillWave, FaTimes } from "react-icons/fa";
 import ProductCard from "../components/ProductCard";
 import LicenseKeyModal from "../components/LicenseKeyModal";
 import AlertModal from "../components/AlertModal";
@@ -120,7 +120,7 @@ const ProductDetails = () => {
                     axios.get(`${API_BASE_URL}/products`),
                     axios.get(`${API_BASE_URL}/settings`).catch(() => ({ data: null }))
                 ]);
-                
+
                 if (settingsRes.data) {
                     setSettings(settingsRes.data);
                 }
@@ -193,11 +193,11 @@ const ProductDetails = () => {
         };
 
         let finalPrice = parsePrice(selectedMangoService.price);
-        if (settings && settings.mangoSettings) {
+        if (settings && settings.home?.mangoSettings) {
             if (mangoRenewType === 'netfly') {
-                finalPrice += parsePrice(settings.mangoSettings.netflyPrice);
+                finalPrice += parsePrice(settings.home.mangoSettings.netflyPrice);
             } else if (mangoRenewType === 'box') {
-                finalPrice += parsePrice(settings.mangoSettings.boxPrice);
+                finalPrice += parsePrice(settings.home.mangoSettings.boxPrice);
             }
         }
 
@@ -486,12 +486,12 @@ const ProductDetails = () => {
 
                 {/* Admin Controls Window */}
                 {user?.role === 'admin' && (
-                    <div className="glass" style={{ 
-                        padding: '15px 25px', 
-                        borderRadius: '16px', 
-                        marginBottom: '30px', 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
+                    <div className="glass" style={{
+                        padding: '15px 25px',
+                        borderRadius: '16px',
+                        marginBottom: '30px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
                         background: 'rgba(255, 153, 0, 0.1)',
                         border: '1px solid rgba(255, 153, 0, 0.3)',
@@ -507,23 +507,23 @@ const ProductDetails = () => {
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            <button 
+                            <button
                                 onClick={() => window.location.href = `/admin?tab=products&edit=${product._id}`}
-                                className="btn" 
+                                className="btn"
                                 style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800' }}
                             >
                                 MODIFIER
                             </button>
-                            <button 
+                            <button
                                 onClick={() => window.location.href = `/admin?tab=stock&productId=${product._id}`}
-                                className="btn" 
+                                className="btn"
                                 style={{ background: 'rgba(255, 153, 0, 0.2)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800' }}
                             >
                                 GÉRER CODES
                             </button>
-                            <button 
+                            <button
                                 onClick={async () => {
-                                    if(window.confirm("Supprimer ce produit ?")) {
+                                    if (window.confirm("Supprimer ce produit ?")) {
                                         try {
                                             await axios.delete(`${API_BASE_URL}/products/${product._id}`);
                                             window.location.href = '/products';
@@ -532,7 +532,7 @@ const ProductDetails = () => {
                                         }
                                     }
                                 }}
-                                className="btn" 
+                                className="btn"
                                 style={{ background: 'rgba(255, 71, 87, 0.2)', color: '#ff4757', border: '1px solid rgba(255, 71, 87, 0.3)', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800' }}
                             >
                                 SUPPRIMER
@@ -560,15 +560,15 @@ const ProductDetails = () => {
                                     const allImages = [product.image, ...(product.secondaryImages || [])];
                                     return (
                                         <>
-                                            <img 
-                                                src={formatImageUrl(allImages[activeImageIndex])} 
-                                                alt={product.title} 
-                                                style={{ 
-                                                    width: '100%', 
-                                                    height: '100%', 
+                                            <img
+                                                src={formatImageUrl(allImages[activeImageIndex])}
+                                                alt={product.title}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
                                                     objectFit: 'cover',
                                                     transition: 'all 0.5s ease-in-out'
-                                                }} 
+                                                }}
                                             />
                                             {allImages.length > 1 && (
                                                 <div style={{
@@ -581,7 +581,7 @@ const ProductDetails = () => {
                                                     zIndex: 10
                                                 }}>
                                                     {allImages.map((_, idx) => (
-                                                        <div 
+                                                        <div
                                                             key={idx}
                                                             onClick={() => setActiveImageIndex(idx)}
                                                             style={{
@@ -599,7 +599,7 @@ const ProductDetails = () => {
                                         </>
                                     );
                                 })()}
-                                
+
                                 {discountPercentage > 0 && (
                                     <div style={{ position: 'absolute', top: '15px', left: '15px', background: 'var(--accent-color)', color: '#000', padding: '6px 12px', borderRadius: '6px', fontWeight: '900', fontSize: '0.75rem', zIndex: 2, boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
                                         OFFRE -{discountPercentage}%
@@ -611,7 +611,7 @@ const ProductDetails = () => {
                             {!isMobile && product.secondaryImages?.length > 0 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '80px' }}>
                                     {[product.image, ...product.secondaryImages].map((img, idx) => (
-                                        <div 
+                                        <div
                                             key={idx}
                                             onClick={() => setActiveImageIndex(idx)}
                                             style={{
@@ -806,27 +806,27 @@ const ProductDetails = () => {
                             })() && (
                                     <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
                                         <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
-                                        
+
                                         {/* Order Completion Inputs */}
                                         <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'rgba(255,255,255,0.5)' }}>NUMÉRO WHATSAPP (POUR LE SUIVI)</label>
-                                                <input 
-                                                    type="text" 
+                                                <input
+                                                    type="text"
                                                     placeholder="Ex: +216..."
-                                                    className="admin-input" 
+                                                    className="admin-input"
                                                     value={customerDetails.whatsapp}
-                                                    onChange={(e) => setCustomerDetails({...customerDetails, whatsapp: e.target.value})}
+                                                    onChange={(e) => setCustomerDetails({ ...customerDetails, whatsapp: e.target.value })}
                                                     style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}
                                                 />
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'rgba(255,255,255,0.5)' }}>NOTES OU INSTRUCTIONS (OPTIONNEL)</label>
-                                                <textarea 
+                                                <textarea
                                                     placeholder="Précisez votre appareil ou demande spéciale..."
-                                                    className="admin-input" 
+                                                    className="admin-input"
                                                     value={customerDetails.note}
-                                                    onChange={(e) => setCustomerDetails({...customerDetails, note: e.target.value})}
+                                                    onChange={(e) => setCustomerDetails({ ...customerDetails, note: e.target.value })}
                                                     style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', minHeight: '80px', paddingTop: '10px' }}
                                                 />
                                             </div>
@@ -1095,7 +1095,34 @@ const ProductDetails = () => {
 
                         {mangoServices.length > 0 && (
                             <div className="mb-6 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                                <label className="block text-gray-400 text-sm mb-3 font-bold uppercase tracking-wider">Services Disponibles</label>
+                                <div className="text-[0.8rem] font-bold text-gray-500 uppercase tracking-[2px] mb-4">Services Disponibles</div>
+
+                                {/* Section for Admin Margin Display */}
+                                {/* <div className="glass-panel mb-6" style={{ 
+                                    padding: '15px 20px', 
+                                    borderRadius: '18px', 
+                                    background: 'rgba(255,153,0,0.08)', 
+                                    border: '1px solid rgba(255,153,0,0.15)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <div className="flex items-center gap-3">
+                                        <div style={{ padding: '8px', background: 'rgba(255,153,0,0.1)', borderRadius: '10px' }}>
+                                            <FaMoneyBillWave className="text-primary" size={18} />
+                                        </div>
+                                        <div>
+                                            <div className="text-[0.65rem] text-gray-400 font-bold uppercase tracking-wider">Frais de Service (Admin)</div>
+                                            <div className="text-[0.85rem] text-white font-black">Prix Mango (Renew)</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-[1.2rem] font-black text-primary">
+                                        + {(() => {
+                                            const margin = settings?.home?.mangoSettings ? (mangoRenewType === 'netfly' ? settings.home.mangoSettings.netflyPrice : settings.home.mangoSettings.boxPrice) : 0;
+                                            return margin || 0;
+                                        })()} $
+                                    </div>
+                                </div> */}
                                 <div className="flex flex-col gap-2">
                                     {mangoServices.map((serviceGroup) => (
                                         <div key={serviceGroup.serviceName}>
@@ -1112,13 +1139,22 @@ const ProductDetails = () => {
                                                     </div>
                                                     <div className="text-right">
                                                         <div className="text-primary font-black">
-                                                            ${plan.price}
+                                                            ${(() => {
+                                                                const raw = String(plan.price || "0").replace(/[^0-9.]/g, '');
+                                                                const base = parseFloat(raw) || 0;
+                                                                // If backend didn't add it, add it here
+                                                                if (!plan.marginAdded) {
+                                                                    const m = settings?.home?.mangoSettings ? (mangoRenewType === 'netfly' ? parseFloat(settings.home.mangoSettings.netflyPrice) : parseFloat(settings.home.mangoSettings.boxPrice)) : 0;
+                                                                    return (base + (parseFloat(m) || 0)).toFixed(2);
+                                                                }
+                                                                return plan.price;
+                                                            })()}
                                                         </div>
-                                                        {plan.marginAdded > 0 && (
+                                                        {/* {(plan.marginAdded > 0 || (settings?.home?.mangoSettings && (mangoRenewType === 'netfly' ? settings.home.mangoSettings.netflyPrice : settings.home.mangoSettings.boxPrice) > 0)) && (
                                                             <div style={{ fontSize: '0.65rem', color: 'rgba(255,153,0,0.6)', marginTop: '2px', fontWeight: 'bold' }}>
-                                                                (+{plan.marginAdded}$ Frais)
+                                                                (+{plan.marginAdded || (mangoRenewType === 'netfly' ? settings.home.mangoSettings.netflyPrice : settings.home.mangoSettings.boxPrice)}$ Frais)
                                                             </div>
-                                                        )}
+                                                        )} */}
                                                     </div>
                                                 </div>
                                             ))}

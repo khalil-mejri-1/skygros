@@ -95,7 +95,7 @@ router.get('/services/:type/:identifier', async (req, res) => {
         });
 
         // Add margin to prices if settings exist
-        if (response.data && (response.data.code === "200" || response.data.code === 200) && response.data.data && response.data.data.serviceList) {
+        if (response.data && (response.data.code == "200" || response.data.code == 200) && response.data.data) {
             const settings = await GeneralSettings.findOne({});
             const mangoPriceSettings = settings?.home?.mangoSettings;
             let margin = 0;
@@ -106,23 +106,25 @@ router.get('/services/:type/:identifier', async (req, res) => {
             }
 
             // Map through service groups and their price lists
-            response.data.data.serviceList = response.data.data.serviceList.map(serviceGroup => {
-                if (serviceGroup.priceList && Array.isArray(serviceGroup.priceList)) {
-                    serviceGroup.priceList = serviceGroup.priceList.map(plan => {
-                        // Securely parse price by removing any currency symbols or non-numeric chars
-                        const rawPrice = String(plan.price || "0").replace(/[^0-9.]/g, '');
-                        const originalPrice = parseFloat(rawPrice) || 0;
-                        
-                        return {
-                            ...plan,
-                            originalPrice: originalPrice,
-                            price: (originalPrice + margin).toFixed(2),
-                            marginAdded: margin // Send back the margin value for display
-                        };
-                    });
-                }
-                return serviceGroup;
-            });
+            if (response.data.data.serviceList) {
+                response.data.data.serviceList = response.data.data.serviceList.map(serviceGroup => {
+                    if (serviceGroup.priceList && Array.isArray(serviceGroup.priceList)) {
+                        serviceGroup.priceList = serviceGroup.priceList.map(plan => {
+                            // Securely parse price by removing any currency symbols or non-numeric chars
+                            const rawPrice = String(plan.price || "0").replace(/[^0-9.]/g, '');
+                            const originalPrice = parseFloat(rawPrice) || 0;
+                            
+                            return {
+                                ...plan,
+                                originalPrice: originalPrice,
+                                price: (originalPrice + margin).toFixed(2),
+                                marginAdded: margin // Send back the margin value for display
+                            };
+                        });
+                    }
+                    return serviceGroup;
+                });
+            }
         }
 
         res.status(200).json(response.data);
