@@ -208,7 +208,7 @@ const ProductDetails = () => {
                 serviceKey: selectedMangoService.key,
                 identifier: mangoIdentifier,
                 type: mangoRenewType,
-                price: selectedMangoService.price, // Backend calculates the overridden price securely
+                price: selectedMangoService.originalPrice || selectedMangoService.price, // Send base price, backend adds margin
                 customerDetails: customerDetails
             });
 
@@ -1110,17 +1110,15 @@ const ProductDetails = () => {
                                                         <div className="text-sm font-bold text-white">{plan.name}</div>
                                                         <div className="text-[0.7rem] text-gray-500">{plan.description || "Plan de renouvellement"}</div>
                                                     </div>
-                                                    <div className="text-primary font-black">
-                                                        ${(() => {
-                                                            const parsePrice = (p) => {
-                                                                if (!p) return 0;
-                                                                const cleaned = String(p).replace(/[^0-9.]/g, '');
-                                                                return parseFloat(cleaned) || 0;
-                                                            };
-                                                            const basePrice = parsePrice(plan.price);
-                                                            const margin = settings?.mangoSettings ? (mangoRenewType === 'netfly' ? parsePrice(settings.mangoSettings.netflyPrice) : parsePrice(settings.mangoSettings.boxPrice)) : 0;
-                                                            return (basePrice + margin).toFixed(2);
-                                                        })()}
+                                                    <div className="text-right">
+                                                        <div className="text-primary font-black">
+                                                            ${plan.price}
+                                                        </div>
+                                                        {plan.marginAdded > 0 && (
+                                                            <div style={{ fontSize: '0.65rem', color: 'rgba(255,153,0,0.6)', marginTop: '2px', fontWeight: 'bold' }}>
+                                                                (+{plan.marginAdded}$ Frais)
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -1144,16 +1142,7 @@ const ProductDetails = () => {
                                     cursor: (isLoading || !selectedMangoService) ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                {isLoading ? "Traitement..." : (selectedMangoService ? `CONFIRMER - $${(() => {
-                                    const parsePrice = (p) => {
-                                        if (!p) return 0;
-                                        const cleaned = String(p).replace(/[^0-9.]/g, '');
-                                        return parseFloat(cleaned) || 0;
-                                    };
-                                    const basePrice = parsePrice(selectedMangoService.price);
-                                    const margin = settings?.mangoSettings ? (mangoRenewType === 'netfly' ? parsePrice(settings.mangoSettings.netflyPrice) : parsePrice(settings.mangoSettings.boxPrice)) : 0;
-                                    return (basePrice + margin).toFixed(2);
-                                })()}` : "CHOISIR UN PLAN")}
+                                {isLoading ? "Traitement..." : (selectedMangoService ? `CONFIRMER - $${selectedMangoService.price}` : "CHOISIR UN PLAN")}
                             </button>
                             <button
                                 onClick={() => setShowMangoModal(false)}

@@ -94,6 +94,37 @@ router.get('/services/:type/:identifier', async (req, res) => {
             httpsAgent: ipv4Agent
         });
 
+        // Add margin to prices if settings exist
+        if (response.data && (response.data.code === "200" || response.data.code === 200) && response.data.data && response.data.data.serviceList) {
+            const settings = await GeneralSettings.findOne({});
+            const mangoPriceSettings = settings?.home?.mangoSettings;
+            let margin = 0;
+            
+            if (mangoPriceSettings) {
+                if (type === 'netfly') margin = parseFloat(mangoPriceSettings.netflyPrice) || 0;
+                else if (type === 'box') margin = parseFloat(mangoPriceSettings.boxPrice) || 0;
+            }
+
+            // Map through service groups and their price lists
+            response.data.data.serviceList = response.data.data.serviceList.map(serviceGroup => {
+                if (serviceGroup.priceList && Array.isArray(serviceGroup.priceList)) {
+                    serviceGroup.priceList = serviceGroup.priceList.map(plan => {
+                        // Securely parse price by removing any currency symbols or non-numeric chars
+                        const rawPrice = String(plan.price || "0").replace(/[^0-9.]/g, '');
+                        const originalPrice = parseFloat(rawPrice) || 0;
+                        
+                        return {
+                            ...plan,
+                            originalPrice: originalPrice,
+                            price: (originalPrice + margin).toFixed(2),
+                            marginAdded: margin // Send back the margin value for display
+                        };
+                    });
+                }
+                return serviceGroup;
+            });
+        }
+
         res.status(200).json(response.data);
     } catch (err) {
         console.error("Mango Services Error:", err.response?.data || err.message);
