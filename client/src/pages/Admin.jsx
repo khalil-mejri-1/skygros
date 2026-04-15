@@ -91,6 +91,7 @@ const Admin = () => {
         hasMultiDuration: false,
         rating: 4.8,
         reviewsCount: 21883,
+        isHidden: false,
         guarantees: [
             "Satisfait ou remboursé 30 jours",
             "Livraison suivie et sécurisée",
@@ -462,7 +463,15 @@ const Admin = () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/${provider}/packages`);
             // Normalize data (some APIs return array, others object)
-            const pkgs = Array.isArray(res.data) ? res.data : Object.values(res.data || {});
+            let pkgs = [];
+            if (provider === 'golden' && res.data?.packages?.data) {
+                pkgs = res.data.packages.data.map(p => ({
+                    id: p.id,
+                    name: p.package_name || p.name
+                }));
+            } else {
+                pkgs = Array.isArray(res.data) ? res.data : Object.values(res.data || {});
+            }
             setProviderPackages(pkgs);
         } catch (err) {
             console.error(`Error fetching packages for ${provider}:`, err);
@@ -486,7 +495,14 @@ const Admin = () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/categories`);
             if (Array.isArray(res.data)) {
-                setCategories(res.data);
+                // Filter out removed categories
+                const filtered = res.data.filter(cat => {
+                    const name = cat.name.toUpperCase();
+                    return !name.includes("FASTREAM") && 
+                           !name.includes("ABONNEMENT M3U API") && 
+                           !name.includes("MANGO SYSTEM");
+                });
+                setCategories(filtered);
             } else {
                 console.error("Categories data is not an array:", res.data);
                 setCategories([]);
@@ -665,8 +681,7 @@ const Admin = () => {
                 deliveryType: "codes",
                 deliveryLink: "",
                 hasMultiDuration: false,
-                rating: 4.8,
-                reviewsCount: 21883,
+                isHidden: false,
                 guarantees: [
                     "Satisfait ou remboursé 30 jours",
                     "Livraison suivie et sécurisée",
@@ -3093,6 +3108,7 @@ const Admin = () => {
                                                 <option value="m3u">📺 M3U (Lien Automatique)</option>
                                                 <option value="mag">📟 MAG (Mac Address)</option>
                                                 <option value="mango">🥭 MANGO (Box, Mars, Netfly)</option>
+                                                <option value="activecode">Active Code (Provider API)</option>
                                             </select>
                                         </div>
 
@@ -3110,6 +3126,8 @@ const Admin = () => {
                                                     <option value="tivipanel">TIVIPANEL (api.tivipanel.net)</option>
                                                     <option value="promax">PROMAX (api.promax-dash.com)</option>
                                                     <option value="mango">MANGO (coinmango.org)</option>
+                                                    <option value="golden">GOLDEN (golden-panel.com)</option>
+                                                    <option value="u8k">U8K (u8k.me)</option>
                                                 </select>
                                             </div>
                                         )}
@@ -3203,6 +3221,35 @@ const Admin = () => {
                                 </div>
 
                                 <div className="flex justify-end gap-3 mt-4 sticky bottom-0 bg-[#131427] pt-4 border-t border-white/5 pb-2 -mb-2">
+                                    {/* Visibility Toggle */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: 'auto', padding: '6px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                        <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>
+                                            Visible
+                                        </span>
+                                        <div
+                                            onClick={() => {
+                                                const current = showAddForm ? !newProduct.isHidden : !isEditing.isHidden;
+                                                if (showAddForm) {
+                                                    setNewProduct({ ...newProduct, isHidden: !newProduct.isHidden });
+                                                } else {
+                                                    setIsEditing({ ...isEditing, isHidden: !isEditing.isHidden });
+                                                }
+                                            }}
+                                            style={{
+                                                width: '42px', height: '22px', borderRadius: '11px', cursor: 'pointer', position: 'relative', transition: 'all 0.3s ease',
+                                                background: (showAddForm ? !newProduct.isHidden : !isEditing?.isHidden) ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)'
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '3px',
+                                                transition: 'all 0.3s ease',
+                                                left: (showAddForm ? !newProduct.isHidden : !isEditing?.isHidden) ? '23px' : '3px'
+                                            }} />
+                                        </div>
+                                        <span style={{ fontSize: '0.75rem', color: (showAddForm ? !newProduct.isHidden : !isEditing?.isHidden) ? 'var(--accent-color)' : 'rgba(255,255,255,0.25)', fontWeight: '700' }}>
+                                            {(showAddForm ? !newProduct.isHidden : !isEditing?.isHidden) ? 'ON' : 'OFF'}
+                                        </span>
+                                    </div>
                                     <button
                                         type="button"
                                         className="btn btn-glass"

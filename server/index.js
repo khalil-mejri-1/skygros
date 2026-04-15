@@ -40,6 +40,8 @@ const promaxRoute = require('./routes/promax');
 const mangoRoute = require('./routes/mango');
 const uploadRoute = require('./routes/upload');
 const rechargeRequestRoute = require('./routes/rechargeRequests');
+const goldenIptvRoute = require('./routes/goldenIptv');
+const u8kRoute = require('./routes/u8k');
 const path = require('path');
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -62,6 +64,8 @@ app.use('/api/promax', promaxRoute);
 app.use('/api/mango', mangoRoute);
 app.use('/api/upload', uploadRoute);
 app.use('/api/recharge-requests', rechargeRequestRoute);
+app.use('/api/v1/orders', goldenIptvRoute);
+app.use('/api/u8k', u8kRoute);
 
 app.get('/', (req, res) => {
     res.send('update-12 4/6/2026');

@@ -102,9 +102,9 @@ const RechargeModal = ({ isOpen, onClose, settings, user }) => {
                             </div>
 
                             {/* WhatsApp Number */}
-                            <div>
-                                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', display: 'block' }}>
-                                    Votre numéro WhatsApp
+                            <div className="form-group mb-4">
+                                <label style={{ display: 'block', fontSize: '0.9rem', color: '#fff', fontWeight: '800', marginBottom: '8px' }}>
+                                    Votre numéro
                                 </label>
                                 <div style={{ position: 'relative' }}>
                                     <input

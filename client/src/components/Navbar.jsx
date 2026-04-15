@@ -51,7 +51,14 @@ const Navbar = () => {
             try {
                 const res = await axios.get(`${API_BASE_URL}/categories`);
                 if (Array.isArray(res.data)) {
-                    setCategories(res.data);
+                    // Filter out removed categories
+                    const filtered = res.data.filter(cat => {
+                        const name = cat.name.toUpperCase();
+                        return !name.includes("FASTREAM") &&
+                            !name.includes("ABONNEMENT M3U API") &&
+                            !name.includes("MANGO SYSTEM");
+                    });
+                    setCategories(filtered);
                 }
             } catch (err) {
                 console.error("Error fetching categories", err);
@@ -242,7 +249,7 @@ const Navbar = () => {
                     ) : (
                         // Guest or Preview Landing user: show horizontal scrolling buttons only if not mobile
                         !isMobile && (
-                        <div className="flex items-center space-x-2 px-2 overflow-x-auto custom-scrollbar pb-4 pt-2" style={{ flexGrow: 1 }}>
+                            <div className="flex items-center space-x-2 px-2 overflow-x-auto custom-scrollbar pb-4 pt-2" style={{ flexGrow: 1 }}>
                                 {[
                                     { name: "Home", icon: "fas fa-home", href: "/", color: "bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white" },
                                     { name: "SERVER LIST", icon: "fas fa-server", href: "/all-server-list", color: "bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white" },

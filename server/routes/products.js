@@ -15,6 +15,19 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET GOLDEN API PROFILE
+router.get('/provider/golden/profile', async (req, res) => {
+    try {
+        const { getProfile } = require('../utils/goldenApi');
+        const profile = await getProfile();
+        res.status(200).json(profile);
+    } catch (err) {
+        console.error("GET GOLDEN PROFILE ERROR:", err);
+        res.status(500).json({ message: err.message || "Internal Server Error", error: err.message });
+    }
+});
+
+
 // CREATE PRODUCT
 router.post('/', async (req, res) => {
     const newProduct = new Product(req.body);
@@ -179,8 +192,8 @@ router.post('/purchase', async (req, res) => {
         let subscriptionData = null;
         let orderStatus = "PENDING";
 
-        // --- HANDLE M3U / MAG (NEO 4K / STRONG 8K) ---
-        if (product.type === 'm3u' || product.type === 'mag') {
+        // --- HANDLE M3U / MAG / ACTIVECODE ---
+        if (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode') {
             try {
                 // Generate a temporary Order ID for reference
                 const orderRef = new mongoose.Types.ObjectId();
@@ -196,6 +209,10 @@ router.post('/purchase', async (req, res) => {
                     apiModule = require('../utils/promaxApi');
                 } else if (product.provider === 'mango') {
                     apiModule = require('../utils/mangoApi');
+                } else if (product.provider === 'golden') {
+                    apiModule = require('../utils/goldenApi');
+                } else if (product.provider === 'u8k') {
+                    apiModule = require('../utils/u8kApi');
                 } else {
                     apiModule = require('../utils/neoApi'); // Default
                 }
@@ -205,36 +222,32 @@ router.post('/purchase', async (req, res) => {
 
                 // CHECK SUBSCRIPTION TYPE (M3U vs CODE)
                 if (options.subscriptionType === 'code') {
-                    // Attempt to find a key from stock
-                    const now = new Date();
-                    // Use findOneAndUpdate to atomically claim a key
-                    const updatedProduct = await Product.findOneAndUpdate(
-                        { _id: productId, "keys.isSold": false },
-                        {
-                            $set: {
-                                "keys.$.isSold": true,
-                                "keys.$.soldTo": userId,
-                                "keys.$.soldAt": now
+                        // Attempt to find a key from stock (Standard behavior for other providers)
+                        const now = new Date();
+                        const updatedProduct = await Product.findOneAndUpdate(
+                            { _id: productId, "keys.isSold": false },
+                            {
+                                $set: {
+                                    "keys.$.isSold": true,
+                                    "keys.$.soldTo": userId,
+                                    "keys.$.soldAt": now
+                                }
+                            },
+                            { new: true }
+                        );
+
+                        if (updatedProduct) {
+                            const claimedKey = updatedProduct.keys.find(k => k.soldTo && k.soldTo.toString() === userId && new Date(k.soldAt).getTime() === now.getTime());
+                            if (claimedKey) {
+                                licenseKey = claimedKey.key;
+                                orderStatus = "COMPLETED";
+                                subscriptionData = { type: 'code', duration: options.duration };
                             }
-                        },
-                        { new: true }
-                    );
-
-                    if (updatedProduct) {
-                        // Key claimed successfully
-                        const claimedKey = updatedProduct.keys.find(k => k.soldTo && k.soldTo.toString() === userId && new Date(k.soldAt).getTime() === now.getTime());
-                        if (claimedKey) {
-                            licenseKey = claimedKey.key;
-                            orderStatus = "COMPLETED";
-                            subscriptionData = { type: 'code', duration: options.duration };
-                        }
-                    } else {
-                        // NO STOCK AVAILABLE -> SET TO PENDING (WAITING)
-                        licenseKey = "EN_ATTENTE"; // Waiting for admin
-                        orderStatus = "PENDING";
-                        subscriptionData = { type: 'code_request', duration: options.duration };
+                        } else {
+                            licenseKey = "EN_ATTENTE"; 
+                            orderStatus = "PENDING";
+                            subscriptionData = { type: 'code_request', duration: options.duration };
                     }
-
                 } else {
                     // M3U / API GENERATION (Default)
 

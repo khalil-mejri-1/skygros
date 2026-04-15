@@ -84,9 +84,10 @@ const Products = () => {
     }, []);
 
     const filteredProducts = products.filter(p => {
-        const matchesCategory = selectedCategory === "all" || p.category.toLowerCase() === selectedCategory.toLowerCase();
+        if (p.isHidden) return false; // Never show hidden products
+        const matchesCategory = selectedCategory === "all" || (p.category || "").toLowerCase() === selectedCategory.toLowerCase();
         const matchesSubcategory = !selectedSubcategory || (p.subcategory || "").split(',').map(s => s.trim().toLowerCase()).includes(selectedSubcategory.toLowerCase());
-        const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = (p.title || "").toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSubcategory && matchesSearch;
     }).sort((a, b) => {
         if (sortBy === 'price_low') {
@@ -94,11 +95,8 @@ const Products = () => {
         } else if (sortBy === 'price_high') {
             return b.price - a.price;
         } else {
-            // Default: 'latest' -> assuming newer products are added later, or modify if 'createdAt' is available
-            // If explicit 'createdAt' exists: return new Date(b.createdAt) - new Date(a.createdAt);
-            // If not, relying on array order (assuming fetched newest first or DB default) might be okay,
-            // or explicit reverse:
-            return 0; // Keeping default order from API
+            // Latest: sort by createdAt descending
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         }
     });
 
