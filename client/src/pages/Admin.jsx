@@ -1833,7 +1833,22 @@ const Admin = () => {
                                             <img src={formatImageUrl(newDemo.image)} style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
                                         )}
                                     </div>
-                                    <input className="admin-input" value={newDemo.image} onChange={(e) => setNewDemo({ ...newDemo, image: e.target.value })} placeholder="Ou collez un lien URL..." style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.7 }} />
+                                    {newDemo.image?.startsWith('data:') ? (
+                                        <div className="flex items-center gap-2 bg-white/5 p-2 rounded-lg border border-white/10 mt-1">
+                                            <span className="text-[10px] text-green-400 font-bold flex-1">
+                                                <i className="fas fa-check-circle mr-1"></i> Image chargée (Base64)
+                                            </span>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setNewDemo({ ...newDemo, image: "" })}
+                                                className="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/30 transition-all font-bold"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <input className="admin-input" value={newDemo.image} onChange={(e) => setNewDemo({ ...newDemo, image: e.target.value })} placeholder="Ou collez un lien URL..." style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.7 }} />
+                                    )}
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label className="form-label">Description (Optionnel)</label>
@@ -2330,11 +2345,30 @@ const Admin = () => {
                                                             <img src={formatImageUrl(method.logo)} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'contain', background: '#fff', padding: '2px' }} />
                                                         )}
                                                     </div>
-                                                    <input className="admin-input" placeholder="Ou lien URL" value={method.logo} onChange={(e) => {
-                                                        const newMethods = [...settings.rechargeMethods];
-                                                        newMethods[idx].logo = e.target.value;
-                                                        setSettings({ ...settings, rechargeMethods: newMethods });
-                                                    }} style={{ marginTop: '5px', fontSize: '0.75rem', opacity: 0.6 }} />
+                                                    {method.logo?.startsWith('data:') ? (
+                                                        <div className="flex items-center gap-2 bg-white/5 p-2 rounded-lg border border-white/10 mt-1">
+                                                            <span className="text-[10px] text-green-400 font-bold flex-1">
+                                                                <i className="fas fa-check-circle mr-1"></i> Image chargée (Base64)
+                                                            </span>
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const newMethods = [...settings.rechargeMethods];
+                                                                    newMethods[idx].logo = "";
+                                                                    setSettings({ ...settings, rechargeMethods: newMethods });
+                                                                }}
+                                                                className="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/30 transition-all font-bold"
+                                                            >
+                                                                Supprimer
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <input className="admin-input" placeholder="Ou lien URL" value={method.logo} onChange={(e) => {
+                                                            const newMethods = [...settings.rechargeMethods];
+                                                            newMethods[idx].logo = e.target.value;
+                                                            setSettings({ ...settings, rechargeMethods: newMethods });
+                                                        }} style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.7 }} />
+                                                    )}
                                                 </div>
                                                 <button type="button" onClick={() => {
                                                     const newMethods = settings.rechargeMethods.filter((_, i) => i !== idx);
@@ -3550,13 +3584,28 @@ const Admin = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <input
-                                        className="admin-input"
-                                        placeholder="Ex: 📺, 🎮, ou URL image"
-                                        value={showCategoryForm ? newCategory.icon : isEditingCategory.icon}
-                                        onChange={(e) => showCategoryForm ? setNewCategory({ ...newCategory, icon: e.target.value }) : setIsEditingCategory({ ...isEditingCategory, icon: e.target.value })}
-                                        style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.7 }}
-                                    />
+                                    {(showCategoryForm ? newCategory.icon : isEditingCategory.icon)?.startsWith('data:') ? (
+                                        <div className="flex items-center gap-2 bg-white/5 p-2 rounded-lg border border-white/10 mt-1">
+                                            <span className="text-[10px] text-green-400 font-bold flex-1">
+                                                <i className="fas fa-check-circle mr-1"></i> Image chargée (Base64)
+                                            </span>
+                                            <button 
+                                                type="button"
+                                                onClick={() => showCategoryForm ? setNewCategory({ ...newCategory, icon: "" }) : setIsEditingCategory({ ...isEditingCategory, icon: "" })}
+                                                className="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/30 transition-all font-bold"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <input
+                                            className="admin-input"
+                                            placeholder="Ex: 📺, 🎮, ou URL image"
+                                            value={showCategoryForm ? newCategory.icon : isEditingCategory.icon}
+                                            onChange={(e) => showCategoryForm ? setNewCategory({ ...newCategory, icon: e.target.value }) : setIsEditingCategory({ ...isEditingCategory, icon: e.target.value })}
+                                            style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.7 }}
+                                        />
+                                    )}
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label className="form-label">Sous-catégories</label>

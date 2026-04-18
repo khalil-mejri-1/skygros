@@ -29,18 +29,31 @@ router.post('/', upload.single('image'), (req, res) => {
             return res.status(400).json({ message: "Please upload a file" });
         }
 
-        // Convert the uploaded file to a Base64 Data URI
-        // This ensures the image is saved in the database results and persists on Vercel
-        const base64Image = req.file.buffer.toString('base64');
-        const dataUri = `data:${req.file.mimetype};base64,${base64Image}`;
+        // Define the uploads directory
+        const uploadsDir = path.join(__dirname, '../uploads');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        // Generate a unique filename
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(req.file.originalname) || '.jpg';
+        const filename = uniqueSuffix + ext;
+        const fullPath = path.join(uploadsDir, filename);
+
+        // Save the file buffer to disk
+        fs.writeFileSync(fullPath, req.file.buffer);
+
+        // Return the relative file path for the frontend
+        const relativePath = `/uploads/${filename}`;
 
         res.status(200).json({
             message: "File uploaded successfully",
-            filePath: dataUri // We return the full data URI
+            filePath: relativePath // Now returns a short URL like /uploads/12345.jpg
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server Error" });
+        console.error("Upload error:", err);
+        res.status(500).json({ message: "Server Error", error: err.message });
     }
 });
 

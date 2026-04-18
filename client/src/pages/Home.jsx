@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useMemo } from 'react';
+import { useState, useEffect, useContext, useMemo, useRef } from 'react';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
@@ -155,6 +155,67 @@ const Home = () => {
     const showNotify = (message, type = 'success') => {
         setNotification({ show: true, message, type });
         setTimeout(() => setNotification({ show: false, message: '', type: '' }), 4000);
+    };
+
+    const fileInputRef = useRef(null);
+    const [uploadingIndex, setUploadingIndex] = useState(null);
+
+    const handleCarouselImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await axios.post(`${API_BASE_URL}/upload`, formData);
+            const filePath = res.data.filePath;
+
+            if (uploadingIndex !== null) {
+                const newItems = [...(editData.items || [])];
+                if (newItems[uploadingIndex]) {
+                    newItems[uploadingIndex].image = filePath;
+                    setEditData({ ...editData, items: newItems });
+                }
+                setUploadingIndex(null);
+            } else {
+                if (editingSection === 'carousel') {
+                    const newItem = {
+                        image: filePath,
+                        title: "Promotion Title",
+                        subtitle: "Subtitle description",
+                        color: "#6366f1",
+                        buttonText: "DÉCOUVRIR",
+                        link: "#"
+                    };
+                    setEditData(prev => ({
+                        ...prev,
+                        items: [...(prev.items || []), newItem]
+                    }));
+                } else if (editingSection === 'memberships') {
+                    const newItem = { title: "", image: filePath, link: "#" };
+                    setEditData(prev => ({
+                        ...prev,
+                        items: [...(prev.items || []), newItem]
+                    }));
+                } else if (editingSection === 'channels' || editingSection === 'sports') {
+                    const newItem = { name: "", image: filePath, link: "#" };
+                    setEditData(prev => ({
+                        ...prev,
+                        items: [...(prev.items || []), newItem]
+                    }));
+                } else if (editingSection === 'hero') {
+                    const newItem = { title: "", subtitle: "", image: filePath, buttonText: "Commencer", link: "#" };
+                    setEditData(prev => ({
+                        ...prev,
+                        items: [...(prev.items || []), newItem]
+                    }));
+                }
+            }
+            showNotify("Image uploadée avec succès", "success");
+        } catch (err) {
+            console.error(err);
+            showNotify("Erreur lors de l'upload", "error");
+        }
     };
 
     const handleEditClick = (section, data) => {
@@ -888,7 +949,7 @@ const Home = () => {
 
                 {/* Notification Area */}
                 {notification.show && (
-                    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[10000] min-w-[350px] animate-fade-in-down">
+                    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[200000] min-w-[350px] animate-fade-in-down">
                         <div className={`relative px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-2xl border overflow-hidden ${notification.type === 'success'
                             ? 'bg-green-500/10 border-green-500/20 text-green-400'
                             : 'bg-red-500/10 border-red-500/20 text-red-400'
@@ -920,9 +981,18 @@ const Home = () => {
                         <div className="relative bg-[#0f172a]/95 border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-6 sm:p-8 custom-scrollbar text-left text-white animate-modal-content">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-2xl font-bold text-white capitalize">Modifier {editingSection}</h3>
-                                <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-white">
-                                    <i className="fas fa-times text-xl"></i>
-                                </button>
+                                <div className="flex items-center gap-4">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleCarouselImageUpload}
+                                    />
+                                    <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-white">
+                                        <i className="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-6">
@@ -930,33 +1000,47 @@ const Home = () => {
                                     <div className="space-y-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <span className="text-gray-400 text-sm font-semibold block">Images du Carrousel</span>
-                                            <button
-                                                onClick={() => setEditData([...(editData || []), { image: "", title: "", subtitle: "", color: "#6366f1", buttonText: "DÉCOUVRIR", link: "#" }])}
-                                                className="text-xs bg-primary/20 text-primary px-3 py-1 rounded-full hover:bg-primary/30 font-bold"
-                                            >
-                                                + Ajouter Photo
-                                            </button>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setUploadingIndex(null);
+                                                        fileInputRef.current.click();
+                                                    }}
+                                                    className="text-xs bg-primary/20 text-primary px-3 py-1 rounded-full hover:bg-primary/30 font-bold flex items-center gap-1"
+                                                >
+                                                    <i className="fas fa-upload"></i>
+                                                    + Ajouter Photo
+                                                </button>
+                                                <button
+                                                    onClick={() => setEditData({ ...editData, items: [...(editData.items || []), { image: "", title: "", subtitle: "", color: "#6366f1", buttonText: "DÉCOUVRIR", link: "#" }] })}
+                                                    className="text-xs bg-white/10 text-white px-3 py-1 rounded-full hover:bg-white/20 font-bold"
+                                                >
+                                                    + Manuel
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="space-y-6">
-                                            {Array.isArray(editData) && editData.map((slide, i) => (
+                                            {Array.isArray(editData?.items) && editData.items.map((slide, i) => (
                                                 <div key={i} className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-4 relative group">
                                                     <button
-                                                        onClick={() => setEditData(editData.filter((_, idx) => idx !== i))}
+                                                        onClick={() => setEditData({ ...editData, items: editData.items.filter((_, idx) => idx !== i) })}
                                                         className="absolute -top-2 -right-2 bg-red-500 w-6 h-6 rounded-full flex items-center justify-center text-[10px] invisible group-hover:visible z-[10010]"
                                                     >
                                                         <i className="fas fa-trash"></i>
                                                     </button>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                         <label className="block">
-                                                            <span className="text-gray-400 text-[10px] mb-1 block uppercase">URL de l'image</span>
+                                                            <div className="flex justify-between items-center mb-1">
+                                                                <span className="text-gray-400 text-[10px] block uppercase">URL de l'image</span>
+                                                            </div>
                                                             <input
                                                                 type="text"
                                                                 className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white text-xs"
                                                                 value={slide.image}
                                                                 onChange={(e) => {
-                                                                    const newData = [...editData];
+                                                                    const newData = [...editData.items];
                                                                     newData[i].image = e.target.value;
-                                                                    setEditData(newData);
+                                                                    setEditData({ ...editData, items: newData });
                                                                 }}
                                                             />
                                                         </label>
@@ -967,9 +1051,9 @@ const Home = () => {
                                                                 className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white text-xs font-bold"
                                                                 value={slide.title}
                                                                 onChange={(e) => {
-                                                                    const newData = [...editData];
+                                                                    const newData = [...editData.items];
                                                                     newData[i].title = e.target.value;
-                                                                    setEditData(newData);
+                                                                    setEditData({ ...editData, items: newData });
                                                                 }}
                                                             />
                                                         </label>
@@ -980,9 +1064,9 @@ const Home = () => {
                                                                 className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white text-xs"
                                                                 value={slide.subtitle}
                                                                 onChange={(e) => {
-                                                                    const newData = [...editData];
+                                                                    const newData = [...editData.items];
                                                                     newData[i].subtitle = e.target.value;
-                                                                    setEditData(newData);
+                                                                    setEditData({ ...editData, items: newData });
                                                                 }}
                                                             />
                                                         </label>
@@ -994,9 +1078,9 @@ const Home = () => {
                                                                     className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white text-xs"
                                                                     value={slide.buttonText}
                                                                     onChange={(e) => {
-                                                                        const newData = [...editData];
+                                                                        const newData = [...editData.items];
                                                                         newData[i].buttonText = e.target.value;
-                                                                        setEditData(newData);
+                                                                        setEditData({ ...editData, items: newData });
                                                                     }}
                                                                 />
                                                             </label>
@@ -1007,9 +1091,9 @@ const Home = () => {
                                                                     className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white text-xs"
                                                                     value={slide.link}
                                                                     onChange={(e) => {
-                                                                        const newData = [...editData];
+                                                                        const newData = [...editData.items];
                                                                         newData[i].link = e.target.value;
-                                                                        setEditData(newData);
+                                                                        setEditData({ ...editData, items: newData });
                                                                     }}
                                                                 />
                                                             </label>
@@ -1020,9 +1104,9 @@ const Home = () => {
                                                                     className="w-full h-8 bg-black/20 border border-white/10 rounded cursor-pointer p-0.5"
                                                                     value={slide.color || "#6366f1"}
                                                                     onChange={(e) => {
-                                                                        const newData = [...editData];
+                                                                        const newData = [...editData.items];
                                                                         newData[i].color = e.target.value;
-                                                                        setEditData(newData);
+                                                                        setEditData({ ...editData, items: newData });
                                                                     }}
                                                                 />
                                                             </label>
@@ -1338,12 +1422,26 @@ const Home = () => {
 
                                         {/* List Items Editor (Memberships, Gift Cards, etc.) */}
                                         {editData?.items && Array.isArray(editData.items) && (
-                                            <div className="space-y-4">
+                                            <>
+                                                <div className="space-y-4">
                                                 <div className="flex justify-between items-center">
                                                     <h4 className="text-sm font-bold text-gray-400">Éléments de la liste</h4>
-                                                    <button
-                                                        onClick={() => {
-                                                            const newItemMap = {
+                                                    <div className="flex gap-2">
+                                                        {(editingSection === 'memberships' || editingSection === 'carousel' || editingSection === 'channels' || editingSection === 'sports' || editingSection === 'hero') && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setUploadingIndex(null);
+                                                                    fileInputRef.current.click();
+                                                                }}
+                                                                className="text-xs bg-indigo-500/20 text-indigo-400 px-3 py-1.5 rounded-lg hover:bg-indigo-500/30 font-bold transition-all flex items-center gap-1"
+                                                            >
+                                                                <i className="fas fa-file-upload"></i>
+                                                                Upload & Add
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => {
+                                                                const newItemMap = {
                                                                 memberships: { title: "", image: "", link: "#" },
                                                                 giftCards: { title: "", subtitle: "", link: "#", color: "#0070d1" },
                                                                 hero: { title: "", subtitle: "", image: "", buttonText: "Commencer", link: "#" },
@@ -1369,7 +1467,9 @@ const Home = () => {
                                                         + Ajouter un élément
                                                     </button>
                                                 </div>
-                                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                                     {editData.items.map((item, i) => (
                                                         <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/10 relative group">
                                                             <button
@@ -1391,11 +1491,23 @@ const Home = () => {
                                                                                 newItems[i].title = e.target.value;
                                                                                 setEditData({ ...editData, items: newItems });
                                                                             }} />
-                                                                            <input type="text" placeholder="Lien de l'image (URL)" className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.image} onChange={(e) => {
-                                                                                const newItems = [...editData.items];
-                                                                                newItems[i].image = e.target.value;
-                                                                                setEditData({ ...editData, items: newItems });
-                                                                            }} />
+                                                                            <div className="flex gap-2">
+                                                                                <input type="text" placeholder="Lien de l'image (URL)" className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.image} onChange={(e) => {
+                                                                                    const newItems = [...editData.items];
+                                                                                    newItems[i].image = e.target.value;
+                                                                                    setEditData({ ...editData, items: newItems });
+                                                                                }} />
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setUploadingIndex(i);
+                                                                                        fileInputRef.current.click();
+                                                                                    }}
+                                                                                    className="bg-primary/20 text-primary px-3 rounded-lg hover:bg-primary/30 transition-colors"
+                                                                                    title="Uploader une image"
+                                                                                >
+                                                                                    <i className="fas fa-upload"></i>
+                                                                                </button>
+                                                                            </div>
                                                                         </div>
                                                                         {item.image && (
                                                                             <div className="w-16 h-20 rounded-lg overflow-hidden border border-white/10 shrink-0">
@@ -1550,11 +1662,30 @@ const Home = () => {
                                                                         </div>
                                                                     </div>
                                                                     <div className="grid grid-cols-2 gap-2">
-                                                                        <input type="text" placeholder="Image URL" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.image} onChange={(e) => {
-                                                                            const newItems = [...editData.items];
-                                                                            newItems[i].image = e.target.value;
-                                                                            setEditData({ ...editData, items: newItems });
-                                                                        }} />
+                                                                        {item.image?.startsWith('data:') ? (
+                                                                            <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-white">
+                                                                                <span className="text-[10px] text-green-400 font-bold flex-1 truncate">
+                                                                                    Image Base64
+                                                                                </span>
+                                                                                <button 
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const newItems = [...editData.items];
+                                                                                        newItems[i].image = "";
+                                                                                        setEditData({ ...editData, items: newItems });
+                                                                                    }}
+                                                                                    className="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/30 transition-all font-bold"
+                                                                                >
+                                                                                    X
+                                                                                </button>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <input type="text" placeholder="Image URL" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none w-full" value={item.image} onChange={(e) => {
+                                                                                const newItems = [...editData.items];
+                                                                                newItems[i].image = e.target.value;
+                                                                                setEditData({ ...editData, items: newItems });
+                                                                            }} />
+                                                                        )}
                                                                         <input type="color" className="w-full h-8 bg-transparent border-none cursor-pointer" value={item.color || "#6366f1"} onChange={(e) => {
                                                                             const newItems = [...editData.items];
                                                                             newItems[i].color = e.target.value;
@@ -1640,69 +1771,86 @@ const Home = () => {
                                                                     }} />
                                                                 </div>
                                                             ) : (
-                                                                <div className="grid grid-cols-2 gap-2">
-                                                                    <input type="text" placeholder="Nom/Titre" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.name || item.title} onChange={(e) => {
-                                                                        const newItems = [...editData.items];
-                                                                        if (item.name !== undefined) newItems[i].name = e.target.value;
-                                                                        else newItems[i].title = e.target.value;
-                                                                        setEditData({ ...editData, items: newItems });
-                                                                    }} />
-                                                                    <input type="text" placeholder="Lien/Image/Icon" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.image || item.icon || item.flag} onChange={(e) => {
-                                                                        const newItems = [...editData.items];
-                                                                        if (item.flag !== undefined) newItems[i].flag = e.target.value;
-                                                                        else if (item.icon !== undefined) newItems[i].icon = e.target.value;
-                                                                        else newItems[i].image = e.target.value;
-                                                                        setEditData({ ...editData, items: newItems });
-                                                                    }} />
+                                                                <div className="space-y-2">
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <input type="text" placeholder="Nom/Titre" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.name || item.title} onChange={(e) => {
+                                                                            const newItems = [...editData.items];
+                                                                            if (item.name !== undefined) newItems[i].name = e.target.value;
+                                                                            else newItems[i].title = e.target.value;
+                                                                            setEditData({ ...editData, items: newItems });
+                                                                        }} />
+                                                                        <div className="flex gap-1">
+                                                                            <input type="text" placeholder="Lien/Image/Icon" className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs" value={item.image || item.icon || item.flag} onChange={(e) => {
+                                                                                const newItems = [...editData.items];
+                                                                                if (item.flag !== undefined) newItems[i].flag = e.target.value;
+                                                                                else if (item.icon !== undefined) newItems[i].icon = e.target.value;
+                                                                                else newItems[i].image = e.target.value;
+                                                                                setEditData({ ...editData, items: newItems });
+                                                                            }} />
+                                                                            {item.image !== undefined && (
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setUploadingIndex(i);
+                                                                                        fileInputRef.current.click();
+                                                                                    }}
+                                                                                    className="bg-primary/20 text-primary px-2 rounded-lg hover:bg-primary/30 transition-colors"
+                                                                                    title="Uploader"
+                                                                                >
+                                                                                    <i className="fas fa-upload"></i>
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     ))}
                                                 </div>
-                                            </div>
+                                            </>
                                         )}
                                     </div>
                                 )}
-                                        {/* Global SEO Controls for Section */}
-                                        <div className="space-y-4 border-t border-white/10 pt-6">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <i className="fas fa-search text-primary"></i>
-                                                <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Paramètres SEO de la Section</span>
-                                            </div>
-                                            <div className="grid gap-4">
-                                                <label className="block">
-                                                    <span className="text-gray-400 text-[10px] mb-1 block uppercase font-bold text-xs opacity-70">Meta Title (SEO)</span>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Titre pour les moteurs de recherche..."
-                                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary/50 outline-none text-xs"
-                                                        value={editData.metaTitle || ""}
-                                                        onChange={(e) => setEditData({ ...editData, metaTitle: e.target.value })}
-                                                    />
-                                                </label>
-                                                <label className="block">
-                                                    <span className="text-gray-400 text-[10px] mb-1 block uppercase font-bold text-xs opacity-70">Meta Description (SEO)</span>
-                                                    <textarea
-                                                        rows="2"
-                                                        placeholder="Description pour les moteurs de recherche..."
-                                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary/50 outline-none text-xs"
-                                                        value={editData.metaDescription || ""}
-                                                        onChange={(e) => setEditData({ ...editData, metaDescription: e.target.value })}
-                                                    ></textarea>
-                                                </label>
-                                            </div>
-                                        </div>
 
-                                        <div className="flex gap-4 pt-6 border-t border-white/10">
+                                {/* Global SEO Controls for Section */}
+                                <div className="space-y-4 border-t border-white/10 pt-6">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <i className="fas fa-search text-primary"></i>
+                                        <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Paramètres SEO de la Section</span>
+                                    </div>
+                                    <div className="grid gap-4">
+                                        <label className="block">
+                                            <span className="text-gray-400 text-[10px] mb-1 block uppercase font-bold text-xs opacity-70">Meta Title (SEO)</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Titre pour les moteurs de recherche..."
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary/50 outline-none text-xs"
+                                                value={editData.metaTitle || ""}
+                                                onChange={(e) => setEditData({ ...editData, metaTitle: e.target.value })}
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="text-gray-400 text-[10px] mb-1 block uppercase font-bold text-xs opacity-70">Meta Description (SEO)</span>
+                                            <textarea
+                                                rows="2"
+                                                placeholder="Description pour les moteurs de recherche..."
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-primary/50 outline-none text-xs"
+                                                value={editData.metaDescription || ""}
+                                                onChange={(e) => setEditData({ ...editData, metaDescription: e.target.value })}
+                                            ></textarea>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-6 border-t border-white/10">
                                     <button
                                         onClick={handleSaveSettings}
-                                        className="flex-1 py-3 bg-primary rounded-xl font-bold text-white hover:bg-primary/80 transition-all"
+                                        className="flex-1 py-3 bg-primary rounded-xl font-bold text-white hover:bg-primary/80 transition-all font-bold uppercase tracking-widest text-xs"
                                     >
                                         Enregistrer les modifications
                                     </button>
                                     <button
                                         onClick={() => setIsEditModalOpen(false)}
-                                        className="px-6 py-3 bg-white/10 rounded-xl font-bold text-white hover:bg-white/20 transition-all"
+                                        className="px-6 py-3 bg-white/10 rounded-xl font-bold text-white hover:bg-white/20 transition-all font-bold uppercase tracking-widest text-xs"
                                     >
                                         Annuler
                                     </button>
@@ -1903,7 +2051,7 @@ const Home = () => {
 
             {/* Notification */}
             {notification.show && (
-                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] animate-fade-in-down">
+                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[200000] animate-fade-in-down">
                     <div className={`relative px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-2xl border overflow-hidden ${notification.type === 'success'
                         ? 'bg-green-500/10 border-green-500/20 text-green-400'
                         : 'bg-red-500/10 border-red-500/20 text-red-400'
@@ -2230,7 +2378,7 @@ const Home = () => {
                                     className="bg-white/5 rounded-lg h-16 flex items-center justify-center border border-white/5 hover:bg-primary/20 hover:border-primary/30 transition-all group overflow-hidden"
                                 >
                                     {channel.image ? (
-                                        <img src={channel.image} alt={channel.name} className="max-h-[70%] max-w-[80%] object-contain" />
+                                        <img src={formatImageUrl(channel.image)} alt={channel.name} className="max-h-[70%] max-w-[80%] object-contain" />
                                     ) : (
                                         <span className="text-white font-bold opacity-70 group-hover:opacity-100 text-xs sm:text-sm px-1 line-clamp-2">{channel.name}</span>
                                     )}
@@ -2263,7 +2411,7 @@ const Home = () => {
                                 >
                                     {sport.image ? (
                                         <img
-                                            src={sport.image}
+                                            src={formatImageUrl(sport.image)}
                                             alt={sport.name}
                                             className="max-h-full max-w-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110"
                                         />
@@ -2342,7 +2490,7 @@ const Home = () => {
                         {(settings?.home?.countriesSection?.items || countries.map(c => ({ name: c.name, image: null, flag: c.flag }))).map((country, idx) => (
                             <div key={idx} className="bg-white/5 rounded-lg p-3 flex items-center space-x-3 border border-white/5 hover:border-white/20 transition-all cursor-default">
                                 {country.image ? (
-                                    <img src={country.image} alt={country.name} className="w-8 h-6 object-cover rounded shadow-sm" />
+                                    <img src={formatImageUrl(country.image)} alt={country.name} className="w-8 h-6 object-cover rounded shadow-sm" />
                                 ) : (
                                     <span className="text-2xl">{country.flag || "🏳️"}</span>
                                 )}

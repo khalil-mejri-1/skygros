@@ -192,7 +192,7 @@ const Navbar = () => {
 
     const renderIcon = (icon) => {
         if (!icon) return null;
-        if (icon.startsWith('http') || icon.startsWith('/')) {
+        if (icon.startsWith('http') || icon.startsWith('/') || icon.startsWith('data:')) {
             return <img src={formatImageUrl(icon)} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />;
         }
         return <span style={{ fontSize: '1.1rem' }}>{icon}</span>;
