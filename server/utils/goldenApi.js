@@ -1,13 +1,13 @@
 const axios = require('axios');
 
-const getBaseUrl = () => {
-    return process.env.GOLDEN_BASE_URL || 'https://newpanel.cx/api';
+const getBaseUrl = (apiConfig = {}) => {
+    return apiConfig.baseUrl || process.env.GOLDEN_BASE_URL || 'https://newpanel.cx/api';
 };
 
-const getHeaders = () => {
-    const apiKey = process.env.GOLDEN_API_KEY;
+const getHeaders = (apiConfig = {}) => {
+    const apiKey = apiConfig.apiKey || process.env.GOLDEN_API_KEY;
     if (!apiKey) {
-        throw new Error("GOLDEN_API_KEY missing in environment");
+        throw new Error("GOLDEN_API_KEY missing");
     }
     return {
         'Content-Type': 'application/json',
@@ -16,10 +16,10 @@ const getHeaders = () => {
     };
 };
 
-const createSubscription = async (options, orderRef) => {
+const createSubscription = async (options, orderRef, apiConfig = {}) => {
     try {
-        const headers = getHeaders();
-        const baseUrl = getBaseUrl();
+        const headers = getHeaders(apiConfig);
+        const baseUrl = getBaseUrl(apiConfig);
 
         // options contains:
         // type: 'm3u', 'mag', 'activecode'

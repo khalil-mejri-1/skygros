@@ -1,8 +1,8 @@
 const axios = require('axios');
 
-const createSubscription = async (options, orderRef) => {
+const createSubscription = async (options, orderRef, apiConfig = {}) => {
     try {
-        const apiKey = process.env.TIVIPANEL_API_KEY || 'a27f6a82-0202-11f1-8b37-6edf5d6edfcb';
+        const apiKey = apiConfig.apiKey || process.env.TIVIPANEL_API_KEY || 'a27f6a82-0202-11f1-8b37-6edf5d6edfcb';
 
         const params = {
             action: 'new',
@@ -23,7 +23,8 @@ const createSubscription = async (options, orderRef) => {
 
         console.log("TIVIPANEL API Request Params:", params);
 
-        const response = await axios.get('https://api.tivipanel.net/reseller/panel_api.php', { params });
+        const endpoint = apiConfig.baseUrl || 'https://api.tivipanel.net/reseller/panel_api.php';
+        const response = await axios.get(endpoint, { params });
         console.log("TIVIPANEL RESPONSE RAW:", response.data);
 
         // Response is usually an array: [{ "status": "true", ... }]

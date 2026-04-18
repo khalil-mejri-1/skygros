@@ -1,9 +1,9 @@
 const axios = require('axios');
 
-const createSubscription = async (options, orderRef) => {
+const createSubscription = async (options, orderRef, apiConfig = {}) => {
     try {
-        const apiKey = process.env.PROMAX_API_KEY || '7dHa1DfhEdWJWgYJSETHLbOeHgxYI9B3ad0SGkHT/l3jftyZAco/s22w/9Kg3Ht3';
-        const baseUrl = 'https://api.promax-dash.com/api.php';
+        const apiKey = apiConfig.apiKey || process.env.PROMAX_API_KEY || '7dHa1DfhEdWJWgYJSETHLbOeHgxYI9B3ad0SGkHT/l3jftyZAco/s22w/9Kg3Ht3';
+        const baseUrl = apiConfig.baseUrl || 'https://api.promax-dash.com/api.php';
 
         const params = {
             action: 'new',

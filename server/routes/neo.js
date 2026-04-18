@@ -12,8 +12,18 @@ const checkApiKey = () => {
 // GET PACKAGES (Use for "Sort Bouquets" / Packs)
 router.get('/packages', async (req, res) => {
     try {
-        const apiKey = checkApiKey();
-        const response = await axios.get('https://neo4kpro.me/api/api.php', {
+        const customApiKey = req.query.apiKey;
+        const customBaseUrl = req.query.baseUrl;
+        
+        // Don't fail if env is missing if custom is provided
+        const apiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : process.env.NEO_API_KEY;
+        const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://neo4kpro.me/api/api.php';
+
+        if (!apiKey) {
+            throw new Error("NEO_API_KEY Missing");
+        }
+
+        const response = await axios.get(endpoint, {
             params: {
                 action: 'bouquet', // Correct action per docs
                 api_key: apiKey

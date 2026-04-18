@@ -59,6 +59,7 @@ const Admin = () => {
     const [historyStatusFilter, setHistoryStatusFilter] = useState("ALL");
     const [col2Input, setCol2Input] = useState("");
     const [col3Input, setCol3Input] = useState("");
+    const [globalApiConfig, setGlobalApiConfig] = useState(null);
 
     const triggerToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -96,7 +97,14 @@ const Admin = () => {
             "Satisfait ou remboursé 30 jours",
             "Livraison suivie et sécurisée",
             "Support client réactif 7j/7"
-        ]
+        ],
+        apiConfig: {
+            apiKey: "",
+            apiSecret: "",
+            clientId: "",
+            paymentPassword: "",
+            baseUrl: ""
+        }
     });
 
     const getRankDetail = (count, ranks = []) => {
@@ -114,7 +122,17 @@ const Admin = () => {
         fetchDemos(); // Fetch demos
         fetchResetData();
         fetchRechargeRequests(); // New fetch
+        fetchGlobalApiConfig();
     }, []);
+
+    const fetchGlobalApiConfig = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/settings/global-api-config`);
+            setGlobalApiConfig(res.data);
+        } catch (err) {
+            console.error("Error fetching global api config:", err);
+        }
+    };
 
     const fetchRechargeRequests = async () => {
         try {
@@ -461,7 +479,16 @@ const Admin = () => {
     const fetchProviderPackages = async (provider) => {
         if (!provider || provider === 'normal') return;
         try {
-            const res = await axios.get(`${API_BASE_URL}/${provider}/packages`);
+            const config = showAddForm ? newProduct.apiConfig : (isEditing?.apiConfig || {});
+            const targetProvider = provider === 'tivione' ? 'tivipanel' : provider;
+            const res = await axios.get(`${API_BASE_URL}/${targetProvider}/packages`, {
+                params: {
+                    apiKey: config.apiKey,
+                    apiSecret: config.apiSecret,
+                    clientId: config.clientId,
+                    baseUrl: config.baseUrl
+                }
+            });
             // Normalize data (some APIs return array, others object)
             let pkgs = [];
             if (provider === 'golden' && res.data?.packages?.data) {
@@ -513,38 +540,53 @@ const Admin = () => {
         }
     };
 
-    const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
+    const handleFileUpload = async (file, type, section = null, index = null) => {
         if (!file) return;
-
-        // Afficher un aperçu local immédiat
-        const localUrl = URL.createObjectURL(file);
-        if (showAddForm) {
-            setNewProduct({ ...newProduct, image: localUrl });
-        } else {
-            setIsEditing({ ...isEditing, image: localUrl });
-        }
 
         const formData = new FormData();
         formData.append('image', file);
 
         try {
             const res = await axios.post(`${API_BASE_URL}/upload`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
+            const filePath = res.data.filePath;
 
-            // Mettre à jour avec le chemin final du serveur
-            if (showAddForm) {
-                setNewProduct(prev => ({ ...prev, image: res.data.filePath }));
-            } else {
-                setIsEditing(prev => ({ ...prev, image: res.data.filePath }));
+            if (type === 'product') {
+                if (showAddForm) setNewProduct(prev => ({ ...prev, image: filePath }));
+                else setIsEditing(prev => ({ ...prev, image: filePath }));
+            } else if (type === 'demo') {
+                setNewDemo(prev => ({ ...prev, image: filePath }));
+            } else if (type === 'category') {
+                if (showCategoryForm) setNewCategory(prev => ({ ...prev, icon: filePath }));
+                else setIsEditingCategory(prev => ({ ...prev, icon: filePath }));
+            } else if (type === 'paymentMethod') {
+                const newMethods = [...settings.rechargeMethods];
+                newMethods[index].logo = filePath;
+                setSettings({ ...settings, rechargeMethods: newMethods });
+            } else if (type === 'seoPage') {
+                setEditingSeoPage(prev => ({ ...prev, ogImage: filePath }));
             }
+
+            triggerToast("Image uploadée avec succès");
+            return filePath;
         } catch (err) {
             console.error("Error uploading image:", err);
-            triggerToast("Erreur lors de l'upload de l'image", "error");
+            triggerToast("Erreur lors de l'upload", "error");
+            return null;
         }
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Visual feedback
+        const localUrl = URL.createObjectURL(file);
+        if (showAddForm) setNewProduct(prev => ({ ...prev, image: localUrl }));
+        else setIsEditing(prev => ({ ...prev, image: localUrl }));
+
+        await handleFileUpload(file, 'product');
     };
 
     const handleSecondaryImagesUpload = async (e) => {
@@ -686,7 +728,14 @@ const Admin = () => {
                     "Satisfait ou remboursé 30 jours",
                     "Livraison suivie et sécurisée",
                     "Support client réactif 7j/7"
-                ]
+                ],
+                apiConfig: {
+                    apiKey: "",
+                    apiSecret: "",
+                    clientId: "",
+                    paymentPassword: "",
+                    baseUrl: ""
+                }
             });
             setShowAddForm(false);
             fetchProducts();
@@ -1054,7 +1103,20 @@ const Admin = () => {
 
                     {activeTab === "products" && (
                         <button
-                            onClick={() => setShowAddForm(true)}
+                            onClick={() => {
+                                const defaults = globalApiConfig?.neo || {};
+                                setNewProduct({
+                                    ...newProduct,
+                                    apiConfig: {
+                                        apiKey: defaults.apiKey || "",
+                                        apiSecret: defaults.apiSecret || "",
+                                        clientId: defaults.clientId || "",
+                                        paymentPassword: defaults.paymentPassword || "",
+                                        baseUrl: defaults.baseUrl || ""
+                                    }
+                                });
+                                setShowAddForm(true);
+                            }}
                             className="btn btn-primary hover-lift"
                             style={{
                                 padding: '14px 28px',
@@ -1237,7 +1299,21 @@ const Admin = () => {
                                             </td>
                                             <td style={{ padding: '20px 24px' }}>
                                                 <div className="flex gap-2">
-                                                    <button onClick={() => setIsEditing(p)} className="action-btn edit" title="Modifier"><FaEdit size={18} /></button>
+                                                    <button onClick={() => {
+                                                        const provider = p.provider || 'neo';
+                                                        const defaults = globalApiConfig?.[provider] || {};
+                                                        
+                                                        setIsEditing({ 
+                                                            ...p, 
+                                                            apiConfig: {
+                                                                apiKey: p.apiConfig?.apiKey || defaults.apiKey || "",
+                                                                apiSecret: p.apiConfig?.apiSecret || defaults.apiSecret || "",
+                                                                clientId: p.apiConfig?.clientId || defaults.clientId || "",
+                                                                paymentPassword: p.apiConfig?.paymentPassword || defaults.paymentPassword || "",
+                                                                baseUrl: p.apiConfig?.baseUrl || defaults.baseUrl || ""
+                                                            }
+                                                        });
+                                                    }} className="action-btn edit" title="Modifier"><FaEdit size={18} /></button>
                                                     <button onClick={() => handleDelete(p._id)} className="action-btn delete" title="Supprimer"><FaTrash size={18} /></button>
                                                 </div>
                                             </td>
@@ -1744,8 +1820,20 @@ const Admin = () => {
                                     <input className="admin-input" value={newDemo.serviceName} onChange={(e) => setNewDemo({ ...newDemo, serviceName: e.target.value })} required />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="form-label">Image URL (Produit)</label>
-                                    <input className="admin-input" value={newDemo.image} onChange={(e) => setNewDemo({ ...newDemo, image: e.target.value })} placeholder="https://..." />
+                                    <label className="form-label">Image (Produit)</label>
+                                    <div className="flex gap-4 items-center">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            className="admin-input" 
+                                            onChange={(e) => handleFileUpload(e.target.files[0], 'demo')} 
+                                            style={{ flex: 1 }}
+                                        />
+                                        {newDemo.image && (
+                                            <img src={formatImageUrl(newDemo.image)} style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                        )}
+                                    </div>
+                                    <input className="admin-input" value={newDemo.image} onChange={(e) => setNewDemo({ ...newDemo, image: e.target.value })} placeholder="Ou collez un lien URL..." style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.7 }} />
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label className="form-label">Description (Optionnel)</label>
@@ -2229,12 +2317,24 @@ const Admin = () => {
                                                     }} />
                                                 </div>
                                                 <div className="flex flex-col gap-1">
-                                                    <label className="form-label">URL du Logo</label>
-                                                    <input className="admin-input" placeholder="Lien vers l'image" value={method.logo} onChange={(e) => {
+                                                    <label className="form-label">Logo de la méthode</label>
+                                                    <div className="flex gap-3 items-center">
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*" 
+                                                            className="admin-input" 
+                                                            onChange={(e) => handleFileUpload(e.target.files[0], 'paymentMethod', null, idx)} 
+                                                            style={{ flex: 1, padding: '10px' }}
+                                                        />
+                                                        {method.logo && (
+                                                            <img src={formatImageUrl(method.logo)} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'contain', background: '#fff', padding: '2px' }} />
+                                                        )}
+                                                    </div>
+                                                    <input className="admin-input" placeholder="Ou lien URL" value={method.logo} onChange={(e) => {
                                                         const newMethods = [...settings.rechargeMethods];
                                                         newMethods[idx].logo = e.target.value;
                                                         setSettings({ ...settings, rechargeMethods: newMethods });
-                                                    }} />
+                                                    }} style={{ marginTop: '5px', fontSize: '0.75rem', opacity: 0.6 }} />
                                                 </div>
                                                 <button type="button" onClick={() => {
                                                     const newMethods = settings.rechargeMethods.filter((_, i) => i !== idx);
@@ -2468,13 +2568,26 @@ const Admin = () => {
                                         />
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label className="form-label">OG Image (URL)</label>
+                                        <label className="form-label">OG Image (Social Media preview)</label>
+                                        <div className="flex gap-4 items-center">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                className="admin-input" 
+                                                onChange={(e) => handleFileUpload(e.target.files[0], 'seoPage')} 
+                                                style={{ flex: 1 }}
+                                            />
+                                            {editingSeoPage.ogImage && (
+                                                <img src={formatImageUrl(editingSeoPage.ogImage)} style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover' }} />
+                                            )}
+                                        </div>
                                         <input
                                             type="text"
                                             value={editingSeoPage.ogImage}
                                             className="admin-input"
-                                            placeholder="https://..."
+                                            placeholder="Ou lien URL..."
                                             onChange={(e) => setEditingSeoPage({ ...editingSeoPage, ogImage: e.target.value })}
+                                            style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.7 }}
                                         />
                                     </div>
                                 </div>
@@ -3118,12 +3231,41 @@ const Admin = () => {
                                                 <select
                                                     className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
                                                     value={showAddForm ? newProduct.provider : isEditing.provider}
-                                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, provider: e.target.value }) : setIsEditing({ ...isEditing, provider: e.target.value })}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        const defaults = globalApiConfig?.[val] || {};
+                                                        if (showAddForm) {
+                                                            setNewProduct({ 
+                                                                ...newProduct, 
+                                                                provider: val,
+                                                                apiConfig: {
+                                                                    apiKey: newProduct.apiConfig?.apiKey || defaults.apiKey || "",
+                                                                    apiSecret: newProduct.apiConfig?.apiSecret || defaults.apiSecret || "",
+                                                                    clientId: newProduct.apiConfig?.clientId || defaults.clientId || "",
+                                                                    paymentPassword: newProduct.apiConfig?.paymentPassword || defaults.paymentPassword || "",
+                                                                    baseUrl: newProduct.apiConfig?.baseUrl || defaults.baseUrl || ""
+                                                                }
+                                                            });
+                                                        } else {
+                                                            setIsEditing({ 
+                                                                ...isEditing, 
+                                                                provider: val,
+                                                                apiConfig: {
+                                                                    apiKey: isEditing.apiConfig?.apiKey || defaults.apiKey || "",
+                                                                    apiSecret: isEditing.apiConfig?.apiSecret || defaults.apiSecret || "",
+                                                                    clientId: isEditing.apiConfig?.clientId || defaults.clientId || "",
+                                                                    paymentPassword: isEditing.apiConfig?.paymentPassword || defaults.paymentPassword || "",
+                                                                    baseUrl: isEditing.apiConfig?.baseUrl || defaults.baseUrl || ""
+                                                                }
+                                                            });
+                                                        }
+                                                    }}
                                                 >
                                                     <option value="neo">NEO 4K (neo4kpro.me)</option>
                                                     <option value="strong8k">STRONG 8K (my8k.me)</option>
                                                     <option value="activation">ACTIVATION PANEL (activationpanel.net)</option>
                                                     <option value="tivipanel">TIVIPANEL (api.tivipanel.net)</option>
+                                                    <option value="tivione">TIVI ONE (tivi-one.com)</option>
                                                     <option value="promax">PROMAX (api.promax-dash.com)</option>
                                                     <option value="mango">MANGO (coinmango.org)</option>
                                                     <option value="golden">GOLDEN (golden-panel.com)</option>
@@ -3160,16 +3302,114 @@ const Admin = () => {
                                                 )}
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label className="form-label">Durée par défaut (Mois)</label>
-                                                <input
-                                                    type="number"
-                                                    className="admin-input"
-                                                    placeholder="ex: 12"
-                                                    value={showAddForm ? newProduct.duration : (isEditing.duration || 12)}
-                                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, duration: parseInt(e.target.value) }) : setIsEditing({ ...isEditing, duration: parseInt(e.target.value) })}
-                                                />
-                                            </div>
-                                        </div>
+                                                 <label className="form-label">Durée par défaut (Mois)</label>
+                                                 <input
+                                                     type="number"
+                                                     className="admin-input"
+                                                     placeholder="ex: 12"
+                                                     value={showAddForm ? newProduct.duration : (isEditing.duration || 12)}
+                                                     onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, duration: parseInt(e.target.value) }) : setIsEditing({ ...isEditing, duration: parseInt(e.target.value) })}
+                                                 />
+                                             </div>
+                                         </div>
+
+                                         {/* Section Doc API - New Section */}
+                                         <div style={{ marginTop: '20px', padding: '20px', borderRadius: '14px', background: 'rgba(255,153,0,0.03)', border: '1px solid rgba(255,153,0,0.1)' }}>
+                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                                                 <FaCog style={{ color: 'var(--accent-color)' }} />
+                                                 <h5 style={{ fontSize: '0.9rem', fontWeight: '900', color: '#fff', textTransform: 'uppercase', margin: 0 }}>Doc API (Configuration des Identifiants)</h5>
+                                             </div>
+                                             
+                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                     <label className="form-label" style={{ fontSize: '0.75rem' }}>API Key</label>
+                                                     <input
+                                                         type="text"
+                                                         className="admin-input"
+                                                         style={{ padding: '10px' }}
+                                                         placeholder="Clé API du fournisseur..."
+                                                         value={showAddForm ? newProduct.apiConfig?.apiKey : isEditing.apiConfig?.apiKey}
+                                                         onChange={(e) => {
+                                                             const val = e.target.value;
+                                                             if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, apiKey: val } });
+                                                             else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, apiKey: val } });
+                                                         }}
+                                                     />
+                                                 </div>
+
+                                                 {(showAddForm ? newProduct.provider : isEditing.provider) === 'u8k' && (
+                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                         <label className="form-label" style={{ fontSize: '0.75rem' }}>API Secret</label>
+                                                         <input
+                                                             type="text"
+                                                             className="admin-input"
+                                                             style={{ padding: '10px' }}
+                                                             placeholder="Secret API..."
+                                                             value={showAddForm ? newProduct.apiConfig?.apiSecret : isEditing.apiConfig?.apiSecret}
+                                                             onChange={(e) => {
+                                                                 const val = e.target.value;
+                                                                 if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, apiSecret: val } });
+                                                                 else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, apiSecret: val } });
+                                                             }}
+                                                         />
+                                                     </div>
+                                                 )}
+
+                                                 {(showAddForm ? newProduct.provider : isEditing.provider) === 'mango' && (
+                                                     <>
+                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                             <label className="form-label" style={{ fontSize: '0.75rem' }}>Client ID</label>
+                                                             <input
+                                                                 type="text"
+                                                                 className="admin-input"
+                                                                 style={{ padding: '10px' }}
+                                                                 placeholder="ID Client..."
+                                                                 value={showAddForm ? newProduct.apiConfig?.clientId : isEditing.apiConfig?.clientId}
+                                                                 onChange={(e) => {
+                                                                     const val = e.target.value;
+                                                                     if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, clientId: val } });
+                                                                     else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, clientId: val } });
+                                                                 }}
+                                                             />
+                                                         </div>
+                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                             <label className="form-label" style={{ fontSize: '0.75rem' }}>Payment Password</label>
+                                                             <input
+                                                                 type="password"
+                                                                 className="admin-input"
+                                                                 style={{ padding: '10px' }}
+                                                                 placeholder="Mot de passe de paiement..."
+                                                                 value={showAddForm ? newProduct.apiConfig?.paymentPassword : isEditing.apiConfig?.paymentPassword}
+                                                                 onChange={(e) => {
+                                                                     const val = e.target.value;
+                                                                     if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, paymentPassword: val } });
+                                                                     else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, paymentPassword: val } });
+                                                                 }}
+                                                             />
+                                                         </div>
+                                                     </>
+                                                 )}
+
+                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
+                                                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Base URL / Endpoint API</label>
+                                                      <input
+                                                          type="text"
+                                                          className="admin-input"
+                                                          style={{ padding: '10px' }}
+                                                          placeholder="https://api.example.com/endpoint (Laissez vide pour le défaut)"
+                                                          value={showAddForm ? newProduct.apiConfig?.baseUrl : isEditing.apiConfig?.baseUrl}
+                                                          onChange={(e) => {
+                                                              const val = e.target.value;
+                                                              if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, baseUrl: val } });
+                                                              else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, baseUrl: val } });
+                                                          }}
+                                                      />
+                                                  </div>
+                                             </div>
+                                             <p style={{ marginTop: '10px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
+                                                 * Laissez vide pour utiliser les identifiants et l'endpoint globaux (configurés dans le serveur).
+                                             </p>
+                                         </div>
 
                                         {/* Dynamic Duration Pricing moved to general product level or kept here for API specifically? 
                                             Actually the user said "dans Créer un Produit, ajoute une case à cocher pour la durée".
@@ -3291,13 +3531,31 @@ const Admin = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="form-label">Icône (Unicode ou URL)</label>
+                                    <label className="form-label">Icône ou Image</label>
+                                    <div className="flex gap-3 items-center">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            className="admin-input" 
+                                            onChange={(e) => handleFileUpload(e.target.files[0], 'category')} 
+                                            style={{ flex: 1 }}
+                                        />
+                                        {(showCategoryForm ? newCategory.icon : isEditingCategory.icon) && (
+                                            <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {(showCategoryForm ? newCategory.icon : isEditingCategory.icon).startsWith('data:') || (showCategoryForm ? newCategory.icon : isEditingCategory.icon).includes('/') ? (
+                                                    <img src={formatImageUrl(showCategoryForm ? newCategory.icon : isEditingCategory.icon)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                                                ) : (
+                                                    <span style={{ fontSize: '1.2rem' }}>{showCategoryForm ? newCategory.icon : isEditingCategory.icon}</span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                     <input
                                         className="admin-input"
                                         placeholder="Ex: 📺, 🎮, ou URL image"
                                         value={showCategoryForm ? newCategory.icon : isEditingCategory.icon}
                                         onChange={(e) => showCategoryForm ? setNewCategory({ ...newCategory, icon: e.target.value }) : setIsEditingCategory({ ...isEditingCategory, icon: e.target.value })}
-                                        required
+                                        style={{ marginTop: '5px', fontSize: '0.8rem', opacity: 0.7 }}
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">

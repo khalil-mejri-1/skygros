@@ -4,7 +4,8 @@ const { getPackages } = require('../utils/u8kApi');
 // GET PACKAGES (Bouquets)
 router.get('/packages', async (req, res) => {
     try {
-        const response = await getPackages();
+        const { apiKey, apiSecret, baseUrl } = req.query;
+        const response = await getPackages({ apiKey, apiSecret, baseUrl });
         // The API returns { bouquets: [{id, name, is_adult}], vods: [...] }
         const bouquets = response.bouquets || [];
         res.status(200).json(bouquets);

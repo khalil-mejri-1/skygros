@@ -1,9 +1,9 @@
 const axios = require('axios');
 
-const createSubscription = async (options, orderRef) => {
+const createSubscription = async (options, orderRef, apiConfig = {}) => {
     try {
-        const apiKey = process.env.NEO_API_KEY;
-        if (!process.env.NEO_API_KEY) {
+        const apiKey = apiConfig.apiKey || process.env.NEO_API_KEY;
+        if (!apiKey) {
             throw new Error("NEO API KEY Missing");
         }
 
@@ -19,7 +19,8 @@ const createSubscription = async (options, orderRef) => {
 
         console.log("NEO API Request Params:", params); // DEBUG LOG to see what is actually sent
 
-        const response = await axios.get('https://neo4kpro.me/api/api.php', { params });
+        const endpoint = apiConfig.baseUrl || 'https://neo4kpro.me/api/api.php';
+        const response = await axios.get(endpoint, { params });
         console.log("NEO RESPONSE:", response.data);
 
         // Check if response is an array (as per doc example) and has success status

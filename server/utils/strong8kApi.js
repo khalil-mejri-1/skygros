@@ -1,8 +1,8 @@
 const axios = require('axios');
 
-const createSubscription = async (options, orderRef) => {
+const createSubscription = async (options, orderRef, apiConfig = {}) => {
     try {
-        const apiKey = process.env.STRONG8K_API_KEY || 'cec67373579d901151b52f29d3750ec1'; // Fallback to provided key if env missing
+        const apiKey = apiConfig.apiKey || process.env.STRONG8K_API_KEY || 'cec67373579d901151b52f29d3750ec1'; // Fallback to provided key if env missing
 
         const params = {
             action: 'new',
@@ -21,7 +21,8 @@ const createSubscription = async (options, orderRef) => {
 
         console.log("STRONG8K API Request Params:", params);
 
-        const response = await axios.get('https://my8k.me/api/api.php', { params });
+        const endpoint = apiConfig.baseUrl || 'https://my8k.me/api/api.php';
+        const response = await axios.get(endpoint, { params });
         console.log("STRONG8K RESPONSE:", response.data);
 
         // Response is an array: [{ "status": "true", ... }]

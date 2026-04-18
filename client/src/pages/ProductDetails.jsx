@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from "react";
+import { createPortal } from 'react-dom';
 
 import API_BASE_URL, { formatImageUrl } from "../config/api";
 import { useParams, Link } from "react-router-dom";
@@ -785,7 +786,7 @@ const ProductDetails = () => {
                                 </div>
                             )}
 
-                            {product.type === 'mango' && (
+                            {(product.type === 'mango' || product.title?.toLowerCase().includes('mango')) && (
                                 <div className="flex flex-col gap-4 mb-6">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <button
@@ -831,17 +832,53 @@ const ProductDetails = () => {
                                             RENEW NETFLY
                                         </button>
                                     </div>
-                                    {/* <button
+                                    <button
                                         onClick={handleTestMangoConnection}
                                         disabled={isTestingConnection}
-                                        className="w-full opacity-60 hover:opacity-100 transition-all py-2 border border-dashed border-white/20 rounded-xl text-[0.7rem] font-bold text-white/50"
+                                        className="w-full opacity-60 hover:opacity-100 transition-all py-3 border border-dashed border-white/20 rounded-xl text-[0.7rem] font-bold text-white/50"
                                     >
                                         {isTestingConnection ? "VÉRIFICATION..." : "TESTER LA CONNEXION API MANGO"}
-                                    </button> */}
+                                    </button>
+                                    
+                                    <button
+                                        onClick={handleBuy}
+                                        style={{
+                                            background: isPurchased ? 'var(--success)' : 'var(--accent-color)',
+                                            color: '#000',
+                                            padding: '18px 25px',
+                                            fontSize: '1.1rem',
+                                            fontWeight: '950',
+                                            borderRadius: '16px',
+                                            boxShadow: isPurchased ? 'none' : '0 12px 24px rgba(255, 153, 0, 0.25)',
+                                            width: '100%',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                        disabled={isPurchased}
+                                    >
+                                        {isLoading ? "Veuillez patienter..." : (isPurchased ? "✓ ACHAT RÉUSSI" : "ACHETER MAINTENANT")}
+                                    </button>
+                                    <button
+                                        onClick={handleAddToCart}
+                                        style={{
+                                            background: isAdded ? 'var(--success)' : 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            color: isAdded ? '#000' : '#fff',
+                                            width: '100%',
+                                            height: '45px',
+                                            fontSize: '1.2rem',
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                    >
+                                        {isAdded ? <FaCheck /> : <FaPlus />}
+                                    </button>
                                 </div>
                             )}
 
-                            {product.provider !== 'golden' && (
+                            {product.provider !== 'golden' && !(product.type === 'mango' || product.title?.toLowerCase().includes('mango')) && (
                                 <div className="flex gap-4 items-stretch">
                                     <button
                                         onClick={handleBuy}
@@ -937,7 +974,8 @@ const ProductDetails = () => {
                             const subs = (product.subcategory || "").split(',').map(s => s.trim());
                             const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
                             const hasVisibilityOptions = product.showBouquetSorter || product.showCountrySelector !== false;
-                            return (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || product.type === 'mango' || product.hasMultiDuration || isHybrid || hasVisibilityOptions);
+                            const isMango = product.type === 'mango' || product.title?.toLowerCase().includes('mango');
+                            return (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || product.hasMultiDuration || isHybrid || hasVisibilityOptions) && !isMango;
                         })() && (
                             <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
                                 <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
@@ -1001,7 +1039,8 @@ const ProductDetails = () => {
                                 {(() => {
                                     const subs = (product.subcategory || "").split(',').map(s => s.trim());
                                     const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
-                                    return (product.type === 'm3u' || isHybrid);
+                                    const isMango = product.type === 'mango' || product.title?.toLowerCase().includes('mango');
+                                    return (product.type === 'm3u' || isHybrid) && !isMango;
                                 })() && (
                                     <>
                                         {/* Subscription Type Selector - Specific to multi-choice subcategories */}
@@ -1108,7 +1147,6 @@ const ProductDetails = () => {
                     <section style={{ marginTop: '80px' }}>
                         <div className="flex justify-between items-end mb-8">
                             <h2 className="section-title" style={{ marginBottom: 40 }}>PRODUITS <span style={{ color: 'var(--accent-color)' }}>SIMILAIRES</span></h2>
-                            {/* <Link to="/products" style={{ color: 'var(--accent-color)', fontWeight: '700', fontSize: '0.9rem', marginBottom: '40px' }}>VOIR TOUT</Link> */}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: isUltraSmall ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isUltraSmall ? '15px' : '25px' }}>
                             {similarProducts.map(p => (
@@ -1119,241 +1157,129 @@ const ProductDetails = () => {
                 )}
             </div>
 
-            {/* Mango Renewal Modal */}
-            {showMangoModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.85)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000,
-                    backdropFilter: 'blur(10px)',
-                    padding: '20px'
-                }}>
-                    <div className="glass" style={{
-                        maxWidth: '500px',
-                        width: '100%',
-                        padding: '40px',
-                        borderRadius: '24px',
-                        border: '1px solid rgba(255, 153, 0, 0.2)',
-                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-                        position: 'relative'
-                    }}>
-                        <button
+            {/* Mango Renewal Modal - Portal ensures it's above everything */}
+            {showMangoModal && createPortal(
+                <div className="modal-overlay" style={{ zIndex: 1000000, position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(10px)' }}>
+                    <div className="modal-content glass" style={{ maxWidth: '450px', width: '100%', position: 'relative', zIndex: 1000001, padding: '30px' }}>
+                        <button 
                             onClick={() => setShowMangoModal(false)}
-                            style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '1.5rem', cursor: 'pointer' }}
+                            style={{ position: 'absolute', top: '20px', right: '20px', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', background: 'none', border: 'none', fontSize: '1.2rem', transition: '0.3s' }}
+                            className="hover:text-red-500"
                         >
-                            &times;
+                            <FaTimes />
                         </button>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#fff', marginBottom: '8px' }}>
+                                    {mangoRenewType === 'box' ? 'Renew Box' : 'Renew Netfly'}
+                                </h2>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
+                                    Veuillez entrer les détails requis pour finaliser votre commande.
+                                </p>
+                            </div>
 
-                        <h2 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: '900', marginBottom: '10px', textAlign: 'center' }}>
-                            {mangoRenewType === 'box' ? 'Renew Box' : 'Renew Netfly'}
-                        </h2>
-                        <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginBottom: '30px' }}>
-                            Veuillez entrer les détails requis pour finaliser votre commande.
-                        </p>
+                            <div>
+                                <label className="block text-gray-400 text-[0.7rem] font-black uppercase tracking-widest mb-2 opacity-50">
+                                    {mangoRenewType === 'box' ? 'SN or Account/UNID:' : 'Account/UNID:'}
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="EX: 20121600..."
+                                        className="admin-input flex-1"
+                                        value={mangoIdentifier}
+                                        onChange={(e) => setMangoIdentifier(e.target.value)}
+                                        style={{ textTransform: 'uppercase', letterSpacing: '1px' }}
+                                    />
+                                    <button 
+                                        onClick={fetchMangoServices}
+                                        disabled={isFetchingMangoServices || !mangoIdentifier}
+                                        className="btn btn-glass"
+                                        style={{ padding: '0 20px', fontWeight: '900' }}
+                                    >
+                                        {isFetchingMangoServices ? "..." : "VÉRIFIER"}
+                                    </button>
+                                </div>
+                            </div>
 
-                        <div className="mb-6">
-                            <label className="block text-gray-400 text-sm mb-3 font-bold uppercase tracking-wider">
-                                {mangoRenewType === 'box' ? 'Input SN or Account/UNID:' : 'Input Account/UNID:'}
-                            </label>
-                            <div className="flex gap-2">
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    className="flex-1 bg-[#151725] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-all"
-                                    placeholder={mangoRenewType === 'box' ? "SN or Account/UNID..." : "Account/UNID..."}
-                                    value={mangoIdentifier}
-                                    onChange={(e) => setMangoIdentifier(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && fetchMangoServices()}
-                                />
+                            {mangoServices.length > 0 && (
+                                <div style={{ maxHeight: '300px', overflowY: 'auto' }} className="custom-scrollbar pr-1">
+                                    <p className="text-[0.7rem] font-black text-primary uppercase tracking-widest mb-3">Services Disponibles</p>
+                                    <div className="flex flex-col gap-2">
+                                        {mangoServices.map((serviceGroup) => (
+                                            <div key={serviceGroup.serviceName}>
+                                                {serviceGroup.priceList.map((plan) => (
+                                                    <div
+                                                        key={plan.key}
+                                                        onClick={() => setSelectedMangoService(plan)}
+                                                        className={`p-3 rounded-xl border cursor-pointer transition-all flex justify-between items-center mb-2 ${selectedMangoService?.key === plan.key ? 'bg-primary/20 border-primary' : 'bg-white/5 border-white/5 hover:border-white/10'}`}
+                                                    >
+                                                        <div>
+                                                            <div className="text-sm font-bold text-white">{plan.name}</div>
+                                                            <div className="text-[0.65rem] text-gray-500">Plan de renouvellement</div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-primary font-black">
+                                                                ${(() => {
+                                                                    const raw = String(plan.price || "0").replace(/[^0-9.]/g, '');
+                                                                    const base = parseFloat(raw) || 0;
+                                                                    if (!plan.marginAdded) {
+                                                                        const m = settings?.home?.mangoSettings ? (mangoRenewType === 'netfly' ? parseFloat(settings.home.mangoSettings.netflyPrice) : parseFloat(settings.home.mangoSettings.boxPrice)) : 0;
+                                                                        return (base + (parseFloat(m) || 0)).toFixed(2);
+                                                                    }
+                                                                    return base.toFixed(2);
+                                                                })()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-3">
                                 <button
-                                    onClick={fetchMangoServices}
-                                    disabled={isFetchingMangoServices}
-                                    style={{
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        color: '#fff',
-                                        padding: '0 15px',
-                                        borderRadius: '12px',
-                                        fontSize: '0.8rem',
-                                        fontWeight: 'bold'
-                                    }}
+                                    onClick={handleMangoPurchase}
+                                    disabled={!selectedMangoService || isLoading}
+                                    className="btn btn-primary"
+                                    style={{ padding: '15px', borderRadius: '12px', fontWeight: '900', boxShadow: '0 10px 20px rgba(255,153,0,0.2)' }}
                                 >
-                                    {isFetchingMangoServices ? "..." : "VÉRIFIER"}
+                                    {isLoading ? "PATIENTEZ..." : (selectedMangoService ? "CHOISIR UN PLAN" : "SÉLECTIONNEZ UN PLAN")}
+                                </button>
+                                <button
+                                    onClick={() => setShowMangoModal(false)}
+                                    className="btn btn-glass"
+                                    style={{ padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '0.8rem' }}
+                                >
+                                    ANNULER
                                 </button>
                             </div>
                         </div>
-
-                        {mangoServices.length > 0 && (
-                            <div className="mb-6 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                                <div className="text-[0.8rem] font-bold text-gray-500 uppercase tracking-[2px] mb-4">Services Disponibles</div>
-
-                                {/* Section for Admin Margin Display */}
-                                {/* <div className="glass-panel mb-6" style={{ 
-                                    padding: '15px 20px', 
-                                    borderRadius: '18px', 
-                                    background: 'rgba(255,153,0,0.08)', 
-                                    border: '1px solid rgba(255,153,0,0.15)',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center'
-                                }}>
-                                    <div className="flex items-center gap-3">
-                                        <div style={{ padding: '8px', background: 'rgba(255,153,0,0.1)', borderRadius: '10px' }}>
-                                            <FaMoneyBillWave className="text-primary" size={18} />
-                                        </div>
-                                        <div>
-                                            <div className="text-[0.65rem] text-gray-400 font-bold uppercase tracking-wider">Frais de Service (Admin)</div>
-                                            <div className="text-[0.85rem] text-white font-black">Prix Mango (Renew)</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-[1.2rem] font-black text-primary">
-                                        + {(() => {
-                                            const margin = settings?.home?.mangoSettings ? (mangoRenewType === 'netfly' ? settings.home.mangoSettings.netflyPrice : settings.home.mangoSettings.boxPrice) : 0;
-                                            return margin || 0;
-                                        })()} $
-                                    </div>
-                                </div> */}
-                                <div className="flex flex-col gap-2">
-                                    {mangoServices.map((serviceGroup) => (
-                                        <div key={serviceGroup.serviceName}>
-                                            <div className="text-[0.7rem] text-primary font-bold mb-1 uppercase opacity-60">{serviceGroup.serviceName}</div>
-                                            {serviceGroup.priceList.map((plan) => (
-                                                <div
-                                                    key={plan.key}
-                                                    onClick={() => setSelectedMangoService(plan)}
-                                                    className={`p-3 rounded-lg border cursor-pointer transition-all flex justify-between items-center ${selectedMangoService?.key === plan.key ? 'bg-primary/20 border-primary' : 'bg-black/20 border-white/5 hover:border-white/20'}`}
-                                                >
-                                                    <div>
-                                                        <div className="text-sm font-bold text-white">{plan.name}</div>
-                                                        <div className="text-[0.7rem] text-gray-500">{plan.description || "Plan de renouvellement"}</div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="text-primary font-black">
-                                                            ${(() => {
-                                                                const raw = String(plan.price || "0").replace(/[^0-9.]/g, '');
-                                                                const base = parseFloat(raw) || 0;
-                                                                // If backend didn't add it, add it here
-                                                                if (!plan.marginAdded) {
-                                                                    const m = settings?.home?.mangoSettings ? (mangoRenewType === 'netfly' ? parseFloat(settings.home.mangoSettings.netflyPrice) : parseFloat(settings.home.mangoSettings.boxPrice)) : 0;
-                                                                    return (base + (parseFloat(m) || 0)).toFixed(2);
-                                                                }
-                                                                return plan.price;
-                                                            })()}
-                                                        </div>
-                                                        {/* {(plan.marginAdded > 0 || (settings?.home?.mangoSettings && (mangoRenewType === 'netfly' ? settings.home.mangoSettings.netflyPrice : settings.home.mangoSettings.boxPrice) > 0)) && (
-                                                            <div style={{ fontSize: '0.65rem', color: 'rgba(255,153,0,0.6)', marginTop: '2px', fontWeight: 'bold' }}>
-                                                                (+{plan.marginAdded || (mangoRenewType === 'netfly' ? settings.home.mangoSettings.netflyPrice : settings.home.mangoSettings.boxPrice)}$ Frais)
-                                                            </div>
-                                                        )} */}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={handleMangoPurchase}
-                                disabled={isLoading || !selectedMangoService}
-                                style={{
-                                    background: 'var(--accent-color)',
-                                    color: '#000',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    fontWeight: '900',
-                                    fontSize: '1rem',
-                                    cursor: (isLoading || !selectedMangoService) ? 'not-allowed' : 'pointer'
-                                }}
-                            >
-                                {isLoading ? "Traitement..." : (selectedMangoService ? `CONFIRMER - $${selectedMangoService.price}` : "CHOISIR UN PLAN")}
-                            </button>
-                            <button
-                                onClick={() => setShowMangoModal(false)}
-                                style={{
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: '#fff',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    fontWeight: '700',
-                                    fontSize: '0.9rem'
-                                }}
-                            >
-                                ANNULER
-                            </button>
-                        </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
-            {/* Mango Test Connection Response Modal */}
-            {showTestModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.9)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 2000,
-                    backdropFilter: 'blur(15px)',
-                    padding: '20px'
-                }}>
-                    <div className="glass" style={{
-                        maxWidth: '600px',
-                        width: '100%',
-                        padding: '40px',
-                        borderRadius: '24px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-                        maxHeight: '80vh',
-                        display: 'flex',
-                        flexDirection: 'column'
-                    }}>
-                        <h2 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: '900', marginBottom: '20px' }}>
-                            Réponse Mango API
-                        </h2>
 
-                        <div style={{
-                            background: '#000',
-                            padding: '20px',
-                            borderRadius: '12px',
-                            overflow: 'auto',
-                            flex: 1,
-                            fontFamily: 'monospace',
-                            fontSize: '0.85rem',
-                            color: '#00FF41', // Matrix green
-                            border: '1px solid #333'
-                        }}>
-                            <pre>{JSON.stringify(mangoTestResponse, null, 2)}</pre>
+            {/* Mango Test Connection Response Modal - Portal */}
+            {showTestModal && createPortal(
+                <div className="modal-overlay" style={{ zIndex: 1000000, position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(15px)' }}>
+                    <div className="modal-content glass" style={{ maxWidth: '600px', width: '100%', maxHeight: '85vh', padding: '30px', position: 'relative', zIndex: 1000001 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+                            <h2 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: '900' }}>Réponse Mango API</h2>
+                            <div style={{ background: '#000', padding: '20px', borderRadius: '15px', flex: 1, overflow: 'auto', fontFamily: 'monospace', fontSize: '0.8rem', border: '1px solid #333' }}>
+                                <pre style={{ color: mangoTestResponse?.status === 'success' ? '#2ed573' : '#ff4757', whiteSpace: 'pre-wrap' }}>
+                                    {JSON.stringify(mangoTestResponse, null, 2)}
+                                </pre>
+                            </div>
+                            <button onClick={() => setShowTestModal(false)} className="btn btn-primary" style={{ padding: '15px', borderRadius: '10px', fontWeight: '900' }}>
+                                FERMER
+                            </button>
                         </div>
-
-                        <button
-                            onClick={() => setShowTestModal(false)}
-                            style={{
-                                marginTop: '20px',
-                                background: 'var(--accent-color)',
-                                color: '#000',
-                                padding: '12px',
-                                borderRadius: '10px',
-                                fontWeight: '900'
-                            }}
-                        >
-                            FERMER
-                        </button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

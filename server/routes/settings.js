@@ -53,4 +53,54 @@ router.put('/', async (req, res) => {
     }
 });
 
+// GET GLOBAL API CONFIGS (for Admin display)
+router.get('/global-api-config', async (req, res) => {
+    try {
+        const config = {
+            neo: { 
+                apiKey: process.env.NEO_API_KEY,
+                baseUrl: process.env.NEO_BASE_URL || 'https://neo4kpro.me/api/api.php'
+            },
+            strong8k: { 
+                apiKey: process.env.STRONG8K_API_KEY,
+                baseUrl: process.env.STRONG8K_BASE_URL || 'https://my8k.me/api/api.php'
+            },
+            activation: { 
+                apiKey: process.env.ACTIVATION_API_KEY,
+                baseUrl: process.env.ACTIVATION_BASE_URL || 'https://activationpanel.net/api/api.php'
+            },
+            tivipanel: { 
+                apiKey: process.env.TIVIPANEL_API_KEY,
+                baseUrl: process.env.TIVIPANEL_BASE_URL || 'https://api.tivipanel.net/reseller/panel_api.php'
+            },
+            tivione: { 
+                apiKey: process.env.TIVIONE_API_KEY || 'a27f6a82-0202-11f1-8b37-6edf5d6edfcb',
+                baseUrl: process.env.TIVIONE_BASE_URL || 'https://api.tivipanel.net/reseller/panel_api.php'
+            },
+            promax: { 
+                apiKey: process.env.PROMAX_API_KEY,
+                baseUrl: process.env.PROMAX_BASE_URL || 'https://api.promax-dash.com/api.php'
+            },
+            mango: { 
+                clientId: process.env.MANGO_CLIENT_ID, 
+                apiKey: process.env.MANGO_API_KEY, 
+                paymentPassword: process.env.MANGO_PAYMENT_PASSWORD,
+                baseUrl: process.env.MANGO_BASE_URL || 'https://api.coinmango.org/api/v1'
+            },
+            golden: { 
+                apiKey: process.env.GOLDEN_API_KEY, 
+                baseUrl: process.env.GOLDEN_BASE_URL || 'https://newpanel.cx/api'
+            },
+            u8k: { 
+                apiKey: process.env.U8K_API_KEY, 
+                apiSecret: process.env.U8K_API_SECRET,
+                baseUrl: process.env.U8K_BASE_URL || 'https://u8k.me/api/v1'
+            }
+        };
+        res.status(200).json(config);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch global config" });
+    }
+});
+
 module.exports = router;

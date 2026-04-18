@@ -1,17 +1,18 @@
 const axios = require('axios');
 
-const MANGO_BASE_URL = 'https://api.coinmango.org/api/v1';
+const DEFAULT_BASE_URL = 'https://api.coinmango.org/api/v1';
 
-const getAuthToken = async () => {
+const getAuthToken = async (apiConfig = {}) => {
     try {
-        const clientID = process.env.MANGO_CLIENT_ID;
-        const apiKey = process.env.MANGO_API_KEY;
+        const clientID = apiConfig.clientId || process.env.MANGO_CLIENT_ID;
+        const apiKey = apiConfig.apiKey || process.env.MANGO_API_KEY;
 
         if (!clientID || !apiKey) {
-            throw new Error("Mango Client ID or API Key missing in environment");
+            throw new Error("Mango Client ID or API Key missing");
         }
 
-        const response = await axios.post(`${MANGO_BASE_URL}/authentication/login`, {}, {
+        const baseUrl = apiConfig.baseUrl || DEFAULT_BASE_URL;
+        const response = await axios.post(`${baseUrl}/authentication/login`, {}, {
             headers: {
                 'Content-Type': 'application/json',
                 'x-client-id': clientID,
@@ -30,9 +31,9 @@ const getAuthToken = async () => {
     }
 };
 
-const createSubscription = async (options, orderRef) => {
+const createSubscription = async (options, orderRef, apiConfig = {}) => {
     try {
-        const token = await getAuthToken();
+        const token = await getAuthToken(apiConfig);
         const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
         // 1. Get Service Key (if not provided directly in options)
@@ -48,8 +49,10 @@ const createSubscription = async (options, orderRef) => {
             throw new Error("Identifier (SN/BoxID/Account) is required for Mango renewal");
         }
 
+        const baseUrl = apiConfig.baseUrl || DEFAULT_BASE_URL;
+
         // 2. Create Order
-        const orderResponse = await axios.post(`${MANGO_BASE_URL}/orders/create`, {
+        const orderResponse = await axios.post(`${baseUrl}/orders/create`, {
             serviceKey: serviceKey
         }, { headers });
 
@@ -60,12 +63,12 @@ const createSubscription = async (options, orderRef) => {
         const orderNumber = orderResponse.data.data.orderNumber;
 
         // 3. Unlock Account
-        const paymentPassword = process.env.MANGO_PAYMENT_PASSWORD;
+        const paymentPassword = apiConfig.paymentPassword || process.env.MANGO_PAYMENT_PASSWORD;
         if (!paymentPassword) {
-            throw new Error("MANGO_PAYMENT_PASSWORD missing in environment");
+            throw new Error("MANGO_PAYMENT_PASSWORD missing");
         }
 
-        const unlockResponse = await axios.post(`${MANGO_BASE_URL}/payment/unlockAccount`, {
+        const unlockResponse = await axios.post(`${baseUrl}/payment/unlockAccount`, {
             paymentPassword: paymentPassword
         }, { headers });
 
@@ -76,7 +79,7 @@ const createSubscription = async (options, orderRef) => {
         }
 
         // 4. Initiate Payment
-        const paymentResponse = await axios.post(`${MANGO_BASE_URL}/payment/payment`, {
+        const paymentResponse = await axios.post(`${baseUrl}/payment/payment`, {
             orderNumber: orderNumber
         }, { headers });
 

@@ -1,12 +1,12 @@
 const axios = require('axios');
 
-const createSubscription = async (options, orderRef) => {
+const createSubscription = async (options, orderRef, apiConfig = {}) => {
     try {
-        const apiKey = process.env.U8K_API_KEY;
-        const apiSecret = process.env.U8K_API_SECRET;
+        const apiKey = apiConfig.apiKey || process.env.U8K_API_KEY;
+        const apiSecret = apiConfig.apiSecret || process.env.U8K_API_SECRET;
 
         if (!apiKey || !apiSecret) {
-            throw new Error("U8K API Credentials missing in environment variables (.env)");
+            throw new Error("U8K API Credentials missing");
         }
 
         const headers = {
@@ -42,7 +42,8 @@ const createSubscription = async (options, orderRef) => {
 
         console.log(`U8K API Sending Request to /devices/${type} with params:`, JSON.stringify(params, null, 2));
 
-        const response = await axios.post(`https://u8k.me/api/v1/devices/${type}`, params, {
+        const baseEndpoint = apiConfig.baseUrl || 'https://u8k.me/api/v1';
+        const response = await axios.post(`${baseEndpoint}/devices/${type}`, params, {
             headers,
             validateStatus: () => true 
         });
@@ -87,13 +88,14 @@ const createSubscription = async (options, orderRef) => {
 
 
 // GET PACKAGES (Bouquets)
-const getPackages = async () => {
+const getPackages = async (apiConfig = {}) => {
     try {
-        const apiKey = process.env.U8K_API_KEY;
-        const apiSecret = process.env.U8K_API_SECRET;
+        const apiKey = apiConfig.apiKey || process.env.U8K_API_KEY;
+        const apiSecret = apiConfig.apiSecret || process.env.U8K_API_SECRET;
+        const baseUrl = apiConfig.baseUrl || 'https://u8k.me/api/v1';
 
         if (!apiKey || !apiSecret) {
-            throw new Error("U8K API Credentials missing in .env");
+            throw new Error("U8K API Credentials missing");
         }
 
         const headers = {
@@ -103,7 +105,7 @@ const getPackages = async () => {
             'Accept': 'application/json'
         };
 
-        const response = await axios.get('https://u8k.me/api/v1/bouquets', { headers });
+        const response = await axios.get(`${baseUrl}/bouquets`, { headers });
         return response.data;
     } catch (error) {
         console.error("U8K API Packages Request Failed:", error.response?.data || error.message);

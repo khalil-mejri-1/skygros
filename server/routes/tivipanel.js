@@ -6,10 +6,16 @@ const apiKey = process.env.TIVIPANEL_API_KEY || 'a27f6a82-0202-11f1-8b37-6edf5d6
 // GET PACKAGES (Bouquets)
 router.get('/packages', async (req, res) => {
     try {
-        const response = await axios.get('https://api.tivipanel.net/reseller/panel_api.php', {
+        const customApiKey = req.query.apiKey;
+        const customBaseUrl = req.query.baseUrl;
+        
+        const finalApiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : apiKey;
+        const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://api.tivipanel.net/reseller/panel_api.php';
+
+        const response = await axios.get(endpoint, {
             params: {
                 action: 'package',
-                api_key: apiKey
+                api_key: finalApiKey
             }
         });
 

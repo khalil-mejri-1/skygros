@@ -203,7 +203,7 @@ router.post('/purchase', async (req, res) => {
                     apiModule = require('../utils/strong8kApi');
                 } else if (product.provider === 'activation') {
                     apiModule = require('../utils/activationApi');
-                } else if (product.provider === 'tivipanel') {
+                } else if (product.provider === 'tivipanel' || product.provider === 'tivione') {
                     apiModule = require('../utils/tivipanelApi');
                 } else if (product.provider === 'promax') {
                     apiModule = require('../utils/promaxApi');
@@ -262,7 +262,7 @@ router.post('/purchase', async (req, res) => {
                     };
 
                     // Call API
-                    const subInfo = await createSubscription(subOptions, orderRef.toString());
+                    const subInfo = await createSubscription(subOptions, orderRef.toString(), product.apiConfig);
 
                     subscriptionData = subInfo;
                     orderStatus = "COMPLETED";

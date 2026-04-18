@@ -6,11 +6,17 @@ const apiKey = process.env.PROMAX_API_KEY || '7dHa1DfhEdWJWgYJSETHLbOeHgxYI9B3ad
 // GET PACKAGES (Bouquets)
 router.get('/packages', async (req, res) => {
     try {
-        const response = await axios.get('https://api.promax-dash.com/api.php', {
+        const customApiKey = req.query.apiKey;
+        const customBaseUrl = req.query.baseUrl;
+        
+        const finalApiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : apiKey;
+        const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://api.promax-dash.com/api.php';
+
+        const response = await axios.get(endpoint, {
             params: {
                 action: 'bouquet',
                 public: 1,
-                api_key: apiKey
+                api_key: finalApiKey
             }
         });
 

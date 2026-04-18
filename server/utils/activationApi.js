@@ -1,8 +1,8 @@
 const axios = require('axios');
 
-const createSubscription = async (options, orderRef) => {
+const createSubscription = async (options, orderRef, apiConfig = {}) => {
     try {
-        const apiKey = process.env.ACTIVATION_API_KEY || 'c47f4a37f6f8e13c103611ba40ac5cbd';
+        const apiKey = apiConfig.apiKey || process.env.ACTIVATION_API_KEY || 'c47f4a37f6f8e13c103611ba40ac5cbd';
 
         const params = {
             action: 'new',
@@ -20,7 +20,8 @@ const createSubscription = async (options, orderRef) => {
 
         console.log("ACTIVATION PANEL API Request Params:", params);
 
-        const response = await axios.get('https://activationpanel.net/api/api.php', { params });
+        const endpoint = apiConfig.baseUrl || 'https://activationpanel.net/api/api.php';
+        const response = await axios.get(endpoint, { params });
         console.log("ACTIVATION PANEL RESPONSE:", response.data);
 
         // Response is an array: [{ "status": "true", ... }]

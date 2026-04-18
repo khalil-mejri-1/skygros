@@ -8,8 +8,13 @@ const axios = require('axios');
 // GET Packages list
 router.get('/packages', async (req, res) => {
     try {
-        const apiKey = process.env.GOLDEN_API_KEY;
-        console.log("Fetching Golden packages and bouquets...");
+        const customApiKey = req.query.apiKey;
+        const customBaseUrl = req.query.baseUrl;
+        
+        const apiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : process.env.GOLDEN_API_KEY;
+        const baseUrl = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://newpanel.cx/api';
+
+        console.log("Fetching Golden packages and bouquets from:", baseUrl);
         
         const headers = { 
             'X-API-Key': apiKey,
@@ -17,7 +22,7 @@ router.get('/packages', async (req, res) => {
             'Content-Type': 'application/json'
         };
 
-        const response = await axios.get('https://newpanel.cx/api/v1/packages', { headers });
+        const response = await axios.get(`${baseUrl}/v1/packages`, { headers });
         
         // Handle different response structures gracefully
         if (response.data) {

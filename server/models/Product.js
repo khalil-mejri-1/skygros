@@ -19,7 +19,7 @@ const ProductSchema = new mongoose.Schema({
     isFeatured: { type: Boolean, default: false },
     isHidden: { type: Boolean, default: false },
     // New Fields for NEO 4K Integration
-    provider: { type: String, enum: ['neo', 'strong8k', 'activation', 'tivipanel', 'promax', 'mango', 'golden', 'u8k'], default: 'neo' },
+    provider: { type: String, enum: ['neo', 'strong8k', 'activation', 'tivipanel', 'tivione', 'promax', 'mango', 'golden', 'u8k'], default: 'neo' },
     type: { type: String, enum: ['normal', 'm3u', 'mag', 'mango', 'activecode'], default: 'normal' },
     pack: { type: String }, // Pack ID (String to support 'all' or numeric IDs)
     duration: { type: Number }, // Duration in months
@@ -45,7 +45,14 @@ const ProductSchema = new mongoose.Schema({
         oldPrice: { type: Number }
     }],
     metaTitle: { type: String },
-    metaDescription: { type: String }
+    metaDescription: { type: String },
+    apiConfig: {
+        apiKey: { type: String },
+        apiSecret: { type: String },
+        clientId: { type: String },
+        paymentPassword: { type: String },
+        baseUrl: { type: String }
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', ProductSchema);

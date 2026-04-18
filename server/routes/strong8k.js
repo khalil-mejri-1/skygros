@@ -13,9 +13,13 @@ const checkApiKey = () => {
 // GET PACKAGES (Bouquets)
 router.get('/packages', async (req, res) => {
     try {
-        const apiKey = checkApiKey();
-        // User requested endpoint: https://my8k.me/api/api.php?action=bouquet&api_key=STRONG8K_API_KEY
-        const response = await axios.get('https://my8k.me/api/api.php', {
+        const customApiKey = req.query.apiKey;
+        const customBaseUrl = req.query.baseUrl;
+        
+        const apiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : (process.env.STRONG8K_API_KEY || 'cec67373579d901151b52f29d3750ec1');
+        const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://my8k.me/api/api.php';
+
+        const response = await axios.get(endpoint, {
             params: {
                 action: 'bouquet',
                 api_key: apiKey
