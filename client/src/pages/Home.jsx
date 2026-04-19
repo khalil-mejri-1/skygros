@@ -532,6 +532,7 @@ const Home = () => {
                     "reviewBody": item.text || "Service exceptionnel",
                     "itemReviewed": {
                         "@type": "Product",
+                        "@id": `${origin}/#product`,
                         "name": "SKYGROS IPTV Wholesale"
                     }
                 }));
@@ -550,7 +551,14 @@ const Home = () => {
                         "bestRating": 5,
                         "reviewCount": reviews.length + 450
                     },
-                    "review": reviews.slice(0, 5)
+                    "review": reviews.slice(0, 5),
+                    "offers": home.pricingSection?.items?.length > 0 ? {
+                        "@type": "AggregateOffer",
+                        "priceCurrency": "EUR",
+                        "offerCount": home.pricingSection.items.length,
+                        "lowPrice": Math.min(...home.pricingSection.items.map(i => parseFloat(String(i.price || "0").replace(/[^\d.]/g, '')) || 9999)),
+                        "highPrice": Math.max(...home.pricingSection.items.map(i => parseFloat(String(i.price || "0").replace(/[^\d.]/g, '')) || 0))
+                    } : undefined
                 });
             }
 
