@@ -527,27 +527,28 @@ const Home = () => {
                     "reviewRating": { 
                         "@type": "Rating", 
                         "ratingValue": item.stars || 5, 
-                        "bestRating": "5" 
+                        "bestRating": 5 
                     },
                     "reviewBody": item.text || "Service exceptionnel",
                     "itemReviewed": {
-                        "@type": "Service",
+                        "@type": "Product",
                         "name": "SKYGROS IPTV Wholesale"
                     }
                 }));
                 
                 schemas.push({
                     "@context": "https://schema.org",
-                    "@type": "Service",
-                    "@id": `${origin}/#service`,
+                    "@type": "Product",
+                    "@id": `${origin}/#product`,
                     "name": "SKYGROS IPTV Wholesale",
+                    "image": `${origin}/logo.png`,
                     "description": "Infrastructure IPTV professionnelle pour revendeurs",
-                    "provider": { "@id": `${origin}/#organization` },
+                    "brand": { "@id": `${origin}/#organization` },
                     "aggregateRating": {
                         "@type": "AggregateRating",
-                        "ratingValue": "4.9",
-                        "bestRating": "5",
-                        "reviewCount": String(reviews.length + 450)
+                        "ratingValue": 4.9,
+                        "bestRating": 5,
+                        "reviewCount": reviews.length + 450
                     },
                     "review": reviews.slice(0, 5)
                 });
