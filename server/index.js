@@ -44,6 +44,7 @@ const goldenIptvRoute = require('./routes/goldenIptv');
 const u8kRoute = require('./routes/u8k');
 const path = require('path');
 
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', (req, res, next) => {
     console.log(`Auth request: ${req.method} ${req.url}`);

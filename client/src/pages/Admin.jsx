@@ -543,24 +543,6 @@ const Admin = () => {
     const handleFileUpload = async (file, type, section = null, index = null) => {
         if (!file) return;
 
-        // Visual feedback (preview)
-        const localUrl = URL.createObjectURL(file);
-        if (type === 'product') {
-            if (showAddForm) setNewProduct(prev => ({ ...prev, image: localUrl }));
-            else setIsEditing(prev => ({ ...prev, image: localUrl }));
-        } else if (type === 'demo') {
-            setNewDemo(prev => ({ ...prev, image: localUrl }));
-        } else if (type === 'category') {
-            if (showCategoryForm) setNewCategory(prev => ({ ...prev, icon: localUrl }));
-            else setIsEditingCategory(prev => ({ ...prev, icon: localUrl }));
-        } else if (type === 'paymentMethod') {
-            const newMethods = [...settings.rechargeMethods];
-            newMethods[index].logo = localUrl;
-            setSettings({ ...settings, rechargeMethods: newMethods });
-        } else if (type === 'seoPage') {
-            setEditingSeoPage(prev => ({ ...prev, ogImage: localUrl }));
-        }
-
         const formData = new FormData();
         formData.append('image', file);
 
@@ -598,6 +580,11 @@ const Admin = () => {
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Visual feedback
+        const localUrl = URL.createObjectURL(file);
+        if (showAddForm) setNewProduct(prev => ({ ...prev, image: localUrl }));
+        else setIsEditing(prev => ({ ...prev, image: localUrl }));
 
         await handleFileUpload(file, 'product');
     };
@@ -3585,7 +3572,7 @@ const Admin = () => {
                                             accept="image/*" 
                                             className="admin-input" 
                                             onChange={(e) => handleFileUpload(e.target.files[0], 'category')} 
-                                            style={{ flex: 1, padding: '10px' }}
+                                            style={{ flex: 1 }}
                                         />
                                         {(showCategoryForm ? newCategory.icon : isEditingCategory.icon) && (
                                             <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

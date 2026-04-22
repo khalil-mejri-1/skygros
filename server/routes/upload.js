@@ -45,11 +45,11 @@ router.post('/', upload.single('image'), (req, res) => {
         fs.writeFileSync(fullPath, req.file.buffer);
 
         // Return the relative file path for the frontend
-        const relativePath = `/uploads/${filename}`;
+        const relativePath = `/api/uploads/${filename}`;
 
         res.status(200).json({
             message: "File uploaded successfully",
-            filePath: relativePath // Now returns a short URL like /uploads/12345.jpg
+            filePath: relativePath // Now returns a short URL like /api/uploads/12345.jpg
         });
     } catch (err) {
         console.error("Upload error:", err);
