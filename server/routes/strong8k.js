@@ -17,7 +17,7 @@ router.get('/packages', async (req, res) => {
         const customBaseUrl = req.query.baseUrl;
         
         const apiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : (process.env.STRONG8K_API_KEY || 'cec67373579d901151b52f29d3750ec1');
-        const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://my8k.me/api/api.php';
+        const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://8k.cms-only.ru/api/api.php';
 
         const response = await axios.get(endpoint, {
             params: {
@@ -31,6 +31,65 @@ router.get('/packages', async (req, res) => {
     } catch (err) {
         console.error("Strong8K Packages Error:", err.message);
         res.status(500).json({ message: "Failed to fetch packages", details: err.message });
+    }
+});
+
+// TEST CONNECTION
+router.get('/test-connection', async (req, res) => {
+    try {
+        const customApiKey = req.query.apiKey;
+        const customBaseUrl = req.query.baseUrl;
+        
+        const apiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : (process.env.STRONG8K_API_KEY || 'cec67373579d901151b52f29d3750ec1');
+        const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://8k.cms-only.ru/api/api.php';
+
+        console.log(`Testing Strong8K Connection: ${endpoint} with key ${apiKey ? '***' + apiKey.slice(-4) : 'MISSING'}`);
+
+        // Fetch Reseller Info
+        const resellerResponse = await axios.get(endpoint, {
+            params: {
+                action: 'reseller',
+                api_key: apiKey
+            }
+        });
+
+        // Fetch Packages
+        const packagesResponse = await axios.get(endpoint, {
+            params: {
+                action: 'bouquet',
+                api_key: apiKey
+            }
+        });
+
+        const resellerRaw = resellerResponse.data;
+        const resellerData = Array.isArray(resellerRaw) ? resellerRaw[0] : resellerRaw;
+
+        if (resellerData && (resellerData.status === 'true' || resellerData.status === true)) {
+            return res.status(200).json({ 
+                status: 'success', 
+                message: 'Connexion réussie',
+                data: {
+                    status: 'Active',
+                    username: resellerData.username || 'N/A',
+                    credits: resellerData.credits || '0',
+                    packages: Array.isArray(packagesResponse.data) ? packagesResponse.data : [],
+                    info: `Compte vérifié. Crédits: ${resellerData.credits || 0}. ${Array.isArray(packagesResponse.data) ? packagesResponse.data.length : 0} bouquets trouvés.`
+                }
+            });
+        } else {
+             return res.status(400).json({ 
+                status: 'error', 
+                message: (resellerData && resellerData.message) ? resellerData.message : 'Clé API ou URL invalide (Réponse API négative)',
+                debug: resellerRaw
+            });
+        }
+    } catch (err) {
+        console.error("Strong8K Test Connection Error:", err.message);
+        res.status(500).json({ 
+            message: "Échec de la connexion (Erreur Serveur)", 
+            details: err.message,
+            hint: "Vérifiez que le domaine est accessible sans VPN et que l'URL se termine par api.php"
+        });
     }
 });
 

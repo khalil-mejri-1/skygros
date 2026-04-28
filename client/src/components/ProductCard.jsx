@@ -187,14 +187,29 @@ const ProductCard = ({ product }) => {
 
                 <div className="flex justify-between items-center" style={{ marginBottom: isSmall ? '10px' : '16px' }}>
                     <div className="flex flex-col">
-                        {product.oldPrice > 0 && (
-                            <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: isSmall ? '0.6rem' : '0.7rem', marginBottom: '-2px' }}>
-                                ${product.oldPrice.toFixed(2)}
-                            </span>
-                        )}
-                        <span style={{ color: 'var(--accent-color)', fontWeight: '900', fontSize: isSmall ? '0.95rem' : '1.1rem' }}>
-                            ${product.price ? product.price.toFixed(2) : "0.00"}
-                        </span>
+                        {(() => {
+                            let price = product.price;
+                            let oldPrice = product.oldPrice;
+                            if (product.hasMultiDuration && product.defaultDuration && product.durationPrices?.length > 0) {
+                                const config = product.durationPrices.find(dp => dp.duration === product.defaultDuration);
+                                if (config) {
+                                    price = config.price;
+                                    oldPrice = config.oldPrice;
+                                }
+                            }
+                            return (
+                                <>
+                                    {oldPrice > 0 && (
+                                        <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: isSmall ? '0.6rem' : '0.7rem', marginBottom: '-2px' }}>
+                                            ${oldPrice.toFixed(2)}
+                                        </span>
+                                    )}
+                                    <span style={{ color: 'var(--accent-color)', fontWeight: '900', fontSize: isSmall ? '0.95rem' : '1.1rem' }}>
+                                        ${price ? price.toFixed(2) : "0.00"}
+                                    </span>
+                                </>
+                            );
+                        })()}
                     </div>
 
                     {/* <div className="flex gap-2" style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>

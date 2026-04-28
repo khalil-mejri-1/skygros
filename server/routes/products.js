@@ -271,7 +271,7 @@ router.post('/purchase', async (req, res) => {
 
             } catch (apiError) {
                 console.error(`${product.provider || 'NEO'} Order Failed:`, apiError);
-                licenseKey = "ERROR_API";
+                licenseKey = `API_ERROR: ${apiError.message}`;
                 orderStatus = "PENDING";
             }
         }

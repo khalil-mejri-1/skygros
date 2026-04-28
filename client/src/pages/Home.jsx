@@ -1038,21 +1038,30 @@ const Home = () => {
                                                         <i className="fas fa-trash"></i>
                                                     </button>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                        <label className="block">
-                                                            <div className="flex justify-between items-center mb-1">
-                                                                <span className="text-gray-400 text-[10px] block uppercase">URL de l'image</span>
+                                                        <div className="space-y-1">
+                                                            <span className="text-gray-400 text-[10px] block uppercase mb-1">Image du Slide</span>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setUploadingIndex(i);
+                                                                        fileInputRef.current.click();
+                                                                    }}
+                                                                    className="flex-1 bg-primary/20 text-primary border border-primary/30 rounded px-3 py-2 text-[10px] font-bold hover:bg-primary/30 transition-all flex items-center justify-center gap-2"
+                                                                >
+                                                                    <i className="fas fa-upload"></i>
+                                                                    {slide.image ? "Changer l'image" : "Uploader"}
+                                                                </button>
+                                                                {slide.image && (
+                                                                    <div className="w-10 h-10 rounded border border-white/10 overflow-hidden shrink-0 group/preview relative">
+                                                                        <img src={formatImageUrl(slide.image)} className="w-full h-full object-cover" alt="" />
+                                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center">
+                                                                            <i className="fas fa-eye text-[8px]"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <input
-                                                                type="text"
-                                                                className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white text-xs"
-                                                                value={slide.image}
-                                                                onChange={(e) => {
-                                                                    const newData = [...editData.items];
-                                                                    newData[i].image = e.target.value;
-                                                                    setEditData({ ...editData, items: newData });
-                                                                }}
-                                                            />
-                                                        </label>
+                                                        </div>
                                                         <label className="block">
                                                             <span className="text-gray-400 text-[10px] mb-1 block uppercase">Titre</span>
                                                             <input
@@ -1500,23 +1509,16 @@ const Home = () => {
                                                                                 newItems[i].title = e.target.value;
                                                                                 setEditData({ ...editData, items: newItems });
                                                                             }} />
-                                                                            <div className="flex gap-2">
-                                                                                <input type="text" placeholder="Lien de l'image (URL)" className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:border-primary/50 outline-none" value={item.image} onChange={(e) => {
-                                                                                    const newItems = [...editData.items];
-                                                                                    newItems[i].image = e.target.value;
-                                                                                    setEditData({ ...editData, items: newItems });
-                                                                                }} />
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        setUploadingIndex(i);
-                                                                                        fileInputRef.current.click();
-                                                                                    }}
-                                                                                    className="bg-primary/20 text-primary px-3 rounded-lg hover:bg-primary/30 transition-colors"
-                                                                                    title="Uploader une image"
-                                                                                >
-                                                                                    <i className="fas fa-upload"></i>
-                                                                                </button>
-                                                                            </div>
+                                                                             <button
+                                                                                 onClick={() => {
+                                                                                     setUploadingIndex(i);
+                                                                                     fileInputRef.current.click();
+                                                                                 }}
+                                                                                 className="w-full bg-primary/20 text-primary border border-primary/30 py-2 rounded-lg hover:bg-primary/30 transition-all font-bold text-[10px] flex items-center justify-center gap-2"
+                                                                             >
+                                                                                 <i className="fas fa-upload"></i>
+                                                                                 {item.image ? "Changer l'image" : "Uploader une image"}
+                                                                             </button>
                                                                         </div>
                                                                         {item.image && (
                                                                             <div className="w-16 h-20 rounded-lg overflow-hidden border border-white/10 shrink-0">

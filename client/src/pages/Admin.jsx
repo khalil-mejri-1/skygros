@@ -89,6 +89,7 @@ const Admin = () => {
         durationPrices: [],
         deliveryType: "codes",
         deliveryLink: "",
+        defaultDuration: "",
         hasMultiDuration: false,
         rating: 4.8,
         reviewsCount: 21883,
@@ -284,19 +285,19 @@ const Admin = () => {
         try {
             const res = await axios.put(`${API_BASE_URL}/settings`, settings);
             setSettings(res.data);
-            setAlertModal({ 
-                isOpen: true, 
-                title: "Succès", 
-                message: "L'enregistrement des nouveaux prix et des paramètres a réussi.", 
-                type: "success" 
+            setAlertModal({
+                isOpen: true,
+                title: "Succès",
+                message: "L'enregistrement des nouveaux prix et des paramètres a réussi.",
+                type: "success"
             });
         } catch (err) {
             console.error(err);
-            setAlertModal({ 
-                isOpen: true, 
-                title: "Erreur", 
-                message: "Une erreur s'est produite et le prix n'a pas été enregistré. Veuillez réessayer.", 
-                type: "error" 
+            setAlertModal({
+                isOpen: true,
+                title: "Erreur",
+                message: "Une erreur s'est produite et le prix n'a pas été enregistré. Veuillez réessayer.",
+                type: "error"
             });
         }
     };
@@ -525,9 +526,9 @@ const Admin = () => {
                 // Filter out removed categories
                 const filtered = res.data.filter(cat => {
                     const name = cat.name.toUpperCase();
-                    return !name.includes("FASTREAM") && 
-                           !name.includes("ABONNEMENT M3U API") && 
-                           !name.includes("MANGO SYSTEM");
+                    return !name.includes("FASTREAM") &&
+                        !name.includes("ABONNEMENT M3U API") &&
+                        !name.includes("MANGO SYSTEM");
                 });
                 setCategories(filtered);
             } else {
@@ -950,9 +951,9 @@ const Admin = () => {
             setSettings(res.data);
             setEditingSeoPage(null);
             triggerToast("Paramètres SEO sauvegardés pour " + editingSeoPage.name);
-        } catch(err) {
+        } catch (err) {
             console.error(err);
-            setAlertModal({ isOpen: true, title: "Erreur", message: "Impossible de sauvegarder la page SEO", type: "error"});
+            setAlertModal({ isOpen: true, title: "Erreur", message: "Impossible de sauvegarder la page SEO", type: "error" });
         }
     };
 
@@ -1076,15 +1077,15 @@ const Admin = () => {
                         <div>
                             <h1 style={{ fontSize: isLargeDesktop ? '2.2rem' : '1.5rem', fontWeight: '900', marginBottom: '8px' }}>
                                 {activeTab === "products" ? "Inventaire des Produits" :
-                                activeTab === "categories" ? "Gestion des Catégories" :
-                                    activeTab === "orders" ? "Gestion des Commandes" :
-                                        activeTab === "recharge" ? "Gestion de Recharge" :
-                                            activeTab === "historique" ? "Historique des Ventes" :
-                                                activeTab === "ranks" ? "Système de Rangs" :
-                                                    activeTab === "demos" ? "Gestion des Demos" :
-                                                        activeTab === "resetcodes" ? "Demandes de Reset Code" :
-                                                            activeTab === "seopages" ? "Gestion des Pages (SEO)" :
-                                                                activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
+                                    activeTab === "categories" ? "Gestion des Catégories" :
+                                        activeTab === "orders" ? "Gestion des Commandes" :
+                                            activeTab === "recharge" ? "Gestion de Recharge" :
+                                                activeTab === "historique" ? "Historique des Ventes" :
+                                                    activeTab === "ranks" ? "Système de Rangs" :
+                                                        activeTab === "demos" ? "Gestion des Demos" :
+                                                            activeTab === "resetcodes" ? "Demandes de Reset Code" :
+                                                                activeTab === "seopages" ? "Gestion des Pages (SEO)" :
+                                                                    activeTab === "settings" ? "Paramètres Généraux" : "Base de Données Clients"}
                             </h1>
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600', fontSize: isLargeDesktop ? '1rem' : '0.85rem' }}>
                                 {activeTab === "products" ? "Gérez vos catalogues de clés digitales et stocks." :
@@ -1302,9 +1303,9 @@ const Admin = () => {
                                                     <button onClick={() => {
                                                         const provider = p.provider || 'neo';
                                                         const defaults = globalApiConfig?.[provider] || {};
-                                                        
-                                                        setIsEditing({ 
-                                                            ...p, 
+
+                                                        setIsEditing({
+                                                            ...p,
                                                             apiConfig: {
                                                                 apiKey: p.apiConfig?.apiKey || defaults.apiKey || "",
                                                                 apiSecret: p.apiConfig?.apiSecret || defaults.apiSecret || "",
@@ -1822,11 +1823,11 @@ const Admin = () => {
                                 <div className="flex flex-col gap-2">
                                     <label className="form-label">Image (Produit)</label>
                                     <div className="flex gap-4 items-center">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            className="admin-input" 
-                                            onChange={(e) => handleFileUpload(e.target.files[0], 'demo')} 
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="admin-input"
+                                            onChange={(e) => handleFileUpload(e.target.files[0], 'demo')}
                                             style={{ flex: 1 }}
                                         />
                                         {newDemo.image && (
@@ -1838,7 +1839,7 @@ const Admin = () => {
                                             <span className="text-[10px] text-green-400 font-bold flex-1">
                                                 <i className="fas fa-check-circle mr-1"></i> Image chargée (Base64)
                                             </span>
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={() => setNewDemo({ ...newDemo, image: "" })}
                                                 className="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/30 transition-all font-bold"
@@ -2240,9 +2241,9 @@ const Admin = () => {
                                                         ...settings,
                                                         home: {
                                                             ...settings.home,
-                                                            mangoSettings: { 
-                                                                ...(settings.home?.mangoSettings || {}), 
-                                                                netflyPrice: e.target.value 
+                                                            mangoSettings: {
+                                                                ...(settings.home?.mangoSettings || {}),
+                                                                netflyPrice: e.target.value
                                                             }
                                                         }
                                                     });
@@ -2253,9 +2254,9 @@ const Admin = () => {
                                                         ...settings,
                                                         home: {
                                                             ...settings.home,
-                                                            mangoSettings: { 
-                                                                ...(settings.home?.mangoSettings || {}), 
-                                                                netflyPrice: isNaN(val) ? 0 : val 
+                                                            mangoSettings: {
+                                                                ...(settings.home?.mangoSettings || {}),
+                                                                netflyPrice: isNaN(val) ? 0 : val
                                                             }
                                                         }
                                                     });
@@ -2279,9 +2280,9 @@ const Admin = () => {
                                                         ...settings,
                                                         home: {
                                                             ...settings.home,
-                                                            mangoSettings: { 
-                                                                ...(settings.home?.mangoSettings || {}), 
-                                                                boxPrice: e.target.value 
+                                                            mangoSettings: {
+                                                                ...(settings.home?.mangoSettings || {}),
+                                                                boxPrice: e.target.value
                                                             }
                                                         }
                                                     });
@@ -2292,9 +2293,9 @@ const Admin = () => {
                                                         ...settings,
                                                         home: {
                                                             ...settings.home,
-                                                            mangoSettings: { 
-                                                                ...(settings.home?.mangoSettings || {}), 
-                                                                boxPrice: isNaN(val) ? 0 : val 
+                                                            mangoSettings: {
+                                                                ...(settings.home?.mangoSettings || {}),
+                                                                boxPrice: isNaN(val) ? 0 : val
                                                             }
                                                         }
                                                     });
@@ -2334,11 +2335,11 @@ const Admin = () => {
                                                 <div className="flex flex-col gap-1">
                                                     <label className="form-label">Logo de la méthode</label>
                                                     <div className="flex gap-3 items-center">
-                                                        <input 
-                                                            type="file" 
-                                                            accept="image/*" 
-                                                            className="admin-input" 
-                                                            onChange={(e) => handleFileUpload(e.target.files[0], 'paymentMethod', null, idx)} 
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="admin-input"
+                                                            onChange={(e) => handleFileUpload(e.target.files[0], 'paymentMethod', null, idx)}
                                                             style={{ flex: 1, padding: '10px' }}
                                                         />
                                                         {method.logo && (
@@ -2350,7 +2351,7 @@ const Admin = () => {
                                                             <span className="text-[10px] text-green-400 font-bold flex-1">
                                                                 <i className="fas fa-check-circle mr-1"></i> Image chargée (Base64)
                                                             </span>
-                                                            <button 
+                                                            <button
                                                                 type="button"
                                                                 onClick={() => {
                                                                     const newMethods = [...settings.rechargeMethods];
@@ -2409,12 +2410,12 @@ const Admin = () => {
                                         <td style={{ padding: '20px 24px', color: 'var(--accent-color)' }}>{page.path}</td>
                                         <td style={{ padding: '20px 24px', color: 'rgba(255,255,255,0.6)' }}>{page.title || 'N/A'}</td>
                                         <td style={{ padding: '20px 24px' }}>
-                                            <button 
-                                                onClick={() => setEditingSeoPage({ ...page, originalIndex: index })} 
-                                                className="btn hover-lift" 
+                                            <button
+                                                onClick={() => setEditingSeoPage({ ...page, originalIndex: index })}
+                                                className="btn hover-lift"
                                                 style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '800' }}
                                             >
-                                                <FaEdit style={{ display: 'inline', marginRight: '6px' }}/> MODIFIER
+                                                <FaEdit style={{ display: 'inline', marginRight: '6px' }} /> MODIFIER
                                             </button>
                                         </td>
                                     </tr>
@@ -2576,10 +2577,10 @@ const Admin = () => {
                                 />
                                 <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Séparés par des virgules.</span>
                             </div>
-                            
+
                             <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '15px' }}>
                                 <h4 style={{ color: 'var(--accent-color)', fontWeight: 'bold', marginBottom: '15px' }}>Open Graph (Réseaux sociaux)</h4>
-                                
+
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label className="form-label">OG Title</label>
@@ -2604,11 +2605,11 @@ const Admin = () => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label className="form-label">OG Image (Social Media preview)</label>
                                         <div className="flex gap-4 items-center">
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                className="admin-input" 
-                                                onChange={(e) => handleFileUpload(e.target.files[0], 'seoPage')} 
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="admin-input"
+                                                onChange={(e) => handleFileUpload(e.target.files[0], 'seoPage')}
                                                 style={{ flex: 1 }}
                                             />
                                             {editingSeoPage.ogImage && (
@@ -2626,7 +2627,7 @@ const Admin = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <button type="submit" className="btn btn-primary" style={{ marginTop: '10px', padding: '14px', borderRadius: '12px' }}>
                                 ENREGISTRER LES MODIFICATIONS
                             </button>
@@ -2724,7 +2725,7 @@ const Admin = () => {
                                                             alt={`Secondary ${idx}`}
                                                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                         />
-                                                        <button 
+                                                        <button
                                                             type="button"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -2869,54 +2870,54 @@ const Admin = () => {
                                     </div>
                                 </div>
 
-                                    {((showAddForm ? newProduct.category : isEditing.category) !== 'Abonnement M3u API' && (showAddForm ? newProduct.subcategory : isEditing.subcategory) !== 'Abonnement M3u API') && (
-                                        <>
-                                            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span>Type de Livraison</span>
-                                            </label>
-                                            <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="radio"
-                                                        id="deliveryCodes"
-                                                        name="deliveryType"
-                                                        checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes"}
-                                                        onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "codes" }) : setIsEditing({ ...isEditing, deliveryType: "codes" })}
-                                                    />
-                                                    <label htmlFor="deliveryCodes" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Codes uniques</label>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="radio"
-                                                        id="deliveryLink"
-                                                        name="deliveryType"
-                                                        checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link"}
-                                                        onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "link" }) : setIsEditing({ ...isEditing, deliveryType: "link" })}
-                                                    />
-                                                    <label htmlFor="deliveryLink" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Lien de téléchargement</label>
-                                                </div>
+                                {((showAddForm ? newProduct.category : isEditing.category) !== 'Abonnement M3u API' && (showAddForm ? newProduct.subcategory : isEditing.subcategory) !== 'Abonnement M3u API') && (
+                                    <>
+                                        <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span>Type de Livraison</span>
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="radio"
+                                                    id="deliveryCodes"
+                                                    name="deliveryType"
+                                                    checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes"}
+                                                    onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "codes" }) : setIsEditing({ ...isEditing, deliveryType: "codes" })}
+                                                />
+                                                <label htmlFor="deliveryCodes" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Codes uniques</label>
                                             </div>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="radio"
+                                                    id="deliveryLink"
+                                                    name="deliveryType"
+                                                    checked={(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link"}
+                                                    onChange={() => showAddForm ? setNewProduct({ ...newProduct, deliveryType: "link" }) : setIsEditing({ ...isEditing, deliveryType: "link" })}
+                                                />
+                                                <label htmlFor="deliveryLink" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Lien de téléchargement</label>
+                                            </div>
+                                        </div>
 
-                                            {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link" && (
-                                                <div style={{ marginBottom: '15px' }}>
-                                                    <label className="form-label">Lien du produit</label>
-                                                    <input
-                                                        type="text"
-                                                        className="admin-input"
-                                                        placeholder="https://example.com/download"
-                                                        value={showAddForm ? (newProduct.deliveryLink || "") : (isEditing.deliveryLink || "")}
-                                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, deliveryLink: e.target.value }) : setIsEditing({ ...isEditing, deliveryLink: e.target.value })}
-                                                    />
-                                                </div>
-                                            )}
+                                        {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "link" && (
+                                            <div style={{ marginBottom: '15px' }}>
+                                                <label className="form-label">Lien du produit</label>
+                                                <input
+                                                    type="text"
+                                                    className="admin-input"
+                                                    placeholder="https://example.com/download"
+                                                    value={showAddForm ? (newProduct.deliveryLink || "") : (isEditing.deliveryLink || "")}
+                                                    onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, deliveryLink: e.target.value }) : setIsEditing({ ...isEditing, deliveryLink: e.target.value })}
+                                                />
+                                            </div>
+                                        )}
 
-                                            {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes" && (<>
-                                                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span>Clés de Licence / Codes (Stock)</span>
-                                                    <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'rgba(255, 153, 0, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
-                                                        {(showAddForm ? newProduct.keysInput : isEditing.keysInput) ? (showAddForm ? newProduct.keysInput : isEditing.keysInput).split(',').filter(k => k.trim()).length : 0} Codes
-                                                    </span>
-                                                </label>
+                                        {(showAddForm ? newProduct.deliveryType : isEditing.deliveryType) === "codes" && (<>
+                                            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>Clés de Licence / Codes (Stock)</span>
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'rgba(255, 153, 0, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                                                    {(showAddForm ? newProduct.keysInput : isEditing.keysInput) ? (showAddForm ? newProduct.keysInput : isEditing.keysInput).split(',').filter(k => k.trim()).length : 0} Codes
+                                                </span>
+                                            </label>
 
                                             <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                                 {/* Input Area */}
@@ -3078,97 +3079,128 @@ const Admin = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                            </>)}
-                                        </>
-                                    )}
+                                        </>)}
+                                    </>
+                                )}
 
-                                    {/* Multi-duration Pricing for both normal and API products */}
-                                    <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <input
-                                                type="checkbox"
-                                                id="hasMultiDuration"
-                                                checked={showAddForm ? newProduct.hasMultiDuration : isEditing.hasMultiDuration}
-                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, hasMultiDuration: e.target.checked }) : setIsEditing({ ...isEditing, hasMultiDuration: e.target.checked })}
-                                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                                            />
-                                            <label htmlFor="hasMultiDuration" className="form-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
-                                                Activer les prix par durée (Mois/Année)
-                                            </label>
-                                        </div>
-
-                                        {(showAddForm ? newProduct.hasMultiDuration : isEditing.hasMultiDuration) && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                                {(showAddForm ? (newProduct.durationPrices || []) : (isEditing.durationPrices || [])).map((dp, idx) => (
-                                                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Durée (ex: 1 mois, 1 an)"
-                                                            className="admin-input"
-                                                            style={{ flex: 1 }}
-                                                            value={dp.duration}
-                                                            onChange={(e) => {
-                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                                updated[idx].duration = e.target.value;
-                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                            }}
-                                                        />
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Prix ($)"
-                                                            className="admin-input"
-                                                            style={{ flex: 0.8 }}
-                                                            value={dp.price}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                                updated[idx].price = val;
-                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                            }}
-                                                        />
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Prix Ancien ($)"
-                                                            className="admin-input"
-                                                            style={{ flex: 0.8 }}
-                                                            value={dp.oldPrice || ""}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                                updated[idx].oldPrice = val;
-                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                            }}
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            className="action-btn delete"
-                                                            style={{ width: '36px', height: '36px' }}
-                                                            onClick={() => {
-                                                                const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                                updated.splice(idx, 1);
-                                                                showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                            }}
-                                                        >
-                                                            <FaTrash size={14} />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-glass"
-                                                    style={{ fontSize: '0.8rem', padding: '10px' }}
-                                                    onClick={() => {
-                                                        const newItem = { duration: "", price: 0 };
-                                                        const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
-                                                        updated.push(newItem);
-                                                        showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
-                                                    }}
-                                                >
-                                                    <FaPlus size={10} style={{ marginRight: '5px' }} /> Ajouter une durée
-                                                </button>
-                                            </div>
-                                        )}
+                                {/* Multi-duration Pricing for both normal and API products */}
+                                <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <input
+                                            type="checkbox"
+                                            id="hasMultiDuration"
+                                            checked={showAddForm ? newProduct.hasMultiDuration : isEditing.hasMultiDuration}
+                                            onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, hasMultiDuration: e.target.checked }) : setIsEditing({ ...isEditing, hasMultiDuration: e.target.checked })}
+                                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        />
+                                        <label htmlFor="hasMultiDuration" className="form-label" style={{ cursor: 'pointer', marginBottom: 0 }}>
+                                            Activer les prix par durée (Mois/Année)
+                                        </label>
                                     </div>
+
+                                    {(showAddForm ? newProduct.hasMultiDuration : isEditing.hasMultiDuration) && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            {(showAddForm ? (newProduct.durationPrices || []) : (isEditing.durationPrices || [])).map((dp, idx) => (
+                                                <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Durée (ex: 1 mois, 1 an)"
+                                                        className="admin-input"
+                                                        style={{ flex: 1 }}
+                                                        value={dp.duration}
+                                                        onChange={(e) => {
+                                                            const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                            updated[idx].duration = e.target.value;
+                                                            showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                        }}
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Prix ($)"
+                                                        className="admin-input"
+                                                        style={{ flex: 0.8 }}
+                                                        value={dp.price}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                            const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                            updated[idx].price = val;
+                                                            showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                        }}
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Prix Ancien ($)"
+                                                        className="admin-input"
+                                                        style={{ flex: 0.8 }}
+                                                        value={dp.oldPrice || ""}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                            const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                            updated[idx].oldPrice = val;
+                                                            showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                        }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="action-btn delete"
+                                                        style={{ width: '36px', height: '36px' }}
+                                                        onClick={() => {
+                                                            const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                            updated.splice(idx, 1);
+                                                            showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                        }}
+                                                    >
+                                                        <FaTrash size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <button
+                                                type="button"
+                                                className="btn btn-glass"
+                                                style={{ fontSize: '0.8rem', padding: '10px' }}
+                                                onClick={() => {
+                                                    const newItem = { duration: "", price: 0 };
+                                                    const updated = showAddForm ? [...(newProduct.durationPrices || [])] : [...(isEditing.durationPrices || [])];
+                                                    updated.push(newItem);
+                                                    showAddForm ? setNewProduct({ ...newProduct, durationPrices: updated }) : setIsEditing({ ...isEditing, durationPrices: updated });
+                                                }}
+                                            >
+                                                <FaPlus size={10} style={{ marginRight: '5px' }} /> Ajouter une durée
+                                            </button>
+
+                                            {(showAddForm ? (newProduct.durationPrices || []) : (isEditing.durationPrices || [])).length > 0 && (
+                                                <div style={{ marginTop: '10px', padding: '15px', background: 'rgba(255,153,0,0.05)', borderRadius: '12px', border: '1px solid rgba(255,153,0,0.1)' }}>
+                                                    <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--accent-color)' }}>Durée par défaut (Sera sélectionnée automatiquement)</label>
+                                                    <select
+                                                        className="admin-input"
+                                                        style={{
+                                                            marginTop: '8px',
+                                                            background: '#151725',
+                                                            color: '#fff',
+                                                            border: '1px solid rgba(255, 153, 0, 0.3)',
+                                                            borderRadius: '12px',
+                                                            cursor: 'pointer',
+                                                            fontWeight: '600'
+                                                        }}
+                                                        value={showAddForm ? (newProduct.defaultDuration || "") : (isEditing?.defaultDuration || "")}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (showAddForm) setNewProduct({ ...newProduct, defaultDuration: val });
+                                                            else setIsEditing({ ...isEditing, defaultDuration: val });
+                                                        }}
+                                                    >
+                                                        <option value="" style={{ background: '#151725', color: '#fff' }}>-- Choisir une durée --</option>
+                                                        {(showAddForm ? newProduct.durationPrices : isEditing.durationPrices).filter(dp => dp.duration).map((dp, i) => (
+                                                            <option key={i} value={dp.duration} style={{ background: '#151725', color: '#fff' }}>
+                                                                {dp.duration} ({dp.price}$)
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label className="form-label">Description (HTML supporté)</label>
@@ -3243,254 +3275,120 @@ const Admin = () => {
                                 <div className="glass" style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <h4 style={{ fontSize: '0.9rem', fontWeight: '800', marginBottom: '15px', color: 'var(--accent-color)', textTransform: 'uppercase' }}>Configuration API Automatique</h4>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '15px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label className="form-label">Type de Produit</label>
-                                            <select
-                                                className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                value={showAddForm ? newProduct.type : isEditing.type}
-                                                onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, type: e.target.value }) : setIsEditing({ ...isEditing, type: e.target.value })}
-                                            >
-                                                <option value="normal">💎 Normal (Clés manuelles)</option>
-                                                <option value="m3u">📺 M3U (Lien Automatique)</option>
-                                                <option value="mag">📟 MAG (Mac Address)</option>
-                                                <option value="mango">🥭 MANGO (Box, Mars, Netfly)</option>
-                                                <option value="activecode">Active Code (Provider API)</option>
-                                            </select>
-                                        </div>
 
-                                        {(showAddForm ? newProduct.type : isEditing.type) !== 'normal' && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label className="form-label">Fournisseur API</label>
-                                                <select
-                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                    value={showAddForm ? newProduct.provider : isEditing.provider}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        const defaults = globalApiConfig?.[val] || {};
-                                                        if (showAddForm) {
-                                                            setNewProduct({ 
-                                                                ...newProduct, 
-                                                                provider: val,
-                                                                apiConfig: {
-                                                                    apiKey: newProduct.apiConfig?.apiKey || defaults.apiKey || "",
-                                                                    apiSecret: newProduct.apiConfig?.apiSecret || defaults.apiSecret || "",
-                                                                    clientId: newProduct.apiConfig?.clientId || defaults.clientId || "",
-                                                                    paymentPassword: newProduct.apiConfig?.paymentPassword || defaults.paymentPassword || "",
-                                                                    baseUrl: newProduct.apiConfig?.baseUrl || defaults.baseUrl || ""
-                                                                }
-                                                            });
-                                                        } else {
-                                                            setIsEditing({ 
-                                                                ...isEditing, 
-                                                                provider: val,
-                                                                apiConfig: {
-                                                                    apiKey: isEditing.apiConfig?.apiKey || defaults.apiKey || "",
-                                                                    apiSecret: isEditing.apiConfig?.apiSecret || defaults.apiSecret || "",
-                                                                    clientId: isEditing.apiConfig?.clientId || defaults.clientId || "",
-                                                                    paymentPassword: isEditing.apiConfig?.paymentPassword || defaults.paymentPassword || "",
-                                                                    baseUrl: isEditing.apiConfig?.baseUrl || defaults.baseUrl || ""
-                                                                }
-                                                            });
-                                                        }
-                                                    }}
-                                                >
-                                                    <option value="neo">NEO 4K (neo4kpro.me)</option>
-                                                    <option value="strong8k">STRONG 8K (my8k.me)</option>
-                                                    <option value="activation">ACTIVATION PANEL (activationpanel.net)</option>
-                                                    <option value="tivipanel">TIVIPANEL (api.tivipanel.net)</option>
-                                                    <option value="tivione">TIVI ONE (tivi-one.com)</option>
-                                                    <option value="promax">PROMAX (api.promax-dash.com)</option>
-                                                    <option value="mango">MANGO (coinmango.org)</option>
-                                                    <option value="golden">GOLDEN (golden-panel.com)</option>
-                                                    <option value="u8k">U8K (u8k.me)</option>
-                                                </select>
-                                            </div>
-                                        )}
-                                    </div>
 
                                     {(showAddForm ? newProduct.type : isEditing.type) !== 'normal' && (<>
 
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label className="form-label">ID du Bouquet (Pack ID - 'all' pour tous)</label>
-                                                {(showAddForm ? newProduct.provider : isEditing.provider) === 'promax' ? (
-                                                    <select
-                                                        className="admin-input"
-                                                        value={showAddForm ? newProduct.pack : (isEditing.pack || "1")}
-                                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, pack: e.target.value }) : setIsEditing({ ...isEditing, pack: e.target.value })}
-                                                    >
-                                                        <option value="">Sélectionner un bouquet</option>
-                                                        {providerPackages.map(b => (
-                                                            <option key={b.id} value={b.id}>{b.name}</option>
-                                                        ))}
-                                                    </select>
-                                                ) : (
+
+
+                                        {/* Section Doc API - New Section */}
+                                        <div style={{ marginTop: '20px', padding: '20px', borderRadius: '14px', background: 'rgba(255,153,0,0.03)', border: '1px solid rgba(255,153,0,0.1)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                                                <FaCog style={{ color: 'var(--accent-color)' }} />
+                                                <h5 style={{ fontSize: '0.9rem', fontWeight: '900', color: '#fff', textTransform: 'uppercase', margin: 0 }}>Doc API (Configuration des Identifiants)</h5>
+                                            </div>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: '1 / -1' }}>
+
+                                                </div>
+
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    <label className="form-label" style={{ fontSize: '0.75rem' }}>API Key</label>
                                                     <input
                                                         type="text"
                                                         className="admin-input"
-                                                        placeholder="ex: 123 ou all"
-                                                        value={showAddForm ? newProduct.pack : (isEditing.pack || "")}
-                                                        onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, pack: e.target.value }) : setIsEditing({ ...isEditing, pack: e.target.value })}
+                                                        style={{ padding: '10px' }}
+                                                        placeholder="Clé API du fournisseur..."
+                                                        value={showAddForm ? newProduct.apiConfig?.apiKey : isEditing.apiConfig?.apiKey}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, apiKey: val } });
+                                                            else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, apiKey: val } });
+                                                        }}
                                                     />
+                                                </div>
+
+                                                {(showAddForm ? newProduct.provider : isEditing.provider) === 'u8k' && (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                        <label className="form-label" style={{ fontSize: '0.75rem' }}>API Secret</label>
+                                                        <input
+                                                            type="text"
+                                                            className="admin-input"
+                                                            style={{ padding: '10px' }}
+                                                            placeholder="Secret API..."
+                                                            value={showAddForm ? newProduct.apiConfig?.apiSecret : isEditing.apiConfig?.apiSecret}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, apiSecret: val } });
+                                                                else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, apiSecret: val } });
+                                                            }}
+                                                        />
+                                                    </div>
                                                 )}
+
+                                                {(showAddForm ? newProduct.provider : isEditing.provider) === 'mango' && (
+                                                    <>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                            <label className="form-label" style={{ fontSize: '0.75rem' }}>Client ID</label>
+                                                            <input
+                                                                type="text"
+                                                                className="admin-input"
+                                                                style={{ padding: '10px' }}
+                                                                placeholder="ID Client..."
+                                                                value={showAddForm ? newProduct.apiConfig?.clientId : isEditing.apiConfig?.clientId}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, clientId: val } });
+                                                                    else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, clientId: val } });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                            <label className="form-label" style={{ fontSize: '0.75rem' }}>Payment Password</label>
+                                                            <input
+                                                                type="password"
+                                                                className="admin-input"
+                                                                style={{ padding: '10px' }}
+                                                                placeholder="Mot de passe de paiement..."
+                                                                value={showAddForm ? newProduct.apiConfig?.paymentPassword : isEditing.apiConfig?.paymentPassword}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, paymentPassword: val } });
+                                                                    else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, paymentPassword: val } });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
+                                                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Base URL / Endpoint API</label>
+                                                    <input
+                                                        type="text"
+                                                        className="admin-input"
+                                                        style={{ padding: '10px' }}
+                                                        placeholder="https://api.example.com/endpoint (Laissez vide pour le défaut)"
+                                                        value={showAddForm ? newProduct.apiConfig?.baseUrl : isEditing.apiConfig?.baseUrl}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, baseUrl: val } });
+                                                            else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, baseUrl: val } });
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                 <label className="form-label">Durée par défaut (Mois)</label>
-                                                 <input
-                                                     type="number"
-                                                     className="admin-input"
-                                                     placeholder="ex: 12"
-                                                     value={showAddForm ? newProduct.duration : (isEditing.duration || 12)}
-                                                     onChange={(e) => showAddForm ? setNewProduct({ ...newProduct, duration: parseInt(e.target.value) }) : setIsEditing({ ...isEditing, duration: parseInt(e.target.value) })}
-                                                 />
-                                             </div>
-                                         </div>
-
-                                         {/* Section Doc API - New Section */}
-                                         <div style={{ marginTop: '20px', padding: '20px', borderRadius: '14px', background: 'rgba(255,153,0,0.03)', border: '1px solid rgba(255,153,0,0.1)' }}>
-                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                                                 <FaCog style={{ color: 'var(--accent-color)' }} />
-                                                 <h5 style={{ fontSize: '0.9rem', fontWeight: '900', color: '#fff', textTransform: 'uppercase', margin: 0 }}>Doc API (Configuration des Identifiants)</h5>
-                                             </div>
-                                             
-                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                     <label className="form-label" style={{ fontSize: '0.75rem' }}>API Key</label>
-                                                     <input
-                                                         type="text"
-                                                         className="admin-input"
-                                                         style={{ padding: '10px' }}
-                                                         placeholder="Clé API du fournisseur..."
-                                                         value={showAddForm ? newProduct.apiConfig?.apiKey : isEditing.apiConfig?.apiKey}
-                                                         onChange={(e) => {
-                                                             const val = e.target.value;
-                                                             if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, apiKey: val } });
-                                                             else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, apiKey: val } });
-                                                         }}
-                                                     />
-                                                 </div>
-
-                                                 {(showAddForm ? newProduct.provider : isEditing.provider) === 'u8k' && (
-                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                         <label className="form-label" style={{ fontSize: '0.75rem' }}>API Secret</label>
-                                                         <input
-                                                             type="text"
-                                                             className="admin-input"
-                                                             style={{ padding: '10px' }}
-                                                             placeholder="Secret API..."
-                                                             value={showAddForm ? newProduct.apiConfig?.apiSecret : isEditing.apiConfig?.apiSecret}
-                                                             onChange={(e) => {
-                                                                 const val = e.target.value;
-                                                                 if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, apiSecret: val } });
-                                                                 else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, apiSecret: val } });
-                                                             }}
-                                                         />
-                                                     </div>
-                                                 )}
-
-                                                 {(showAddForm ? newProduct.provider : isEditing.provider) === 'mango' && (
-                                                     <>
-                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                             <label className="form-label" style={{ fontSize: '0.75rem' }}>Client ID</label>
-                                                             <input
-                                                                 type="text"
-                                                                 className="admin-input"
-                                                                 style={{ padding: '10px' }}
-                                                                 placeholder="ID Client..."
-                                                                 value={showAddForm ? newProduct.apiConfig?.clientId : isEditing.apiConfig?.clientId}
-                                                                 onChange={(e) => {
-                                                                     const val = e.target.value;
-                                                                     if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, clientId: val } });
-                                                                     else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, clientId: val } });
-                                                                 }}
-                                                             />
-                                                         </div>
-                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                             <label className="form-label" style={{ fontSize: '0.75rem' }}>Payment Password</label>
-                                                             <input
-                                                                 type="password"
-                                                                 className="admin-input"
-                                                                 style={{ padding: '10px' }}
-                                                                 placeholder="Mot de passe de paiement..."
-                                                                 value={showAddForm ? newProduct.apiConfig?.paymentPassword : isEditing.apiConfig?.paymentPassword}
-                                                                 onChange={(e) => {
-                                                                     const val = e.target.value;
-                                                                     if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, paymentPassword: val } });
-                                                                     else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, paymentPassword: val } });
-                                                                 }}
-                                                             />
-                                                         </div>
-                                                     </>
-                                                 )}
-
-                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
-                                                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Base URL / Endpoint API</label>
-                                                      <input
-                                                          type="text"
-                                                          className="admin-input"
-                                                          style={{ padding: '10px' }}
-                                                          placeholder="https://api.example.com/endpoint (Laissez vide pour le défaut)"
-                                                          value={showAddForm ? newProduct.apiConfig?.baseUrl : isEditing.apiConfig?.baseUrl}
-                                                          onChange={(e) => {
-                                                              const val = e.target.value;
-                                                              if (showAddForm) setNewProduct({ ...newProduct, apiConfig: { ...newProduct.apiConfig, baseUrl: val } });
-                                                              else setIsEditing({ ...isEditing, apiConfig: { ...isEditing.apiConfig, baseUrl: val } });
-                                                          }}
-                                                      />
-                                                  </div>
-                                             </div>
-                                             <p style={{ marginTop: '10px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
-                                                 * Laissez vide pour utiliser les identifiants et l'endpoint globaux (configurés dans le serveur).
-                                             </p>
-                                         </div>
+                                            <p style={{ marginTop: '10px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
+                                                * Laissez vide pour utiliser les identifiants et l'endpoint globaux (configurés dans le serveur).
+                                            </p>
+                                        </div>
 
                                         {/* Dynamic Duration Pricing moved to general product level or kept here for API specifically? 
                                             Actually the user said "dans Créer un Produit, ajoute une case à cocher pour la durée".
                                             I already added it above. I'll remove this API-specific one to avoid confusion.
                                         */}
 
-                                        <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
 
-                                            {providerPackages.length > 0 && (
-                                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', maxHeight: '200px', overflowY: 'auto' }}>
-                                                    <label className="form-label" style={{ marginBottom: '10px', display: 'block', color: 'var(--accent-color)' }}>Renommer les Bouquets (Optionnel)</label>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                                        {providerPackages.map(pkg => {
-                                                            const currentNames = showAddForm ? (newProduct.bouquetNames || {}) : (isEditing.bouquetNames || {});
-                                                            const customName = currentNames[pkg.id] || "";
-
-                                                            return (
-                                                                <div key={pkg.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px', padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                                                                    <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>{pkg.name} (Original)</div>
-                                                                    <input
-                                                                        className="admin-input"
-                                                                        style={{ padding: '8px', fontSize: '0.8rem' }}
-                                                                        placeholder="Nom personnalisé..."
-                                                                        value={customName}
-                                                                        onChange={(e) => {
-                                                                            const val = e.target.value;
-                                                                            const updatedNames = { ...currentNames };
-                                                                            if (val.trim()) {
-                                                                                updatedNames[pkg.id] = val;
-                                                                            } else {
-                                                                                delete updatedNames[pkg.id];
-                                                                            }
-
-                                                                            if (showAddForm) {
-                                                                                setNewProduct({ ...newProduct, bouquetNames: updatedNames });
-                                                                            } else {
-                                                                                setIsEditing({ ...isEditing, bouquetNames: updatedNames });
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
                                     </>)}
                                 </div>
 
@@ -3567,11 +3465,11 @@ const Admin = () => {
                                 <div className="flex flex-col gap-2">
                                     <label className="form-label">Icône ou Image</label>
                                     <div className="flex gap-3 items-center">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            className="admin-input" 
-                                            onChange={(e) => handleFileUpload(e.target.files[0], 'category')} 
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="admin-input"
+                                            onChange={(e) => handleFileUpload(e.target.files[0], 'category')}
                                             style={{ flex: 1 }}
                                         />
                                         {(showCategoryForm ? newCategory.icon : isEditingCategory.icon) && (
@@ -3589,7 +3487,7 @@ const Admin = () => {
                                             <span className="text-[10px] text-green-400 font-bold flex-1">
                                                 <i className="fas fa-check-circle mr-1"></i> Image chargée (Base64)
                                             </span>
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={() => showCategoryForm ? setNewCategory({ ...newCategory, icon: "" }) : setIsEditingCategory({ ...isEditingCategory, icon: "" })}
                                                 className="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/30 transition-all font-bold"

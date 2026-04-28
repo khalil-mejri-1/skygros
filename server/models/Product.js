@@ -38,6 +38,7 @@ const ProductSchema = new mongoose.Schema({
     bouquetNames: { type: Map, of: String, default: {} }, // Map of bouquetId -> customName
     deliveryType: { type: String, enum: ['codes', 'link'], default: 'codes' },
     deliveryLink: { type: String },
+    defaultDuration: { type: String },
     hasMultiDuration: { type: Boolean, default: false },
     durationPrices: [{
         duration: { type: String, required: true }, // e.g. "1 mois", "5 mois", "1 an"

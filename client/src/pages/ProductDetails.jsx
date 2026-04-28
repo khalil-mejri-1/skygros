@@ -19,6 +19,7 @@ const ProductDetails = () => {
     const { user, updateBalance } = useContext(AuthContext);
     const { addToCart } = useContext(CartContext);
     const [product, setProduct] = useState(null);
+    const isNeo4k = product?.title?.toLowerCase().includes("neo4k");
     const [similarProducts, setSimilarProducts] = useState([]);
     const [isPurchased, setIsPurchased] = useState(false);
     const [isAdded, setIsAdded] = useState(false);
@@ -53,6 +54,55 @@ const ProductDetails = () => {
     const [goldenProfile, setGoldenProfile] = useState(null);
     const [isTestingGolden, setIsTestingGolden] = useState(false);
     const [goldenTestError, setGoldenTestError] = useState("");
+
+    const [isTestingNeo, setIsTestingNeo] = useState(false);
+    const [neoTestData, setNeoTestData] = useState(null);
+    const [neoTestError, setNeoTestError] = useState("");
+
+
+
+    const handleTestNeoConnection = async () => {
+        setIsTestingNeo(true);
+        setNeoTestError("");
+        setNeoTestData(null);
+        try {
+            const [testRes, pkgRes] = await Promise.all([
+                axios.get(`${API_BASE_URL}/neo/test-connection`, {
+                    params: {
+                        apiKey: product.apiConfig?.apiKey,
+                        baseUrl: product.apiConfig?.baseUrl
+                    }
+                }),
+                // Also try to re-fetch packages during test
+                axios.get(`${API_BASE_URL}/neo/packages`, {
+                    params: {
+                        apiKey: product.apiConfig?.apiKey,
+                        baseUrl: product.apiConfig?.baseUrl
+                    }
+                }).catch(() => ({ data: [] }))
+            ]);
+
+            setNeoTestData(testRes.data.data);
+
+            // Update packages if we got them
+            if (pkgRes.data) {
+                let pkgs = [];
+                if (Array.isArray(pkgRes.data)) {
+                    pkgs = pkgRes.data;
+                } else if (typeof pkgRes.data === 'object' && pkgRes.data !== null) {
+                    pkgs = Object.entries(pkgRes.data).map(([id, name]) => ({
+                        id: id,
+                        name: typeof name === 'string' ? name : (name.name || id)
+                    }));
+                }
+                if (pkgs.length > 0) setPackages(pkgs);
+            }
+        } catch (err) {
+            setNeoTestError(err.response?.data?.message || err.message || "Erreur de connexion API Neo");
+        } finally {
+            setIsTestingNeo(false);
+        }
+    };
 
     const handleTestGoldenProfile = async () => {
         setIsTestingGolden(true);
@@ -105,21 +155,49 @@ const ProductDetails = () => {
                     console.log(`Fetching options for provider: ${providerPrefix}`);
 
                     const requests = [
-                        axios.get(`${API_BASE_URL}/${providerPrefix}/packages`),
-                        axios.get(`${API_BASE_URL}/${providerPrefix}/countries`).catch(() => axios.get(`${API_BASE_URL}/neo/countries`))
+                        axios.get(`${API_BASE_URL}/${providerPrefix}/packages`, {
+                            params: {
+                                apiKey: product.apiConfig?.apiKey,
+                                baseUrl: product.apiConfig?.baseUrl
+                            }
+                        }),
+                        axios.get(`${API_BASE_URL}/${providerPrefix}/countries`, {
+                            params: {
+                                apiKey: product.apiConfig?.apiKey,
+                                baseUrl: product.apiConfig?.baseUrl
+                            }
+                        }).catch(() => axios.get(`${API_BASE_URL}/neo/countries`))
                     ];
 
                     const [pkgRes, countryRes] = await Promise.all(requests);
 
                     // Handle Packages
                     let pkgs = [];
-                    pkgs = Array.isArray(pkgRes.data) ? pkgRes.data : Object.values(pkgRes.data || {});
+                    if (Array.isArray(pkgRes.data)) {
+                        pkgs = pkgRes.data;
+                    } else if (typeof pkgRes.data === 'object' && pkgRes.data !== null) {
+                        // If it's an object with ID as key and Name as value
+                        pkgs = Object.entries(pkgRes.data).map(([id, name]) => ({
+                            id: id,
+                            name: typeof name === 'string' ? name : (name.name || id)
+                        }));
+                    }
                     
                     setPackages(pkgs);
 
                     // Auto-select first package if available
-                    if (pkgs.length > 0 && !selectedRegion) {
-                        setSelectedRegion(pkgs[0].id);
+                    if (pkgs.length > 0) {
+                        const isNeo4k = product?.title?.toLowerCase().includes("neo4k");
+                        if (isNeo4k) {
+                            const skygrosPkg = pkgs.find(p => p.name?.toLowerCase().includes("skygros") || p.id === "skygros");
+                            if (skygrosPkg) {
+                                setSelectedRegion(skygrosPkg.id);
+                            } else if (!selectedRegion) {
+                                setSelectedRegion(pkgs[0].id);
+                            }
+                        } else if (!selectedRegion) {
+                            setSelectedRegion(pkgs[0].id);
+                        }
                     }
 
                     // Handle Countries
@@ -160,6 +238,10 @@ const ProductDetails = () => {
                     const currentProduct = productRes.data.find(p => p._id === id);
                     if (currentProduct) {
                         setProduct(currentProduct);
+                        // Auto-select default duration if configured
+                        if (currentProduct.defaultDuration) {
+                            setSelectedDuration(currentProduct.defaultDuration);
+                        }
                         // Get similar products from the same category
                         setSimilarProducts(productRes.data.filter(p => p.category === currentProduct.category && p._id !== id).slice(0, 4));
                     }
@@ -759,9 +841,25 @@ const ProductDetails = () => {
                                 {product.category} • REGION GLOBALE
                             </span>
                         </div>
-                        <h1 style={{ fontSize: isMobile ? '2rem' : '3rem', fontWeight: '900', color: '#fff', marginBottom: '15px', lineHeight: '1.1', fontFamily: 'var(--font-main)' }}>
+                        <h1 style={{ fontSize: isMobile ? '2rem' : '3rem', fontWeight: '900', color: '#fff', marginBottom: '10px', lineHeight: '1.1', fontFamily: 'var(--font-main)' }}>
                             {product.title}
                         </h1>
+
+                        <div className="flex items-center gap-4 mb-6">
+                            <div style={{ fontSize: isMobile ? '1.8rem' : '2.2rem', fontWeight: '900', color: 'var(--accent-color)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span>${currentPrice.toFixed(2)}</span>
+                                {currentOldPrice > 0 && (
+                                    <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.3)', textDecoration: 'line-through', fontWeight: '700' }}>
+                                        ${currentOldPrice.toFixed(2)}
+                                    </span>
+                                )}
+                            </div>
+                            {discountPercentage > 0 && (
+                                <div style={{ background: 'rgba(255, 153, 0, 0.1)', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', fontSize: '0.7rem', fontWeight: '900', padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase' }}>
+                                    OFFRE -{discountPercentage}%
+                                </div>
+                            )}
+                        </div>
 
                         <div className="flex items-center gap-4 mb-8">
                             <div className="flex items-center gap-1" style={{ color: '#f1c40f' }}>
@@ -770,6 +868,218 @@ const ProductDetails = () => {
                             </div>
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>(12.5k avis)</span>
                         </div>
+
+
+
+                        {/* Golden API Diagnostic Block */}
+                        {product.provider === 'golden' && user?.isAdmin && (
+                            <div className="glass p-6 rounded-xl border border-white/10 mb-6" style={{ background: 'rgba(255, 193, 7, 0.05)' }}>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                        <FaGlobe style={{ color: '#ffc107' }} /> Diagnostic GOLDEN API
+                                    </h3>
+                                    <button
+                                        onClick={handleTestGoldenProfile}
+                                        disabled={isTestingGolden}
+                                        className="btn hover-lift"
+                                        style={{
+                                            background: '#ffc107',
+                                            color: '#000',
+                                            padding: '8px 16px',
+                                            borderRadius: '8px',
+                                            fontWeight: '800',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        {isTestingGolden ? "Test en cours..." : "Tester la connexion"}
+                                    </button>
+                                </div>
+                                
+                                {goldenTestError && (
+                                    <div style={{ background: 'rgba(244, 67, 54, 0.1)', color: '#f44336', padding: '12px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                                        {goldenTestError}
+                                    </div>
+                                )}
+                                
+                                {goldenProfile && (
+                                    <div style={{ background: 'rgba(0,0,0,0.5)', padding: '16px', borderRadius: '12px', fontSize: '0.85rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.8)' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                            <div><strong style={{ color: '#ffc107' }}>Username:</strong> {goldenProfile.username}</div>
+                                            <div><strong style={{ color: '#ffc107' }}>Credit:</strong> {goldenProfile.credit}</div>
+                                            <div><strong style={{ color: '#ffc107' }}>Role:</strong> {goldenProfile.role}</div>
+                                            <div><strong style={{ color: '#ffc107' }}>Created By:</strong> {goldenProfile.created_by}</div>
+                                            <div><strong style={{ color: '#ffc107' }}>Last Login:</strong> {goldenProfile.last_login}</div>
+                                            <div><strong style={{ color: '#ffc107' }}>Created At:</strong> {goldenProfile.created_at}</div>
+                                            <div style={{ gridColumn: '1 / -1' }}><strong style={{ color: '#ffc107' }}>Last IP:</strong> {goldenProfile.last_ip}</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+
+
+
+
+                        {/* Configuration de l'offre Moved Here */}
+                        {(() => {
+                            const subs = (product.subcategory || "").split(',').map(s => s.trim());
+                            const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                            const hasVisibilityOptions = product.showBouquetSorter || product.showCountrySelector !== false;
+                            const isMango = product.type === 'mango' || product.title?.toLowerCase().includes('mango');
+                            return (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || product.hasMultiDuration || isHybrid || hasVisibilityOptions) && !isMango;
+                        })() && (
+                            <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
+                                <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
+
+                                {/* Order Completion Inputs */}
+                                {product.provider !== 'u8k' && (
+                                    <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'rgba(255,255,255,0.5)' }}>NUMÉRO (POUR LE SUIVI)</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ex: +216..."
+                                                className="admin-input"
+                                                value={customerDetails.whatsapp}
+                                                onChange={(e) => setCustomerDetails({ ...customerDetails, whatsapp: e.target.value })}
+                                                style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}
+                                            />
+                                        </div>
+
+                                    </div>
+                                )}
+
+
+                                {/* Subscription Duration */}
+                                <div className="mb-4">
+                                    <label className="block text-gray-400 text-sm mb-2 font-bold">Durée (Option)</label>
+                                    <select
+                                        className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                        value={selectedDuration}
+                                        onChange={(e) => setSelectedDuration(e.target.value)}
+                                    >
+                                        <option value="">Sélectionner une durée</option>
+
+                                        {/* Dynamic Options from Backend or Default List */}
+                                        {product.durationPrices && product.durationPrices.length > 0 ? (
+                                            product.durationPrices.map((dp, i) => (
+                                                <option key={i} value={dp.duration}>
+                                                    {dp.duration}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <>
+                                                <option value="1">1 Month</option>
+                                                <option value="3">3 Months</option>
+                                                <option value="6">6 Months</option>
+                                                <option value="12">12 Months</option>
+                                            </>
+                                        )}
+                                    </select>
+                                </div>
+                                {(() => {
+                                    const subs = (product.subcategory || "").split(',').map(s => s.trim());
+                                    const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                    const isMango = product.type === 'mango' || product.title?.toLowerCase().includes('mango');
+                                    return (product.type === 'm3u' || isHybrid) && !isMango;
+                                })() && (
+                                    <>
+                                        {/* Subscription Type Selector - Specific to multi-choice subcategories */}
+                                        {(() => {
+                                            const subs = (product.subcategory || "").split(',').map(s => s.trim());
+                                            return subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                        })() && (
+                                            <div className="mb-4">
+                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
+                                                <div className="flex gap-4">
+                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                        <input
+                                                            type="radio"
+                                                            name="subtype"
+                                                            value="m3u"
+                                                            checked={subscriptionType === 'm3u'}
+                                                            onChange={() => setSubscriptionType('m3u')}
+                                                            className="hidden"
+                                                        />
+                                                        <div className="text-center font-bold">Lien M3U</div>
+                                                    </label>
+                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
+                                                        <input
+                                                            type="radio"
+                                                            name="subtype"
+                                                            value="code"
+                                                            checked={subscriptionType === 'code'}
+                                                            onChange={() => setSubscriptionType('code')}
+                                                            className="hidden"
+                                                        />
+                                                        <div className="text-center font-bold">Code d'activation</div>
+                                                    </label>
+                                                </div>
+                                                {subscriptionType === 'code' && (
+                                                    <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
+                                                        <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
+                                                        <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
+                                                            {product.keys?.filter(k => !k.isSold).length > 0 ? `${product.keys?.filter(k => !k.isSold).length} Codes Disponibles en stock` : "Commande en attente (Livraison manuelle par l'admin)"}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Sort Bouquets (Packages) */}
+                                        {product.showBouquetSorter !== false && !isNeo4k && (
+                                            <div className="mb-4">
+                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
+                                                <select
+                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                    value={selectedRegion}
+                                                    onChange={(e) => setSelectedRegion(e.target.value)}
+                                                >
+                                                    <option value="">Sélectionner un bouquet</option>
+                                                    {packages.map(pkg => (
+                                                        <option key={pkg.id} value={pkg.id}>
+                                                            {(product.bouquetNames && product.bouquetNames[pkg.id]) ? product.bouquetNames[pkg.id] : pkg.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+
+
+                                        {/* Country */}
+                                        {product.showCountrySelector !== false && (product.type === 'm3u' || product.type === 'mag') && (
+                                            <div className="mb-2">
+                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
+                                                <select
+                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                    value={selectedCountry}
+                                                    onChange={(e) => setSelectedCountry(e.target.value)}
+                                                >
+                                                    {countries.map(c => (
+                                                        <option key={c.code} value={c.code}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                        
+                                        {product.type === 'mag' && (
+                                            <div className="mb-4">
+                                                <label className="block text-gray-400 text-sm mb-2 font-bold text-white uppercase">MAC Address</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="00:1A:79:XX:XX:XX"
+                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                                    value={macAddress}
+                                                    onChange={(e) => setMacAddress(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        )}
 
                         <div className="glass" style={{ padding: isMobile ? '20px' : '30px', borderRadius: 'var(--radius-lg)', marginBottom: '30px', border: '1px solid rgba(255, 153, 0, 0.2)' }}>
                             <div className="flex justify-between items-center mb-6">
@@ -922,222 +1232,6 @@ const ProductDetails = () => {
                                 </div>
                             )}
                         </div>
-
-                        {/* Golden API Diagnostic Block */}
-                        {product.provider === 'golden' && user?.isAdmin && (
-                            <div className="glass p-6 rounded-xl border border-white/10 mb-6" style={{ background: 'rgba(255, 193, 7, 0.05)' }}>
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                                        <FaGlobe style={{ color: '#ffc107' }} /> Diagnostic GOLDEN API
-                                    </h3>
-                                    <button
-                                        onClick={handleTestGoldenProfile}
-                                        disabled={isTestingGolden}
-                                        className="btn hover-lift"
-                                        style={{
-                                            background: '#ffc107',
-                                            color: '#000',
-                                            padding: '8px 16px',
-                                            borderRadius: '8px',
-                                            fontWeight: '800',
-                                            fontSize: '0.85rem'
-                                        }}
-                                    >
-                                        {isTestingGolden ? "Test en cours..." : "Tester la connexion"}
-                                    </button>
-                                </div>
-                                
-                                {goldenTestError && (
-                                    <div style={{ background: 'rgba(244, 67, 54, 0.1)', color: '#f44336', padding: '12px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
-                                        {goldenTestError}
-                                    </div>
-                                )}
-                                
-                                {goldenProfile && (
-                                    <div style={{ background: 'rgba(0,0,0,0.5)', padding: '16px', borderRadius: '12px', fontSize: '0.85rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.8)' }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                            <div><strong style={{ color: '#ffc107' }}>Username:</strong> {goldenProfile.username}</div>
-                                            <div><strong style={{ color: '#ffc107' }}>Credit:</strong> {goldenProfile.credit}</div>
-                                            <div><strong style={{ color: '#ffc107' }}>Role:</strong> {goldenProfile.role}</div>
-                                            <div><strong style={{ color: '#ffc107' }}>Created By:</strong> {goldenProfile.created_by}</div>
-                                            <div><strong style={{ color: '#ffc107' }}>Last Login:</strong> {goldenProfile.last_login}</div>
-                                            <div><strong style={{ color: '#ffc107' }}>Created At:</strong> {goldenProfile.created_at}</div>
-                                            <div style={{ gridColumn: '1 / -1' }}><strong style={{ color: '#ffc107' }}>Last IP:</strong> {goldenProfile.last_ip}</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Configuration de l'offre Moved Here */}
-                        {(() => {
-                            const subs = (product.subcategory || "").split(',').map(s => s.trim());
-                            const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
-                            const hasVisibilityOptions = product.showBouquetSorter || product.showCountrySelector !== false;
-                            const isMango = product.type === 'mango' || product.title?.toLowerCase().includes('mango');
-                            return (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || product.hasMultiDuration || isHybrid || hasVisibilityOptions) && !isMango;
-                        })() && (
-                            <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
-                                <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
-
-                                {/* Order Completion Inputs */}
-                                {product.provider !== 'u8k' && (
-                                    <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'rgba(255,255,255,0.5)' }}>NUMÉRO (POUR LE SUIVI)</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Ex: +216..."
-                                                className="admin-input"
-                                                value={customerDetails.whatsapp}
-                                                onChange={(e) => setCustomerDetails({ ...customerDetails, whatsapp: e.target.value })}
-                                                style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}
-                                            />
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'rgba(255,255,255,0.5)' }}>NOTES OU INSTRUCTIONS (OPTIONNEL)</label>
-                                            <textarea
-                                                placeholder="Précisez votre appareil ou demande spéciale..."
-                                                className="admin-input"
-                                                value={customerDetails.note}
-                                                onChange={(e) => setCustomerDetails({ ...customerDetails, note: e.target.value })}
-                                                style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px', minHeight: '80px', paddingTop: '10px' }}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-
-
-                                {/* Subscription Duration */}
-                                <div className="mb-4">
-                                    <label className="block text-gray-400 text-sm mb-2 font-bold">Durée (Option)</label>
-                                    <select
-                                        className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                        value={selectedDuration}
-                                        onChange={(e) => setSelectedDuration(e.target.value)}
-                                    >
-                                        <option value="">Sélectionner une durée</option>
-
-                                        {/* Dynamic Options from Backend */}
-                                        {product.durationPrices && product.durationPrices.length > 0 ? (
-                                            product.durationPrices.map((dp, i) => (
-                                                <option key={i} value={dp.duration}>
-                                                    {dp.duration}
-                                                </option>
-                                            ))
-                                        ) : (
-                                            <>
-                                                {product.provider === 'tivipanel' && <option value="trial">24h (Test)</option>}
-                                                <option value="1">1 Month</option>
-                                                <option value="3">3 Months</option>
-                                                <option value="6">6 Months</option>
-                                                <option value="12">12 Months</option>
-                                            </>
-                                        )}
-                                    </select>
-                                </div>
-                                {(() => {
-                                    const subs = (product.subcategory || "").split(',').map(s => s.trim());
-                                    const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
-                                    const isMango = product.type === 'mango' || product.title?.toLowerCase().includes('mango');
-                                    return (product.type === 'm3u' || isHybrid) && !isMango;
-                                })() && (
-                                    <>
-                                        {/* Subscription Type Selector - Specific to multi-choice subcategories */}
-                                        {(() => {
-                                            const subs = (product.subcategory || "").split(',').map(s => s.trim());
-                                            return subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
-                                        })() && (
-                                            <div className="mb-4">
-                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
-                                                <div className="flex gap-4">
-                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'm3u' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
-                                                        <input
-                                                            type="radio"
-                                                            name="subtype"
-                                                            value="m3u"
-                                                            checked={subscriptionType === 'm3u'}
-                                                            onChange={() => setSubscriptionType('m3u')}
-                                                            className="hidden"
-                                                        />
-                                                        <div className="text-center font-bold">Lien M3U</div>
-                                                    </label>
-                                                    <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
-                                                        <input
-                                                            type="radio"
-                                                            name="subtype"
-                                                            value="code"
-                                                            checked={subscriptionType === 'code'}
-                                                            onChange={() => setSubscriptionType('code')}
-                                                            className="hidden"
-                                                        />
-                                                        <div className="text-center font-bold">Code d'activation</div>
-                                                    </label>
-                                                </div>
-                                                {subscriptionType === 'code' && (
-                                                    <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
-                                                        <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
-                                                        <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
-                                                            {product.keys?.filter(k => !k.isSold).length > 0 ? `${product.keys?.filter(k => !k.isSold).length} Codes Disponibles en stock` : "Commande en attente (Livraison manuelle par l'admin)"}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Sort Bouquets (Packages) */}
-                                        {product.showBouquetSorter !== false && (
-                                            <div className="mb-4">
-                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
-                                                <select
-                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                    value={selectedRegion}
-                                                    onChange={(e) => setSelectedRegion(e.target.value)}
-                                                >
-                                                    <option value="">Sélectionner un bouquet</option>
-                                                    {packages.map(pkg => (
-                                                        <option key={pkg.id} value={pkg.id}>
-                                                            {(product.bouquetNames && product.bouquetNames[pkg.id]) ? product.bouquetNames[pkg.id] : pkg.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-
-
-                                        {/* Country */}
-                                        {product.showCountrySelector !== false && (product.type === 'm3u' || product.type === 'mag') && (
-                                            <div className="mb-2">
-                                                <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
-                                                <select
-                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                    value={selectedCountry}
-                                                    onChange={(e) => setSelectedCountry(e.target.value)}
-                                                >
-                                                    {countries.map(c => (
-                                                        <option key={c.code} value={c.code}>{c.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-                                        
-                                        {product.type === 'mag' && (
-                                            <div className="mb-4">
-                                                <label className="block text-gray-400 text-sm mb-2 font-bold text-white uppercase">MAC Address</label>
-                                                <input
-                                                    type="text"
-                                                    placeholder="00:1A:79:XX:XX:XX"
-                                                    className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                                    value={macAddress}
-                                                    onChange={(e) => setMacAddress(e.target.value)}
-                                                    required
-                                                />
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        )}
                     </div>
                 </div>
 
