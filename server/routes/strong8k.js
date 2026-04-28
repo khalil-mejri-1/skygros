@@ -15,7 +15,7 @@ router.get('/packages', async (req, res) => {
     try {
         const customApiKey = req.query.apiKey;
         const customBaseUrl = req.query.baseUrl;
-        
+
         const apiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : (process.env.STRONG8K_API_KEY || 'cec67373579d901151b52f29d3750ec1');
         const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://8k.cms-only.ru/api/api.php';
 
@@ -39,7 +39,7 @@ router.get('/test-connection', async (req, res) => {
     try {
         const customApiKey = req.query.apiKey;
         const customBaseUrl = req.query.baseUrl;
-        
+
         const apiKey = (customApiKey && customApiKey !== 'undefined') ? customApiKey : (process.env.STRONG8K_API_KEY || 'cec67373579d901151b52f29d3750ec1');
         const endpoint = (customBaseUrl && customBaseUrl !== 'undefined') ? customBaseUrl : 'https://8k.cms-only.ru/api/api.php';
 
@@ -65,8 +65,8 @@ router.get('/test-connection', async (req, res) => {
         const resellerData = Array.isArray(resellerRaw) ? resellerRaw[0] : resellerRaw;
 
         if (resellerData && (resellerData.status === 'true' || resellerData.status === true)) {
-            return res.status(200).json({ 
-                status: 'success', 
+            return res.status(200).json({
+                status: 'success',
                 message: 'Connexion réussie',
                 data: {
                     status: 'Active',
@@ -77,16 +77,16 @@ router.get('/test-connection', async (req, res) => {
                 }
             });
         } else {
-             return res.status(400).json({ 
-                status: 'error', 
+            return res.status(400).json({
+                status: 'error',
                 message: (resellerData && resellerData.message) ? resellerData.message : 'Clé API ou URL invalide (Réponse API négative)',
                 debug: resellerRaw
             });
         }
     } catch (err) {
         console.error("Strong8K Test Connection Error:", err.message);
-        res.status(500).json({ 
-            message: "Échec de la connexion (Erreur Serveur)", 
+        res.status(500).json({
+            message: "Échec de la connexion (Erreur Serveur)",
             details: err.message,
             hint: "Vérifiez que le domaine est accessible sans VPN et que l'URL se termine par api.php"
         });
