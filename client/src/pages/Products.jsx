@@ -85,7 +85,7 @@ const Products = () => {
 
     const filteredProducts = products.filter(p => {
         if (p.isHidden) return false; // Never show hidden products
-        const matchesCategory = selectedCategory === "all" || (p.category || "").toLowerCase() === selectedCategory.toLowerCase();
+        const matchesCategory = selectedCategory === "all" || (p.category || "").split(',').map(c => c.trim().toLowerCase()).includes(selectedCategory.toLowerCase());
         const matchesSubcategory = !selectedSubcategory || (p.subcategory || "").split(',').map(s => s.trim().toLowerCase()).includes(selectedSubcategory.toLowerCase());
         const matchesSearch = (p.title || "").toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSubcategory && matchesSearch;

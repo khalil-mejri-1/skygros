@@ -35,9 +35,9 @@ const Toast = ({ message, type = 'success', duration = 3000, onClose }) => {
         },
         info: {
             icon: <FaInfoCircle size={20} />,
-            color: '#0099ff',
-            bgColor: 'rgba(0, 153, 255, 0.1)',
-            borderColor: 'rgba(0, 153, 255, 0.2)'
+            color: '#ff4757',
+            bgColor: 'rgba(255, 71, 87, 0.1)',
+            borderColor: 'rgba(255, 71, 87, 0.2)'
         }
     };
 

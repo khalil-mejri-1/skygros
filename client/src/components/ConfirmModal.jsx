@@ -28,10 +28,10 @@ const ConfirmModal = ({
     if (!isOpen) return null;
 
     const icons = {
-        warning: { Icon: FaExclamationTriangle, color: "#ff9900" },
+        warning: { Icon: FaExclamationTriangle, color: "#ff4757" },
         danger: { Icon: FaExclamationTriangle, color: "#ff4757" },
         success: { Icon: FaCheckCircle, color: "#00d285" },
-        info: { Icon: FaInfoCircle, color: "#0099ff" }
+        info: { Icon: FaInfoCircle, color: "#ff4757" }
     };
 
     const { Icon, color } = icons[type] || icons.warning;

@@ -336,7 +336,14 @@ const Historique = () => {
                                                     fontStyle: item.licenseKey === "PENDING" ? 'italic' : 'normal',
                                                     wordBreak: 'break-all'
                                                 }}>
-                                                    {item.licenseKey === "PENDING" ? "En attente de réapprovisionnement..." : item.licenseKey}
+                                                    {item.licenseKey === "PENDING" || item.licenseKey === "EN_ATTENTE" ? (
+                                                        item.subscription?.type === 'm3u' ? (
+                                                            (item.productCategory || "").toUpperCase().includes("ABONNEMENT IPTV M3U API") ?
+                                                            "Lien en cours d'envoi via WhatsApp..." :
+                                                            "Le lien vous sera envoyé dès qu'il sera prêt."
+                                                        ) : 
+                                                        "En attente de réapprovisionnement..."
+                                                    ) : item.licenseKey}
                                                 </div>
                                             </div>
                                         </div>

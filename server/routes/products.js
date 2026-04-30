@@ -220,6 +220,8 @@ router.post('/purchase', async (req, res) => {
 
                 console.log(`Backend received ${product.provider || 'NEO'} options:`, options); // DEBUG LOG
 
+                const isM3uCategory = (product.category || "").split(',').some(c => c.trim().toUpperCase() === "ABONNEMENT IPTV M3U API");
+
                 // CHECK SUBSCRIPTION TYPE (M3U vs CODE)
                 if (options.subscriptionType === 'code') {
                         // Attempt to find a key from stock (Standard behavior for other providers)
@@ -248,8 +250,8 @@ router.post('/purchase', async (req, res) => {
                             orderStatus = "PENDING";
                             subscriptionData = { type: 'code_request', duration: options.duration };
                     }
-                } else {
-                    // M3U / API GENERATION (Default)
+                } else if (isM3uCategory) {
+                    // M3U / API GENERATION (Only for API category)
 
                     // Use values from frontend or fallback to product defaults
                     const subOptions = {
@@ -264,9 +266,14 @@ router.post('/purchase', async (req, res) => {
                     // Call API
                     const subInfo = await createSubscription(subOptions, orderRef.toString(), product.apiConfig);
 
-                    subscriptionData = subInfo;
+                    subscriptionData = { ...subInfo, type: options.subscriptionType || product.type || 'm3u' };
                     orderStatus = "COMPLETED";
                     licenseKey = subInfo.url || subInfo.message || "ACTIVE";
+                } else {
+                    // Manual Order (Products NOT in "ABONNEMENT IPTV M3U API" category)
+                    licenseKey = "PENDING";
+                    orderStatus = "PENDING";
+                    subscriptionData = { type: options.subscriptionType || 'm3u' };
                 }
 
             } catch (apiError) {
@@ -325,6 +332,7 @@ router.post('/purchase', async (req, res) => {
             productId: product._id,
             productTitle: product.title,
             productImage: product.image,
+            productCategory: product.category,
             price: finalPrice, // Save the actual price paid
             licenseKey: licenseKey,
             status: orderStatus,

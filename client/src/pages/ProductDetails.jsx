@@ -20,6 +20,9 @@ const ProductDetails = () => {
     const { addToCart } = useContext(CartContext);
     const [product, setProduct] = useState(null);
     const isNeo4k = product?.title?.toLowerCase().includes("neo4k");
+    const isM3uCategory = (product?.category || "").split(',').some(c => c.trim().toUpperCase() === "ABONNEMENT IPTV M3U API");
+    const categoriesArr = (product?.category || "").split(',').map(c => c.trim().toUpperCase());
+    const isHybridCategory = categoriesArr.includes("ABONNEMENT ACTIVE CODE") && categoriesArr.includes("ABONNEMENT IPTV M3U");
     const [similarProducts, setSimilarProducts] = useState([]);
     const [isPurchased, setIsPurchased] = useState(false);
     const [isAdded, setIsAdded] = useState(false);
@@ -242,8 +245,13 @@ const ProductDetails = () => {
                         if (currentProduct.defaultDuration) {
                             setSelectedDuration(currentProduct.defaultDuration);
                         }
-                        // Get similar products from the same category
-                        setSimilarProducts(productRes.data.filter(p => p.category === currentProduct.category && p._id !== id).slice(0, 4));
+                        // Get similar products that share at least one category
+                        setSimilarProducts(productRes.data.filter(p => {
+                            if (p._id === id) return false;
+                            const pCats = (p.category || "").split(',').map(c => c.trim().toLowerCase());
+                            const currentCats = (currentProduct.category || "").split(',').map(c => c.trim().toLowerCase());
+                            return pCats.some(cat => currentCats.includes(cat));
+                        }).slice(0, 4));
                     }
                 } else {
                     console.error("Products data is not an array:", productRes.data);
@@ -375,26 +383,38 @@ const ProductDetails = () => {
         }
 
         // Validation for selection options
-        if (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || product.hasMultiDuration) {
-            if (!selectedDuration) {
-                setAlertModal({
-                    isOpen: true,
-                    title: "Configuration Requise",
-                    message: "Veuillez sélectionner une durée avant d'acheter.",
-                    type: "warning"
-                });
-                return;
-            }
+                                        if (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || product.hasMultiDuration || !isM3uCategory) {
+                                            // Duration is only required for API category products
+                                            if (isM3uCategory && !selectedDuration) {
+                                                setAlertModal({
+                                                    isOpen: true,
+                                                    title: "Configuration Requise",
+                                                    message: "Veuillez sélectionner une durée avant d'acheter.",
+                                                    type: "warning"
+                                                });
+                                                return;
+                                            }
 
-            if ((product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode') && subscriptionType === 'm3u' && !selectedRegion) {
-                setAlertModal({
-                    isOpen: true,
-                    title: "Configuration Requise",
-                    message: "Veuillez sélectionner un package/bouquet avant d'acheter.",
-                    type: "warning"
-                });
-                return;
-            }
+                                            // WhatsApp is always required for non-API products
+                                            if (!isM3uCategory && !customerDetails.whatsapp) {
+                                                setAlertModal({
+                                                    isOpen: true,
+                                                    title: "Donnée Manquante",
+                                                    message: "Veuillez entrer votre numéro WhatsApp pour le suivi.",
+                                                    type: "warning"
+                                                });
+                                                return;
+                                            }
+
+                                            if ((product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || !isM3uCategory) && subscriptionType === 'm3u' && !selectedRegion && isM3uCategory) {
+                                                setAlertModal({
+                                                    isOpen: true,
+                                                    title: "Configuration Requise",
+                                                    message: "Veuillez sélectionner un package/bouquet avant d'acheter.",
+                                                    type: "warning"
+                                                });
+                                                return;
+                                            }
 
             if (product.type === 'mag' && !macAddress) {
                 setAlertModal({
@@ -470,7 +490,25 @@ const ProductDetails = () => {
                 }
 
                 setIsPurchased(true);
-                setShowKeyModal(true);
+                
+                if (subscriptionType === 'm3u') {
+                    setAlertModal({
+                        isOpen: true,
+                        title: "Commande Reçue",
+                        message: "Votre commande M3U a été enregistrée. Le lien vous sera envoyé via WhatsApp dans les plus brefs délais.",
+                        type: "success"
+                    });
+                } else if (res.data.licenseKey === "EN_ATTENTE" || res.data.licenseKey === "PENDING") {
+                    setAlertModal({
+                        isOpen: true,
+                        title: "Commande en attente",
+                        message: "Actuellement, aucun code n'est disponible. Dès qu'un code sera disponible (sous 24h max), il vous sera envoyé via WhatsApp et apparaîtra dans votre Historique.",
+                        type: "info"
+                    });
+                } else {
+                    setShowKeyModal(true);
+                }
+                
                 setTimeout(() => setIsPurchased(false), 5000);
             }
         } catch (err) {
@@ -838,7 +876,7 @@ const ProductDetails = () => {
                     <div>
                         <div style={{ marginBottom: '10px' }}>
                             <span style={{ color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                {product.category} • REGION GLOBALE
+                                {product.category?.split(',').join(' • ')} • REGION GLOBALE
                             </span>
                         </div>
                         <h1 style={{ fontSize: isMobile ? '2rem' : '3rem', fontWeight: '900', color: '#fff', marginBottom: '10px', lineHeight: '1.1', fontFamily: 'var(--font-main)' }}>
@@ -924,10 +962,11 @@ const ProductDetails = () => {
                         {/* Configuration de l'offre Moved Here */}
                         {(() => {
                             const subs = (product.subcategory || "").split(',').map(s => s.trim());
-                            const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                            const isHybrid = (subs.includes("Abonnement code") && subs.includes("Abonnement M3u")) || isHybridCategory;
                             const hasVisibilityOptions = product.showBouquetSorter || product.showCountrySelector !== false;
                             const isMango = product.type === 'mango' || product.title?.toLowerCase().includes('mango');
-                            return (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || product.hasMultiDuration || isHybrid || hasVisibilityOptions) && !isMango;
+                            // Show section if it's a standard sub/API product OR if it's NOT in the main API category (per user request)
+                            return (product.type === 'm3u' || product.type === 'mag' || product.type === 'activecode' || product.hasMultiDuration || isHybrid || hasVisibilityOptions || !isM3uCategory) && !isMango;
                         })() && (
                             <div className="glass p-6 rounded-xl border border-white/10 mb-6 bg-black/20">
                                 <h3 className="text-white font-bold mb-4 text-lg">Configuration de l'offre</h3>
@@ -952,43 +991,45 @@ const ProductDetails = () => {
 
 
                                 {/* Subscription Duration */}
-                                <div className="mb-4">
-                                    <label className="block text-gray-400 text-sm mb-2 font-bold">Durée (Option)</label>
-                                    <select
-                                        className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
-                                        value={selectedDuration}
-                                        onChange={(e) => setSelectedDuration(e.target.value)}
-                                    >
-                                        <option value="">Sélectionner une durée</option>
+                                {isM3uCategory && (
+                                    <div className="mb-4">
+                                        <label className="block text-gray-400 text-sm mb-2 font-bold">Durée (Option)</label>
+                                        <select
+                                            className="w-full bg-[#151725] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                            value={selectedDuration}
+                                            onChange={(e) => setSelectedDuration(e.target.value)}
+                                        >
+                                            <option value="">Sélectionner une durée</option>
 
-                                        {/* Dynamic Options from Backend or Default List */}
-                                        {product.durationPrices && product.durationPrices.length > 0 ? (
-                                            product.durationPrices.map((dp, i) => (
-                                                <option key={i} value={dp.duration}>
-                                                    {dp.duration}
-                                                </option>
-                                            ))
-                                        ) : (
-                                            <>
-                                                <option value="1">1 Month</option>
-                                                <option value="3">3 Months</option>
-                                                <option value="6">6 Months</option>
-                                                <option value="12">12 Months</option>
-                                            </>
-                                        )}
-                                    </select>
-                                </div>
+                                            {/* Dynamic Options from Backend or Default List */}
+                                            {product.durationPrices && product.durationPrices.length > 0 ? (
+                                                product.durationPrices.map((dp, i) => (
+                                                    <option key={i} value={dp.duration}>
+                                                        {dp.duration}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option value="1">1 Month</option>
+                                                    <option value="3">3 Months</option>
+                                                    <option value="6">6 Months</option>
+                                                    <option value="12">12 Months</option>
+                                                </>
+                                            )}
+                                        </select>
+                                    </div>
+                                )}
                                 {(() => {
                                     const subs = (product.subcategory || "").split(',').map(s => s.trim());
-                                    const isHybrid = subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                    const isHybrid = (subs.includes("Abonnement code") && subs.includes("Abonnement M3u")) || isHybridCategory;
                                     const isMango = product.type === 'mango' || product.title?.toLowerCase().includes('mango');
                                     return (product.type === 'm3u' || isHybrid) && !isMango;
                                 })() && (
                                     <>
-                                        {/* Subscription Type Selector - Specific to multi-choice subcategories */}
+                                        {/* Subscription Type Selector - Specific to multi-choice subcategories or hybrid categories or non-API products */}
                                         {(() => {
                                             const subs = (product.subcategory || "").split(',').map(s => s.trim());
-                                            return subs.includes("Abonnement code") && subs.includes("Abonnement M3u");
+                                            return (subs.includes("Abonnement code") && subs.includes("Abonnement M3u")) || isHybridCategory || !isM3uCategory;
                                         })() && (
                                             <div className="mb-4">
                                                 <label className="block text-gray-400 text-sm mb-2 font-bold">Type d'abonnement</label>
@@ -1002,7 +1043,7 @@ const ProductDetails = () => {
                                                             onChange={() => setSubscriptionType('m3u')}
                                                             className="hidden"
                                                         />
-                                                        <div className="text-center font-bold">Lien M3U</div>
+                                                        <div className="text-center font-bold">M3U</div>
                                                     </label>
                                                     <label className={`flex-1 p-3 rounded-lg border cursor-pointer transition-all ${subscriptionType === 'code' ? 'bg-primary border-primary text-white' : 'bg-[#151725] border-white/10 text-gray-400 hover:border-white/30'}`}>
                                                         <input
@@ -1013,22 +1054,20 @@ const ProductDetails = () => {
                                                             onChange={() => setSubscriptionType('code')}
                                                             className="hidden"
                                                         />
-                                                        <div className="text-center font-bold">Code d'activation</div>
+                                                        <div className="text-center font-bold">CODE</div>
                                                     </label>
                                                 </div>
-                                                {subscriptionType === 'code' && (
-                                                    <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
-                                                        <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
-                                                        <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
-                                                            {product.keys?.filter(k => !k.isSold).length > 0 ? `${product.keys?.filter(k => !k.isSold).length} Codes Disponibles en stock` : "Commande en attente (Livraison manuelle par l'admin)"}
-                                                        </span>
-                                                    </div>
-                                                )}
+                                                <div className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5 flex items-center gap-3">
+                                                    <div className={`w-2 h-2 rounded-full ${product.keys?.filter(k => !k.isSold).length > 0 ? 'bg-success' : 'bg-yellow-500 animate-pulse'}`}></div>
+                                                    <span className="text-xs font-bold" style={{ color: product.keys?.filter(k => !k.isSold).length > 0 ? 'var(--success)' : '#f1c40f' }}>
+                                                        {product.keys?.filter(k => !k.isSold).length > 0 ? `${product.keys?.filter(k => !k.isSold).length} Codes Disponibles en stock` : "Commande en attente (Livraison manuelle par l'admin)"}
+                                                    </span>
+                                                </div>
                                             </div>
                                         )}
 
                                         {/* Sort Bouquets (Packages) */}
-                                        {product.showBouquetSorter !== false && !isNeo4k && (
+                                        {isM3uCategory && product.showBouquetSorter !== false && !isNeo4k && (
                                             <div className="mb-4">
                                                 <label className="block text-gray-400 text-sm mb-2 font-bold">Sort Bouquets (Package)</label>
                                                 <select
@@ -1048,7 +1087,7 @@ const ProductDetails = () => {
 
 
                                         {/* Country */}
-                                        {product.showCountrySelector !== false && (product.type === 'm3u' || product.type === 'mag') && (
+                                        {isM3uCategory && product.showCountrySelector !== false && (product.type === 'm3u' || product.type === 'mag') && (
                                             <div className="mb-2">
                                                 <label className="block text-gray-400 text-sm mb-2 font-bold">Country</label>
                                                 <select
@@ -1063,6 +1102,7 @@ const ProductDetails = () => {
                                             </div>
                                         )}
                                         
+                                        {/* MAC Address (Only for MAG) */}
                                         {product.type === 'mag' && (
                                             <div className="mb-4">
                                                 <label className="block text-gray-400 text-sm mb-2 font-bold text-white uppercase">MAC Address</label>
@@ -1084,9 +1124,16 @@ const ProductDetails = () => {
                         <div className="glass" style={{ padding: isMobile ? '20px' : '30px', borderRadius: 'var(--radius-lg)', marginBottom: '30px', border: '1px solid rgba(255, 153, 0, 0.2)' }}>
                             <div className="flex justify-between items-center mb-6">
                                 <div className="text-gray-500 font-bold text-xs uppercase tracking-widest">Achat Rapide</div>
-                                <div style={{ fontSize: '0.8rem', color: (subscriptionType === 'm3u' || (product.keys?.filter(k => !k.isSold).length > 0)) ? 'var(--success)' : '#ff4757', fontWeight: '800' }}>
-                                    {subscriptionType === 'm3u' ? "✓ LIVRAISON INSTANTANÉE" :
-                                        (product.keys?.filter(k => !k.isSold).length > 0 ? "✓ EN STOCK - LIVRAISON RAPIDE" : "⌛ SUR COMMANDE (MAX 24H)")}
+                                <div style={{ fontSize: '0.8rem', fontWeight: '800' }}>
+                                    {subscriptionType === 'm3u' ? (
+                                        <span style={{ color: isM3uCategory ? 'var(--success)' : '#ff4757' }}>
+                                            {isM3uCategory ? "✓ LIVRAISON INSTANTANÉE" : "⌛ SUR COMMANDE (MAX 24H)"}
+                                        </span>
+                                    ) : (
+                                        product.keys?.filter(k => !k.isSold).length > 0 && (
+                                            <span style={{ color: 'var(--success)' }}>✓ EN STOCK - LIVRAISON RAPIDE</span>
+                                        )
+                                    )}
                                 </div>
                             </div>
 

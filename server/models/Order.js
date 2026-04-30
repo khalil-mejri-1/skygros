@@ -5,6 +5,7 @@ const OrderSchema = new mongoose.Schema({
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     productTitle: { type: String, required: true },
     productImage: { type: String },
+    productCategory: { type: String },
     price: { type: Number, required: true },
     quantity: { type: Number, default: 1 },
     licenseKey: { type: String, default: 'PENDING' },
@@ -13,7 +14,8 @@ const OrderSchema = new mongoose.Schema({
     subscription: {
         userId: { type: String },
         url: { type: String },
-        status: { type: String }
+        status: { type: String },
+        type: { type: String }
     },
     customerDetails: {
         whatsapp: { type: String },

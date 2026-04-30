@@ -34,9 +34,14 @@ const AlertModal = ({
             color: "#ff4757",
             title: title || "Erreur"
         },
+        warning: {
+            Icon: FaExclamationTriangle,
+            color: "#ff4757",
+            title: title || "Attention"
+        },
         info: {
             Icon: FaInfoCircle,
-            color: "#0099ff",
+            color: "#ff4757",
             title: title || "Information"
         }
     };
